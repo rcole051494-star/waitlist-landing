@@ -8,6 +8,30 @@ import { Runner } from "./Runner";
 import { getLesson, upsertLesson, markStarted, markCompleted } from "@/lib/progress";
 import { getCard, grade, upsertCard } from "@/lib/srs";
 import { findLesson, lessonsForTrack } from "@/lib/curriculum";
+import { useTutorContext } from "@/lib/tutor/context";
+
+function stepTutorFields(step: Step): {
+  stepPrompt: string;
+  referenceCode?: string;
+  expected?: string;
+} {
+  switch (step.kind) {
+    case "read":
+      return { stepPrompt: step.body };
+    case "example":
+      return { stepPrompt: step.note ?? "Read and experiment with this example.", referenceCode: step.code };
+    case "predict":
+      return { stepPrompt: "Predict the exact output of this code.", referenceCode: step.code, expected: step.answer };
+    case "fix":
+      return { stepPrompt: "Fix the bug so the output matches expected.", referenceCode: step.buggy, expected: step.expected };
+    case "write":
+      return { stepPrompt: step.prompt, referenceCode: step.starter, expected: step.expected };
+    case "explain":
+      return { stepPrompt: step.prompt };
+    case "mcq":
+      return { stepPrompt: `${step.prompt}\nOptions: ${step.options.join(" | ")}` };
+  }
+}
 
 export function LessonViewer({ lesson }: { lesson: Lesson }) {
   const [state, setState] = useState(() => getLesson(lesson.id));
@@ -18,6 +42,25 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
   }, [lesson.id]);
 
   const step = lesson.steps[Math.min(state.stepIndex, lesson.steps.length - 1)];
+
+  const tutorFields = stepTutorFields(step);
+  useTutorContext(
+    {
+      track: lesson.track,
+      lessonTitle: lesson.title,
+      lessonSummary: lesson.summary,
+      stepTitle: step.title,
+      stepKind: step.kind,
+      stepPrompt: tutorFields.stepPrompt,
+      referenceCode: tutorFields.referenceCode,
+      expected: tutorFields.expected,
+      userCode: undefined,
+      lastStdout: undefined,
+      lastStderr: undefined,
+      lastError: undefined,
+    },
+    [lesson.id, step.id]
+  );
   const percent = Math.round(((state.stepIndex + 1) / lesson.steps.length) * 100);
   const track = lesson.track;
   const trackLabel = track === "python" ? "Python" : "JavaScript";

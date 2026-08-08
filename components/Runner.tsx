@@ -1,8 +1,9 @@
 "use client";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CodeEditor } from "./CodeEditor";
 import { runJs } from "@/lib/js-runner";
 import { runPython } from "@/lib/pyodide-runner";
+import { useTutor } from "@/lib/tutor/context";
 
 type Track = "python" | "javascript";
 
@@ -29,6 +30,12 @@ export function Runner({
   const [stderr, setStderr] = useState("");
   const [status, setStatus] = useState<"idle" | "running" | "ok" | "err" | "match" | "nomatch">("idle");
   const [pyLoading, setPyLoading] = useState(false);
+  const { setCtx } = useTutor();
+
+  // Keep the tutor's view of "what's in the editor" live as the learner types.
+  useEffect(() => {
+    setCtx({ userCode: code });
+  }, [code, setCtx]);
 
   const run = useCallback(async () => {
     setStatus("running");
@@ -43,6 +50,7 @@ export function Runner({
       setStdout(out);
       setStderr(err);
       const ok = !err;
+      setCtx({ userCode: code, lastStdout: out, lastStderr: err, lastError: undefined });
       if (expected !== undefined) {
         const norm = (s: string) => s.replace(/\r\n/g, "\n").trim();
         const match = norm(out) === norm(expected) && !err;
@@ -54,17 +62,20 @@ export function Runner({
       }
     } catch (e: any) {
       setPyLoading(false);
-      setStderr(String(e?.message ?? e));
+      const msg = String(e?.message ?? e);
+      setStderr(msg);
       setStatus("err");
-      onResult?.({ ok: false, stdout: "", error: String(e?.message ?? e) });
+      setCtx({ userCode: code, lastStdout: "", lastStderr: "", lastError: msg });
+      onResult?.({ ok: false, stdout: "", error: msg });
     }
-  }, [code, expected, onResult, track]);
+  }, [code, expected, onResult, track, setCtx]);
 
   const reset = () => {
     setCode(initial);
     setStdout("");
     setStderr("");
     setStatus("idle");
+    setCtx({ userCode: initial, lastStdout: undefined, lastStderr: undefined, lastError: undefined });
   };
 
   const statusPill =
