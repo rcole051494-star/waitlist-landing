@@ -29,38 +29,38 @@ export default function Home() {
   return (
     <>
       <Nav />
-      <main className="max-w-6xl mx-auto px-6 pt-10 pb-20">
-        <header className="grid-bg -mx-6 px-6 pt-10 pb-14 mb-10 border-b border-ink-800">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-20">
+        <header className="grid-bg -mx-4 sm:-mx-6 px-4 sm:px-6 pt-8 sm:pt-10 pb-10 sm:pb-14 mb-8 sm:mb-10 border-b border-ink-800">
           <div className="max-w-4xl">
-            <p className="text-xs uppercase tracking-[0.2em] text-ink-400">
+            <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-ink-400">
               built on the science of how coding actually sticks
             </p>
-            <h1 className="mt-3 text-4xl md:text-5xl font-bold tracking-tight text-ink-100">
+            <h1 className="mt-3 text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-ink-100 leading-tight">
               Learn <span className="text-py">Python</span> and{" "}
               <span className="text-js">JavaScript</span> — for real.
             </h1>
-            <p className="mt-4 text-ink-300 text-lg max-w-2xl">
+            <p className="mt-3 sm:mt-4 text-ink-300 text-base sm:text-lg max-w-2xl">
               A hands-on lab, not a passive course. Every concept is a runnable example, a
               predict-the-output, a bug-fix, a from-scratch build — reinforced by spaced repetition
               so it doesn't slip away.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-5 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
               <Link
                 href="/learn/python/py.01.variables"
-                className="px-5 py-2.5 rounded-lg bg-py text-ink-950 font-medium hover:brightness-110 transition"
+                className="px-5 py-2.5 rounded-lg bg-py text-ink-950 font-medium hover:brightness-110 active:brightness-95 transition"
               >
                 Start Python
               </Link>
               <Link
                 href="/learn/javascript/js.01.variables"
-                className="px-5 py-2.5 rounded-lg bg-js text-ink-950 font-medium hover:brightness-110 transition"
+                className="px-5 py-2.5 rounded-lg bg-js text-ink-950 font-medium hover:brightness-110 active:brightness-95 transition"
               >
                 Start JavaScript
               </Link>
               {due > 0 && (
                 <Link
                   href="/review"
-                  className="px-5 py-2.5 rounded-lg border border-ink-700 hover:border-ink-500 text-ink-100 transition"
+                  className="px-5 py-2.5 rounded-lg border border-ink-700 hover:border-ink-500 active:bg-ink-800 text-ink-100 transition"
                 >
                   {due} due for review →
                 </Link>
@@ -69,7 +69,7 @@ export default function Home() {
           </div>
         </header>
 
-        <div className="grid md:grid-cols-4 gap-4 mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-10">
           <Stat label="Lessons complete" value={`${done} / ${allLessons.length}`} accent="text-good" />
           <Stat label="In progress" value={started} accent="text-warm" />
           <Stat label="Concepts mastered" value={`${avgMastery}%`} accent="text-py" />

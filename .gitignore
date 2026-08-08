@@ -7,3 +7,16 @@ dist/
 .DS_Store
 .env*.local
 next-env.d.ts
+
+# Android build artifacts (keep the project sources, ignore generated)
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/capacitor.settings.gradle
+android/capacitor.build.gradle
+android/app/capacitor.build.gradle
+

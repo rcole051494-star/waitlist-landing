@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Code Forge</string>
+    <string name="title_activity_main">Code Forge</string>
+    <string name="package_name">app.codeforge.learn</string>
+    <string name="custom_url_scheme">app.codeforge.learn</string>
+</resources>

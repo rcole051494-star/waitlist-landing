@@ -10,7 +10,7 @@ export default function ProjectsPage() {
   return (
     <>
       <Nav />
-      <main className="max-w-6xl mx-auto px-6 pt-10 pb-20">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-20">
         <p className="text-xs uppercase tracking-[0.2em] text-ink-400">apply what you've learned</p>
         <h1 className="mt-2 text-3xl font-bold text-ink-100">Projects</h1>
         <p className="mt-2 text-ink-300 max-w-2xl">

@@ -1,0 +1,22 @@
+{
+  "name": "Code Forge — Learn Python & JavaScript",
+  "short_name": "Code Forge",
+  "description": "An immersive, evidence-based way to learn modern Python and JavaScript. Active recall, spaced repetition, live code, projects.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#07080b",
+  "theme_color": "#07080b",
+  "categories": ["education", "developer", "productivity"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Start Python", "url": "/learn/python", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Start JavaScript", "url": "/learn/javascript", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Review", "url": "/review", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

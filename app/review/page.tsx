@@ -70,7 +70,7 @@ export default function ReviewPage() {
   return (
     <>
       <Nav />
-      <main className="max-w-4xl mx-auto px-6 pt-10 pb-20">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-20">
         <header className="flex items-baseline justify-between mb-8">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-ink-400">spaced repetition</p>

@@ -16,11 +16,14 @@ export function Runner({
 }: {
   initial: string;
   track: Track;
-  expected?: string; // if provided, compares stdout (trimmed)
+  expected?: string;
   onResult?: (r: { ok: boolean; stdout: string; error?: string }) => void;
   height?: number;
   runLabel?: string;
 }) {
+  // Use a smaller editor height on phones
+  const isPhone = typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches;
+  const editorHeight = isPhone ? Math.min(height, 180) : height;
   const [code, setCode] = useState(initial);
   const [stdout, setStdout] = useState("");
   const [stderr, setStderr] = useState("");
@@ -77,7 +80,7 @@ export function Runner({
 
   return (
     <div className="space-y-3">
-      <CodeEditor value={code} onChange={setCode} language={track} height={height} />
+      <CodeEditor value={code} onChange={setCode} language={track} height={editorHeight} />
       <div className="flex items-center gap-3">
         <button
           onClick={run}

@@ -80,7 +80,7 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
         <h3 className="mt-2 text-sm font-semibold text-ink-100">
           Lesson {lesson.index}: {lesson.title}
         </h3>
-        <p className="mt-1 text-xs text-ink-400">{lesson.summary}</p>
+        <p className="mt-1 text-xs text-ink-400 hidden lg:block">{lesson.summary}</p>
         <div className="mt-4 h-1.5 rounded-full bg-ink-800 overflow-hidden">
           <div
             className={`h-full ${track === "python" ? "bg-py" : "bg-js"}`}
@@ -88,7 +88,29 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
           />
         </div>
         <div className="mt-2 text-[11px] text-ink-400">{percent}% through lesson</div>
-        <ul className="mt-5 space-y-2">
+        {/* Mobile: horizontal step scroller */}
+        <div className="lg:hidden mt-4 -mx-4 px-4 overflow-x-auto scrollbar-thin">
+          <div className="flex gap-2 pb-2">
+            {lesson.steps.map((s, i) => (
+              <button
+                key={s.id}
+                onClick={() => goToStep(i)}
+                className={`shrink-0 flex items-center gap-2 rounded-full px-3 py-1.5 border text-xs whitespace-nowrap transition ${
+                  i === state.stepIndex
+                    ? `${track === "python" ? "bg-py/15 border-py" : "bg-js/15 border-js"} text-ink-100`
+                    : i < state.stepIndex
+                    ? "bg-good/10 border-good/50 text-good"
+                    : "bg-ink-900 border-ink-700 text-ink-300"
+                }`}
+              >
+                <span>{i + 1}</span>
+                <span className="opacity-80">{kindLabel(s.kind)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* Desktop: vertical step list */}
+        <ul className="hidden lg:block mt-5 space-y-2">
           {lesson.steps.map((s, i) => (
             <li key={s.id}>
               <button
