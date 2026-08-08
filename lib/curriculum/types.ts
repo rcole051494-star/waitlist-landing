@@ -56,9 +56,12 @@ export type Step =
       why?: string;
     };
 
+export type Module = "foundation" | "ai";
+
 export type Lesson = {
   id: string; // e.g. "py.01.variables"
   track: Track;
+  module?: Module; // default "foundation"
   index: number;
   title: string;
   summary: string;

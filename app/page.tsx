@@ -93,14 +93,20 @@ export default function Home() {
                 </span>
                 <div>
                   <h3 className="font-semibold text-ink-100">{t.label}</h3>
-                  <p className="text-sm text-ink-400">{t.count} interactive lessons</p>
+                  <p className="text-sm text-ink-400">{t.count} lessons — foundations + AI engineering</p>
                 </div>
               </div>
-              <div className="mt-4 text-sm text-ink-300 leading-relaxed">
+              <div className="mt-4 text-sm text-ink-300 leading-relaxed space-y-1.5">
                 {t.id === "python" ? (
-                  <>Fundamentals → f-strings → pattern matching → async → PEP 695 generics.</>
+                  <>
+                    <div><span className="text-ink-500 text-xs uppercase tracking-wider mr-2">Found.</span>types → pattern matching → async → PEP 695 generics</div>
+                    <div><span className="text-ink-500 text-xs uppercase tracking-wider mr-2">AI</span>NumPy + pandas → LLM SDKs → RAG → agents → evals</div>
+                  </>
                 ) : (
-                  <>let/const → array methods → closures → promises → Object.groupBy.</>
+                  <>
+                    <div><span className="text-ink-500 text-xs uppercase tracking-wider mr-2">Found.</span>let/const → array methods → closures → promises</div>
+                    <div><span className="text-ink-500 text-xs uppercase tracking-wider mr-2">AI</span>TypeScript → SDKs → streaming → Next.js AI apps → deploy</div>
+                  </>
                 )}
               </div>
               <div className="mt-4 text-sm text-ink-400 group-hover:text-ink-100 transition">
@@ -108,6 +114,33 @@ export default function Home() {
               </div>
             </Link>
           ))}
+        </section>
+
+        <section className="rounded-2xl border border-ink-800 bg-gradient-to-br from-ink-900/60 to-ink-900/20 p-6 mb-10">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-[11px] uppercase tracking-[0.16em] font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-py to-js text-ink-950">
+              AI Engineering
+            </span>
+            <span className="text-xs text-ink-400">30 lessons + 5 projects</span>
+          </div>
+          <h3 className="text-xl font-semibold text-ink-100">Become an AI engineer</h3>
+          <p className="mt-2 text-sm text-ink-300 max-w-3xl leading-relaxed">
+            ML foundations (NumPy, pandas, gradient descent, scikit-learn, evaluation) →
+            LLM engineering with both Anthropic and OpenAI (prompting, structured outputs, tool use,
+            embeddings, RAG, agents, evals, fine-tuning, observability) →
+            shipping real AI web apps with Next.js, streaming, auth, deployment.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link href="/learn/python/py.ai.01.numpy/" className="px-4 py-2 rounded-lg bg-py text-ink-950 text-sm font-medium hover:brightness-110 transition">
+              Start AI Python
+            </Link>
+            <Link href="/learn/javascript/js.ai.01.typescript/" className="px-4 py-2 rounded-lg bg-js text-ink-950 text-sm font-medium hover:brightness-110 transition">
+              Start AI JS/TS
+            </Link>
+            <Link href="/projects/" className="px-4 py-2 rounded-lg border border-ink-700 hover:border-ink-500 text-ink-100 text-sm transition">
+              See projects →
+            </Link>
+          </div>
         </section>
 
         <section className="rounded-2xl border border-ink-800 bg-ink-900/40 p-6">
