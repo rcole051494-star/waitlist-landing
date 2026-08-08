@@ -14,9 +14,9 @@ export const javascriptLessons: Lesson[] = [
       {
         kind: "read",
         id: "r1",
-        title: "let vs const (never var)",
+        title: "let vs const",
         body:
-          "`const` binds a value that can't be **reassigned** (the object it points to may still mutate). `let` allows reassignment. Both are **block-scoped**.\n\n`var` is function-scoped and hoisted with an initial `undefined` — avoid it in new code.\n\nPrimitives: `string`, `number`, `bigint`, `boolean`, `undefined`, `null`, `symbol`.",
+          "You already made a variable with `const` in the last lesson. Now the choice that matters: JavaScript actually gives you two ways to create one.\n\n- `const name = value` — creates a name you can **never reassign** later. Trying to gives an error. Reach for this by default.\n- `let name = value` — creates a name you're allowed to reassign later, as many times as you want.\n\n```\nconst x = 1;\nx = 2;        // error — const can't be reassigned\n\nlet y = 1;\ny = 2;        // fine — let allows it\n```\n\nUse `const` unless you specifically know the value needs to change (like a counter going up in a loop) — then use `let`.\n\nYou may see a third keyword, `var`, in older code or tutorials. It's an older, quirkier way to make variables with rules that cause real bugs — this app never uses it, and neither should you.",
       },
       {
         kind: "example",
@@ -26,6 +26,13 @@ export const javascriptLessons: Lesson[] = [
           "const name = 'Ada', score = 92.5;\n" +
           "console.log(`${name} got ${score.toFixed(1)}%`);\n" +
           "console.log(`multi\n  line`);\n",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "Blocks, and the types you'll use daily",
+        body:
+          "A pair of curly braces `{ ... }` marks a **block** — a chunk of code, for example the body of an `if` or a loop. A variable made with `let` or `const` only exists **inside** the block where you made it; step outside those braces and it's gone. This is called being **block-scoped**, and it's a safety feature — it stops code in one part of your program from accidentally reaching into and messing with a variable from somewhere else.\n\nEvery value in JavaScript has a type. The core ones, called **primitives** because they're the simplest building blocks: `string` (text), `number` (numbers — JS doesn't separate int/float like Python does), `boolean` (true/false), `undefined` (a variable that hasn't been given a value yet), `null` (deliberately 'no value'), plus two you'll meet later: `bigint` and `symbol`.",
       },
       {
         kind: "predict",

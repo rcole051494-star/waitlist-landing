@@ -1,3 +1,5 @@
+import { pythonBasicsLesson } from "./python-basics";
+import { javascriptBasicsLesson } from "./javascript-basics";
 import { pythonLessons } from "./python";
 import { javascriptLessons } from "./javascript";
 import { pythonAiLessons } from "./python-ai";
@@ -10,8 +12,8 @@ import type { Lesson, Module, Track } from "./types";
 const withModule = (ls: Lesson[], m: Module) => ls.map((l) => ({ ...l, module: l.module ?? m }));
 
 export const allLessons: Lesson[] = [
-  ...withModule(pythonLessons, "foundation"),
-  ...withModule(javascriptLessons, "foundation"),
+  ...withModule([pythonBasicsLesson, ...pythonLessons], "foundation"),
+  ...withModule([javascriptBasicsLesson, ...javascriptLessons], "foundation"),
   ...withModule(pythonAiLessons, "ai"),
   ...withModule(javascriptAiLessons, "ai"),
 ];

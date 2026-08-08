@@ -17,7 +17,7 @@ export const pythonLessons: Lesson[] = [
         id: "r1",
         title: "Names, not boxes",
         body:
-          "In Python, `=` binds a **name** to an object.\n\nUnlike C or Java, a variable is not a labeled box — it's a label pointing at a value. Reassigning changes what the label points at.\n\nCore built-in types you'll meet first: `int`, `float`, `str`, `bool`, `list`, `dict`, `set`, `tuple`, `None`.\n\nUse `type(x)` to check a type and `isinstance(x, int)` to test group membership.",
+          "You already used variables in the previous lesson — a name stuck to a value with `=`. One more detail worth knowing now: reassigning a name (`x = 7` then later `x = 'seven'`) doesn't change the old value, it just moves the sticky note to point at something new. The old value is simply forgotten.\n\nEvery value in Python has a **type** — what *kind* of thing it is. The core types you'll meet constantly: `int` (whole numbers), `float` (decimal numbers), `str` (text, short for 'string'), `bool` (True/False), plus a few container types you'll meet soon: `list`, `dict`, `set`, `tuple`, and `None` (meaning 'no value').\n\nUse `type(x)` to ask Python what type a value is, and `isinstance(x, int)` to check 'is this an int?' (True/False).",
       },
       {
         kind: "example",
