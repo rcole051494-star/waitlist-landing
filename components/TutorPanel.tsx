@@ -12,10 +12,12 @@ const QUICK_ACTIONS = [
 ];
 
 export function TutorPanel() {
-  const { open, setOpen, messages, streaming, send, quickAsk, stop, clearChat, error, ctx } = useTutor();
+  const { open, setOpen, messages, streaming, send, quickAsk, stop, clearChat, error, ctx, rememberMessage, memory } =
+    useTutor();
   const [input, setInput] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [keyPresent, setKeyPresent] = useState(true);
+  const [rememberedId, setRememberedId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -70,6 +72,14 @@ export function TutorPanel() {
               · watching {ctx.stepTitle ? "this step" : "this lesson"}
             </span>
           )}
+          {memory.trim() && (
+            <span
+              className="text-[11px] text-py ml-1 shrink-0"
+              title="The tutor has saved notes from past sessions"
+            >
+              · 🧠 remembers you
+            </span>
+          )}
           <div className="ml-auto flex items-center gap-1">
             <button
               onClick={() => setSettingsOpen(true)}
@@ -120,19 +130,38 @@ export function TutorPanel() {
                   see your lesson, your code, and your last run.
                 </div>
               )}
-              {messages.map((m) => (
-                <div key={m.id} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
-                  <div
-                    className={`max-w-[90%] rounded-xl px-3 py-2 text-[13.5px] whitespace-pre-wrap leading-relaxed ${
-                      m.role === "user"
-                        ? "bg-ink-100 text-ink-950"
-                        : "bg-ink-800 text-ink-100 border border-ink-700"
-                    }`}
-                  >
-                    {m.content || (streaming && m.role === "assistant" ? "…" : "")}
+              {messages.map((m, i) => {
+                const isLastAssistant = m.role === "assistant" && i === messages.length - 1;
+                const canRemember = m.role === "assistant" && m.content && !(isLastAssistant && streaming);
+                return (
+                  <div key={m.id} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
+                    <div className="max-w-[90%]">
+                      <div
+                        className={`rounded-xl px-3 py-2 text-[13.5px] whitespace-pre-wrap leading-relaxed ${
+                          m.role === "user"
+                            ? "bg-ink-100 text-ink-950"
+                            : "bg-ink-800 text-ink-100 border border-ink-700"
+                        }`}
+                      >
+                        {m.content || (streaming && m.role === "assistant" ? "…" : "")}
+                      </div>
+                      {canRemember && (
+                        <button
+                          onClick={() => {
+                            rememberMessage(m.content);
+                            setRememberedId(m.id);
+                            setTimeout(() => setRememberedId((id) => (id === m.id ? null : id)), 1800);
+                          }}
+                          className="mt-1 text-[11px] text-ink-500 hover:text-ink-200 transition"
+                          title="Save this to long-term memory so future sessions know it too"
+                        >
+                          {rememberedId === m.id ? "✓ saved to memory" : "📌 remember this"}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {error && (
                 <div className="rounded-lg border border-bad/50 bg-bad/10 text-bad text-xs px-3 py-2">
                   {error}

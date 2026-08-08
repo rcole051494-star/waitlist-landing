@@ -3,6 +3,10 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import type { ChatMsg, LessonContext } from "./types";
 import { loadSettings } from "./settings";
 import { buildSystemPrompt, streamChat } from "./client";
+import { appendMemory, loadMemory, saveMemory as persistMemory } from "./memory";
+
+const CHAT_KEY = "codeforge.tutor.chat.v1";
+const MAX_API_HISTORY = 24; // last N messages sent to the API per turn; full history stays in UI/storage
 
 type TutorState = {
   open: boolean;
@@ -16,6 +20,9 @@ type TutorState = {
   stop: () => void;
   clearChat: () => void;
   error: string | null;
+  memory: string;
+  setMemory: (text: string) => void;
+  rememberMessage: (content: string) => void;
 };
 
 const TutorCtx = createContext<TutorState | null>(null);
@@ -24,20 +31,63 @@ function uid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+function loadChat(): ChatMsg[] {
+  if (typeof localStorage === "undefined") return [];
+  try {
+    const raw = JSON.parse(localStorage.getItem(CHAT_KEY) || "[]");
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
 export function TutorProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [ctx, setCtxState] = useState<LessonContext>({});
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [memory, setMemoryState] = useState("");
   const abortRef = useRef<{ abort: () => void } | null>(null);
   const ctxRef = useRef(ctx);
   ctxRef.current = ctx;
   const messagesRef = useRef<ChatMsg[]>(messages);
   messagesRef.current = messages;
+  const memoryRef = useRef(memory);
+  memoryRef.current = memory;
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load persisted chat + memory once, client-side only.
+  useEffect(() => {
+    setMessages(loadChat());
+    setMemoryState(loadMemory());
+  }, []);
+
+  // Debounced persistence — avoids a localStorage write on every streamed token.
+  useEffect(() => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(CHAT_KEY, JSON.stringify(messages));
+      }
+    }, 400);
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [messages]);
 
   const setCtx = useCallback((patch: Partial<LessonContext>) => {
     setCtxState((prev) => ({ ...prev, ...patch }));
+  }, []);
+
+  const setMemory = useCallback((text: string) => {
+    persistMemory(text);
+    setMemoryState(text);
+  }, []);
+
+  const rememberMessage = useCallback((content: string) => {
+    const next = appendMemory(content);
+    setMemoryState(next);
   }, []);
 
   const runSend = useCallback((text: string) => {
@@ -55,8 +105,8 @@ export function TutorProvider({ children }: { children: React.ReactNode }) {
     setStreaming(true);
     setOpen(true);
 
-    const system = buildSystemPrompt(ctxRef.current);
-    const history = [...priorHistory, userMsg];
+    const system = buildSystemPrompt(ctxRef.current, memoryRef.current);
+    const history = [...priorHistory.slice(-MAX_API_HISTORY), userMsg];
 
     const handle = streamChat(settings.provider, settings.apiKey, settings.model, system, history, {
       onToken: (delta) => {
@@ -106,7 +156,22 @@ export function TutorProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <TutorCtx.Provider
-      value={{ open, setOpen, ctx, setCtx, messages, streaming, send, quickAsk, stop, clearChat, error }}
+      value={{
+        open,
+        setOpen,
+        ctx,
+        setCtx,
+        messages,
+        streaming,
+        send,
+        quickAsk,
+        stop,
+        clearChat,
+        error,
+        memory,
+        setMemory,
+        rememberMessage,
+      }}
     >
       {children}
     </TutorCtx.Provider>

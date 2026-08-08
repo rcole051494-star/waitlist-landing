@@ -5,7 +5,7 @@ import type { ChatMsg, LessonContext, Provider } from "./types";
 // localStorage and is sent straight to Anthropic/OpenAI — never through
 // any server of ours (there is none; this app is static).
 
-export function buildSystemPrompt(ctx: LessonContext): string {
+export function buildSystemPrompt(ctx: LessonContext, memory?: string): string {
   const parts: string[] = [];
   parts.push(
     "You are an embedded coding tutor inside 'Code Forge', an app teaching modern Python and JavaScript through active recall and spaced repetition. " +
@@ -13,6 +13,12 @@ export function buildSystemPrompt(ctx: LessonContext): string {
       "Default to Socratic guidance: point at what's wrong and ask a leading question rather than just handing over corrected code, UNLESS they explicitly ask you to just give the answer or fix the code, in which case do that directly. " +
       "Keep replies short — a few sentences, or a small code snippet. No long lectures unless asked."
   );
+  if (memory && memory.trim()) {
+    parts.push(
+      "What you already know about this learner from past sessions (persists across the whole app, not just this lesson):\n" +
+        memory.trim()
+    );
+  }
   if (ctx.track) parts.push(`Language: ${ctx.track === "python" ? "Python 3.12+" : "JavaScript ES2024+"}.`);
   if (ctx.lessonTitle) parts.push(`Lesson: "${ctx.lessonTitle}"${ctx.lessonSummary ? ` — ${ctx.lessonSummary}` : ""}.`);
   if (ctx.stepTitle) parts.push(`Current step (${ctx.stepKind ?? "step"}): "${ctx.stepTitle}".`);
