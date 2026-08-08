@@ -50,7 +50,7 @@ export function TrackView({ track }: { track: Track }) {
             return (
               <Link
                 key={l.id}
-                href={`/learn/${track}/${l.id}`}
+                href={`/learn/${track}/${l.id}/`}
                 className="group flex items-center gap-4 rounded-xl border border-ink-800 bg-ink-900/40 hover:bg-ink-900 hover:border-ink-600 active:bg-ink-800 transition p-4"
               >
                 <span

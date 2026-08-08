@@ -19,11 +19,11 @@ export function Nav() {
         <div className="flex-1 min-w-0 overflow-x-auto scrollbar-thin">
           <div className="flex items-center gap-1 text-sm whitespace-nowrap">
             <NavLink href="/" active={path === "/"}>Home</NavLink>
-            <NavLink href="/learn/python" active={path?.startsWith("/learn/python") ?? false}>Python</NavLink>
-            <NavLink href="/learn/javascript" active={path?.startsWith("/learn/javascript") ?? false}>JavaScript</NavLink>
-            <NavLink href="/review" active={path === "/review"}>Review</NavLink>
-            <NavLink href="/projects" active={path === "/projects"}>Projects</NavLink>
-            <NavLink href="/cheatsheet" active={path === "/cheatsheet"}>Cheatsheet</NavLink>
+            <NavLink href="/learn/python/" active={path?.startsWith("/learn/python") ?? false}>Python</NavLink>
+            <NavLink href="/learn/javascript/" active={path?.startsWith("/learn/javascript") ?? false}>JavaScript</NavLink>
+            <NavLink href="/review/" active={path?.startsWith("/review") ?? false}>Review</NavLink>
+            <NavLink href="/projects/" active={path?.startsWith("/projects") ?? false}>Projects</NavLink>
+            <NavLink href="/cheatsheet/" active={path?.startsWith("/cheatsheet") ?? false}>Cheatsheet</NavLink>
           </div>
         </div>
       </div>

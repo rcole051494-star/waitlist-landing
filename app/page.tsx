@@ -46,20 +46,20 @@ export default function Home() {
             </p>
             <div className="mt-5 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
               <Link
-                href="/learn/python/py.01.variables"
+                href="/learn/python/py.01.variables/"
                 className="px-5 py-2.5 rounded-lg bg-py text-ink-950 font-medium hover:brightness-110 active:brightness-95 transition"
               >
                 Start Python
               </Link>
               <Link
-                href="/learn/javascript/js.01.variables"
+                href="/learn/javascript/js.01.variables/"
                 className="px-5 py-2.5 rounded-lg bg-js text-ink-950 font-medium hover:brightness-110 active:brightness-95 transition"
               >
                 Start JavaScript
               </Link>
               {due > 0 && (
                 <Link
-                  href="/review"
+                  href="/review/"
                   className="px-5 py-2.5 rounded-lg border border-ink-700 hover:border-ink-500 active:bg-ink-800 text-ink-100 transition"
                 >
                   {due} due for review →
@@ -80,7 +80,7 @@ export default function Home() {
           {tracks().map((t) => (
             <Link
               key={t.id}
-              href={`/learn/${t.id}`}
+              href={`/learn/${t.id}/`}
               className="group rounded-2xl border border-ink-800 bg-ink-900/50 p-6 hover:border-ink-600 transition"
             >
               <div className="flex items-center gap-3">

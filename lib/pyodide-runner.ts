@@ -10,7 +10,10 @@ declare global {
   }
 }
 
-const PYODIDE_URL = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+// Pyodide is bundled into the app under /pyodide/ (see scripts/copy-pyodide.mjs).
+// Works fully offline — no CDN needed once the APK/PWA is installed.
+const LOCAL_PYODIDE = "/pyodide/";
+const LOCAL_SCRIPT = `${LOCAL_PYODIDE}pyodide.js`;
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -23,7 +26,7 @@ function loadScript(src: string): Promise<void> {
     s.dataset.src = src;
     s.async = true;
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error("Failed to load Pyodide"));
+    s.onerror = () => reject(new Error(`Failed to load Pyodide from ${src}`));
     document.head.appendChild(s);
   });
 }
@@ -33,11 +36,9 @@ export async function getPyodide(): Promise<any> {
   if (window.__pyodidePromise) return window.__pyodidePromise;
 
   window.__pyodidePromise = (async () => {
-    await loadScript(PYODIDE_URL);
+    await loadScript(LOCAL_SCRIPT);
     if (!window.loadPyodide) throw new Error("Pyodide did not load");
-    const py = await window.loadPyodide({
-      indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/",
-    });
+    const py = await window.loadPyodide({ indexURL: LOCAL_PYODIDE });
     // Redirect stdout/stderr into a buffer we can read from JS
     await py.runPythonAsync(`
 import sys, io

@@ -191,13 +191,13 @@ function EmptyReview() {
       </p>
       <div className="mt-6 flex justify-center gap-3">
         <Link
-          href="/learn/python"
+          href="/learn/python/"
           className="px-4 py-2 rounded-lg bg-py text-ink-950 font-medium hover:brightness-110 transition"
         >
           Start Python
         </Link>
         <Link
-          href="/learn/javascript"
+          href="/learn/javascript/"
           className="px-4 py-2 rounded-lg bg-js text-ink-950 font-medium hover:brightness-110 transition"
         >
           Start JavaScript

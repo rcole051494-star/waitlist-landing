@@ -72,7 +72,7 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
       {/* Sidebar */}
       <aside className="lg:sticky lg:top-20 self-start rounded-2xl border border-ink-800 bg-ink-900/60 p-4">
         <Link
-          href={`/learn/${track}`}
+          href={`/learn/${track}/`}
           className="text-xs uppercase tracking-wider text-ink-400 hover:text-ink-100 transition"
         >
           ← {trackLabel} track
@@ -177,7 +177,7 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
               </button>
               {nextLessonId && (
                 <Link
-                  href={`/learn/${track}/${nextLessonId}`}
+                  href={`/learn/${track}/${nextLessonId}/`}
                   onClick={() => markCompleted(lesson.id)}
                   className="px-5 py-2 rounded-lg font-medium bg-ink-100 text-ink-950 hover:bg-white transition"
                 >
