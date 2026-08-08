@@ -1,8 +1,17 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useTutor } from "@/lib/tutor/context";
-import { hasApiKey, loadSettings } from "@/lib/tutor/settings";
+import { hasApiKey } from "@/lib/tutor/settings";
 import { TutorSettingsModal } from "./TutorSettingsModal";
+import {
+  createRecognizer,
+  isSTTSupported,
+  isTTSSupported,
+  speak,
+  stopSpeaking,
+  type Recognizer,
+} from "@/lib/tutor/voice";
+import { loadVoiceSettings, saveVoiceSettings } from "@/lib/tutor/voiceSettings";
 
 const QUICK_ACTIONS = [
   { label: "What's wrong with my code?", prompt: "Look at my current code and the last run's output/error. What's wrong, and why?" },
@@ -20,19 +29,85 @@ export function TutorPanel() {
   const [rememberedId, setRememberedId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Voice
+  const [sttSupported, setSttSupported] = useState(false);
+  const [ttsSupported, setTtsSupported] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [autoSpeak, setAutoSpeak] = useState(false);
+  const recRef = useRef<Recognizer | null>(null);
+  const wasStreaming = useRef(false);
+
   useEffect(() => {
     setKeyPresent(hasApiKey());
   }, [open, settingsOpen]);
 
   useEffect(() => {
+    setSttSupported(isSTTSupported());
+    setTtsSupported(isTTSSupported());
+    setAutoSpeak(loadVoiceSettings().autoSpeak);
+  }, []);
+
+  useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, streaming]);
+
+  // Auto-speak the reply once streaming finishes, if enabled.
+  useEffect(() => {
+    if (wasStreaming.current && !streaming && autoSpeak && ttsSupported) {
+      const last = messages[messages.length - 1];
+      if (last?.role === "assistant" && last.content) {
+        const vs = loadVoiceSettings();
+        speak(last.content, { voiceURI: vs.voiceURI, rate: vs.rate });
+      }
+    }
+    wasStreaming.current = streaming;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streaming]);
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!input.trim()) return;
     send(input);
     setInput("");
+  };
+
+  const toggleListening = () => {
+    if (listening) {
+      recRef.current?.stop();
+      return;
+    }
+    stopSpeaking();
+    setVoiceError(null);
+    const rec = createRecognizer({
+      onInterim: (text) => setInput(text),
+      onFinal: (text) => {
+        setInput("");
+        send(text);
+      },
+      onEnd: () => setListening(false),
+      onError: (msg) => {
+        setVoiceError(msg);
+        setListening(false);
+      },
+    });
+    if (!rec) return;
+    recRef.current = rec;
+    setListening(true);
+    rec.start();
+  };
+
+  const toggleAutoSpeak = () => {
+    const vs = loadVoiceSettings();
+    const next = !autoSpeak;
+    saveVoiceSettings({ ...vs, autoSpeak: next });
+    setAutoSpeak(next);
+    if (!next) stopSpeaking();
+  };
+
+  const speakMessage = (content: string) => {
+    const vs = loadVoiceSettings();
+    speak(content, { voiceURI: vs.voiceURI, rate: vs.rate });
   };
 
   const hasLessonContext = !!(ctx.lessonTitle || ctx.stepTitle);
@@ -81,6 +156,17 @@ export function TutorPanel() {
             </span>
           )}
           <div className="ml-auto flex items-center gap-1">
+            {ttsSupported && (
+              <button
+                onClick={toggleAutoSpeak}
+                className={`w-7 h-7 grid place-items-center rounded-md transition text-xs ${
+                  autoSpeak ? "text-py bg-py/10" : "text-ink-400 hover:text-ink-100 hover:bg-ink-800"
+                }`}
+                title={autoSpeak ? "Auto-speak replies: on" : "Auto-speak replies: off"}
+              >
+                {autoSpeak ? "🔊" : "🔇"}
+              </button>
+            )}
             <button
               onClick={() => setSettingsOpen(true)}
               className="w-7 h-7 grid place-items-center rounded-md text-ink-400 hover:text-ink-100 hover:bg-ink-800 transition text-xs"
@@ -128,11 +214,12 @@ export function TutorPanel() {
                 <div className="text-sm text-ink-400 leading-relaxed">
                   Ask about the step you're on, paste an error, or use a quick action below. I can
                   see your lesson, your code, and your last run.
+                  {sttSupported && " Tap the mic to talk instead of typing."}
                 </div>
               )}
               {messages.map((m, i) => {
                 const isLastAssistant = m.role === "assistant" && i === messages.length - 1;
-                const canRemember = m.role === "assistant" && m.content && !(isLastAssistant && streaming);
+                const finishedAssistant = m.role === "assistant" && m.content && !(isLastAssistant && streaming);
                 return (
                   <div key={m.id} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
                     <div className="max-w-[90%]">
@@ -145,18 +232,29 @@ export function TutorPanel() {
                       >
                         {m.content || (streaming && m.role === "assistant" ? "…" : "")}
                       </div>
-                      {canRemember && (
-                        <button
-                          onClick={() => {
-                            rememberMessage(m.content);
-                            setRememberedId(m.id);
-                            setTimeout(() => setRememberedId((id) => (id === m.id ? null : id)), 1800);
-                          }}
-                          className="mt-1 text-[11px] text-ink-500 hover:text-ink-200 transition"
-                          title="Save this to long-term memory so future sessions know it too"
-                        >
-                          {rememberedId === m.id ? "✓ saved to memory" : "📌 remember this"}
-                        </button>
+                      {finishedAssistant && (
+                        <div className="mt-1 flex items-center gap-3">
+                          <button
+                            onClick={() => {
+                              rememberMessage(m.content);
+                              setRememberedId(m.id);
+                              setTimeout(() => setRememberedId((id) => (id === m.id ? null : id)), 1800);
+                            }}
+                            className="text-[11px] text-ink-500 hover:text-ink-200 transition"
+                            title="Save this to long-term memory so future sessions know it too"
+                          >
+                            {rememberedId === m.id ? "✓ saved to memory" : "📌 remember this"}
+                          </button>
+                          {ttsSupported && (
+                            <button
+                              onClick={() => speakMessage(m.content)}
+                              className="text-[11px] text-ink-500 hover:text-ink-200 transition"
+                              title="Read this reply aloud"
+                            >
+                              🔊 play
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -165,6 +263,11 @@ export function TutorPanel() {
               {error && (
                 <div className="rounded-lg border border-bad/50 bg-bad/10 text-bad text-xs px-3 py-2">
                   {error}
+                </div>
+              )}
+              {voiceError && (
+                <div className="rounded-lg border border-warm/50 bg-warm/10 text-warm text-xs px-3 py-2">
+                  {voiceError}
                 </div>
               )}
             </div>
@@ -187,6 +290,20 @@ export function TutorPanel() {
 
             {/* Input */}
             <form onSubmit={submit} className="p-3 border-t border-ink-800 shrink-0 flex items-end gap-2">
+              {sttSupported && (
+                <button
+                  type="button"
+                  onClick={toggleListening}
+                  className={`shrink-0 w-9 h-9 grid place-items-center rounded-lg border transition ${
+                    listening
+                      ? "border-bad bg-bad/20 text-bad animate-pulse"
+                      : "border-ink-700 text-ink-300 hover:text-ink-100 hover:bg-ink-800"
+                  }`}
+                  title={listening ? "Listening… tap to stop" : "Talk to the tutor"}
+                >
+                  {listening ? "●" : "🎤"}
+                </button>
+              )}
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -197,13 +314,16 @@ export function TutorPanel() {
                   }
                 }}
                 rows={1}
-                placeholder="Ask the tutor…"
+                placeholder={listening ? "Listening…" : "Ask the tutor…"}
                 className="flex-1 resize-none rounded-lg bg-ink-950 border border-ink-700 focus:border-ink-500 focus:outline-none px-3 py-2 text-sm text-ink-100 max-h-32"
               />
               {streaming ? (
                 <button
                   type="button"
-                  onClick={stop}
+                  onClick={() => {
+                    stopSpeaking();
+                    stop();
+                  }}
                   className="shrink-0 px-3 py-2 rounded-lg bg-bad/20 text-bad text-sm font-medium hover:bg-bad/30 transition"
                 >
                   Stop

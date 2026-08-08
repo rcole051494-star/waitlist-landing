@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { loadSettings, saveSettings } from "@/lib/tutor/settings";
 import { useTutor } from "@/lib/tutor/context";
 import { MODEL_OPTIONS, DEFAULT_MODELS, type Provider } from "@/lib/tutor/types";
+import { getVoices, isTTSSupported, onVoicesChanged, speak } from "@/lib/tutor/voice";
+import { loadVoiceSettings, saveVoiceSettings } from "@/lib/tutor/voiceSettings";
 
 export function TutorSettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { memory, setMemory } = useTutor();
@@ -11,7 +13,13 @@ export function TutorSettingsModal({ open, onClose }: { open: boolean; onClose: 
   const [model, setModel] = useState(DEFAULT_MODELS.anthropic);
   const [showKey, setShowKey] = useState(false);
   const [memoryText, setMemoryText] = useState("");
-  const [tab, setTab] = useState<"connection" | "memory">("connection");
+  const [tab, setTab] = useState<"connection" | "memory" | "voice">("connection");
+
+  const [ttsSupported, setTtsSupported] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [autoSpeak, setAutoSpeak] = useState(false);
+  const [voiceURI, setVoiceURI] = useState("");
+  const [rate, setRate] = useState(1);
 
   useEffect(() => {
     if (!open) return;
@@ -21,6 +29,15 @@ export function TutorSettingsModal({ open, onClose }: { open: boolean; onClose: 
     setModel(s.model);
     setMemoryText(memory);
     setTab("connection");
+
+    setTtsSupported(isTTSSupported());
+    const vs = loadVoiceSettings();
+    setAutoSpeak(vs.autoSpeak);
+    setVoiceURI(vs.voiceURI);
+    setRate(vs.rate);
+    setVoices(getVoices());
+    const unsub = onVoicesChanged(() => setVoices(getVoices()));
+    return unsub;
   }, [open, memory]);
 
   if (!open) return null;
@@ -28,8 +45,12 @@ export function TutorSettingsModal({ open, onClose }: { open: boolean; onClose: 
   const save = () => {
     saveSettings({ provider, apiKey: apiKey.trim(), model });
     setMemory(memoryText);
+    saveVoiceSettings({ autoSpeak, voiceURI, rate });
     onClose();
   };
+
+  const englishVoices = voices.filter((v) => v.lang.startsWith("en"));
+  const voiceList = englishVoices.length > 0 ? englishVoices : voices;
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onClick={onClose}>
@@ -40,25 +61,20 @@ export function TutorSettingsModal({ open, onClose }: { open: boolean; onClose: 
         <h2 className="text-lg font-semibold text-ink-100">Tutor settings</h2>
 
         <div className="mt-3 flex gap-1 border-b border-ink-800">
-          <button
-            onClick={() => setTab("connection")}
-            className={`px-3 py-2 text-sm font-medium border-b-2 transition ${
-              tab === "connection" ? "border-ink-100 text-ink-100" : "border-transparent text-ink-400 hover:text-ink-200"
-            }`}
-          >
-            Connection
-          </button>
-          <button
-            onClick={() => setTab("memory")}
-            className={`px-3 py-2 text-sm font-medium border-b-2 transition ${
-              tab === "memory" ? "border-ink-100 text-ink-100" : "border-transparent text-ink-400 hover:text-ink-200"
-            }`}
-          >
-            Memory
-          </button>
+          {(["connection", "memory", "voice"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-3 py-2 text-sm font-medium border-b-2 transition capitalize ${
+                tab === t ? "border-ink-100 text-ink-100" : "border-transparent text-ink-400 hover:text-ink-200"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
         </div>
 
-        {tab === "connection" ? (
+        {tab === "connection" && (
           <>
             <p className="mt-3 text-xs text-ink-400">
               Your API key is stored only in this browser (localStorage) and sent directly to the
@@ -134,7 +150,9 @@ export function TutorSettingsModal({ open, onClose }: { open: boolean; onClose: 
               </div>
             </div>
           </>
-        ) : (
+        )}
+
+        {tab === "memory" && (
           <>
             <p className="mt-3 text-xs text-ink-400">
               Notes the tutor keeps about you across every session — included in every conversation,
@@ -157,6 +175,75 @@ export function TutorSettingsModal({ open, onClose }: { open: boolean; onClose: 
                 Clear memory
               </button>
             </div>
+          </>
+        )}
+
+        {tab === "voice" && (
+          <>
+            {!ttsSupported ? (
+              <p className="mt-3 text-sm text-ink-400">
+                Voice output isn't supported in this browser. Voice input (the mic button) may still
+                work in Chrome or Edge on desktop.
+              </p>
+            ) : (
+              <div className="mt-4 space-y-4">
+                <label className="flex items-center justify-between gap-3 cursor-pointer">
+                  <span className="text-sm text-ink-200">Auto-speak tutor replies</span>
+                  <button
+                    type="button"
+                    onClick={() => setAutoSpeak((v) => !v)}
+                    className={`w-10 h-6 rounded-full transition-colors relative shrink-0 ${
+                      autoSpeak ? "bg-py" : "bg-ink-700"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
+                        autoSpeak ? "translate-x-4" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </label>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-ink-400 mb-1.5">Voice</label>
+                  <select
+                    value={voiceURI}
+                    onChange={(e) => setVoiceURI(e.target.value)}
+                    className="w-full rounded-lg bg-ink-950 border border-ink-700 px-3 py-2 text-sm text-ink-100 focus:border-ink-500 focus:outline-none"
+                  >
+                    <option value="">Browser default</option>
+                    {voiceList.map((v) => (
+                      <option key={v.voiceURI} value={v.voiceURI}>
+                        {v.name} ({v.lang})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs uppercase tracking-wider text-ink-400">Speed</label>
+                    <span className="text-xs text-ink-300 mono">{rate.toFixed(2)}x</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0.75}
+                    max={1.5}
+                    step={0.05}
+                    value={rate}
+                    onChange={(e) => setRate(parseFloat(e.target.value))}
+                    className="w-full accent-py"
+                  />
+                </div>
+
+                <button
+                  onClick={() => speak("This is what the tutor sounds like.", { voiceURI, rate })}
+                  className="px-3 py-1.5 rounded-lg border border-ink-700 text-ink-300 hover:text-ink-100 hover:bg-ink-800 text-sm transition"
+                >
+                  ▶ Test voice
+                </button>
+              </div>
+            )}
           </>
         )}
 
