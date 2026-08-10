@@ -16,23 +16,101 @@ export const javascriptLessons: Lesson[] = [
         id: "r1",
         title: "let vs const",
         body:
-          "You already made a variable with `const` in the last lesson. Now the choice that matters: JavaScript actually gives you two ways to create one.\n\n- `const name = value` — creates a name you can **never reassign** later. Trying to gives an error. Reach for this by default.\n- `let name = value` — creates a name you're allowed to reassign later, as many times as you want.\n\n```\nconst x = 1;\nx = 2;        // error — const can't be reassigned\n\nlet y = 1;\ny = 2;        // fine — let allows it\n```\n\nUse `const` unless you specifically know the value needs to change (like a counter going up in a loop) — then use `let`.\n\nYou may see a third keyword, `var`, in older code or tutorials. It's an older, quirkier way to make variables with rules that cause real bugs — this app never uses it, and neither should you.",
+          "In the last lesson you made variables with `let`. JavaScript actually gives you two keywords for this, and picking between them is a real decision you'll make on every line.\n\n- **`let name = value`** — a name you're allowed to reassign later, as often as you like.\n- **`const name = value`** — a name that can **never be reassigned**. Trying gives an error.\n\n```\nlet y = 1;\ny = 2;          // fine — let allows it\n\nconst x = 1;\nx = 2;          // TypeError: Assignment to constant variable\n```\n\n**Reach for `const` by default**, and only switch to `let` when you actually need the value to change (a counter climbing in a loop, a running total). That sounds backwards if you're new — surely being able to change things is better? — but a `const` is a promise to whoever reads the code next, including future you: *this never changes, you don't have to track it.* Most variables genuinely never change, and marking them that way removes a whole category of bug.\n\nYou'll also see `var` in older code and tutorials. It's the original keyword, with scoping rules loose enough to cause real bugs. It still works, but there is no reason to write it in new code — this app never does, and neither should you.",
       },
       {
-        kind: "example",
-        id: "e1",
-        title: "Template literals",
-        code:
-          "const name = 'Ada', score = 92.5;\n" +
-          "console.log(`${name} got ${score.toFixed(1)}%`);\n" +
-          "console.log(`multi\n  line`);\n",
+        kind: "categorize",
+        id: "cat1",
+        title: "let or const?",
+        prompt:
+          "For each situation, decide which keyword you'd reach for. Remember the rule: const unless the value genuinely has to change.",
+        buckets: ["const", "let"],
+        items: [
+          { text: "someone's date of birth", bucket: 0, why: "It never changes once set — that's exactly what const is for." },
+          { text: "a running total inside a loop", bucket: 1, why: "The whole point is that it grows on each pass, so it must be reassignable." },
+          { text: "the value of pi", bucket: 0, why: "A fixed mathematical constant — it will never be reassigned." },
+          { text: "a counter that climbs 1, 2, 3…", bucket: 1, why: "It's reassigned on every step, so const would throw an error." },
+          { text: "a config setting read once at startup", bucket: 0, why: "Read once and used everywhere — no reason to allow reassignment." },
+        ],
       },
       {
         kind: "read",
         id: "r2",
+        title: "Template literals: putting values inside text",
+        body:
+          "Constantly you'll want to build a sentence with a value in the middle of it. The modern way is a **template literal**.\n\nInstead of the usual quotes, wrap the text in **backticks** — the ` character, usually top-left of the keyboard next to the 1. Inside a backtick string, `${...}` gets evaluated and dropped into the text:\n\n```\nconst name = 'Ada';\nconsole.log(`hello ${name}`);     // hello Ada\n```\n\nWith ordinary quotes the `${}` has no special meaning — `'hello ${name}'` shows literally as `hello ${name}`. The backticks are what switch it on.\n\nAny expression works inside, not just a bare name:\n\n```\nconsole.log(`2 + 2 is ${2 + 2}`);          // 2 + 2 is 4\nconsole.log(`shouting: ${name.toUpperCase()}`); // shouting: ADA\n```\n\nBacktick strings can also span several lines without any escaping, which ordinary quotes can't do.",
+      },
+      {
+        kind: "trace",
+        id: "t1",
+        title: "Watch a template literal get built",
+        intro: "JavaScript builds the finished string piece by piece. Here's what it's doing.",
+        code: "const price = 4;\nconst qty = 3;\nconsole.log(`${qty} items at $${price} = $${qty * price}`);\n",
+        lines: [
+          { code: "const price = 4;", what: "Stick the value 4 onto the name price. It's a const, so it'll never change.", state: "price = 4" },
+          { code: "const qty = 3;", what: "Same again for qty.", state: "price = 4, qty = 3" },
+          {
+            code: "`${qty} items at $${price}`",
+            what:
+              "JavaScript walks the string left to right. Plain characters copy across untouched. At `${qty}` it looks up qty (3) and drops it in. ' items at $' copies across — note the first $ is an ordinary character, and the second one starts a `${`. Two dollar signs in a row look odd but they're doing different jobs.",
+            state: "so far: '3 items at $4'",
+          },
+          {
+            code: "${qty * price}",
+            what:
+              "The last slot holds an expression rather than a plain name. JavaScript works it out first — 3 times 4 is 12 — and drops the result in. The finished string goes to console.log.",
+            output: "3 items at $4 = $12",
+          },
+        ],
+        takeaway:
+          "Everything inside `${}` is evaluated then turned into text; everything outside is copied as-is. That's the whole rule.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "The classic let/const and template mistakes",
+        items: [
+          {
+            wrong: "const total = 0;\ntotal = total + 5;",
+            problem:
+              "TypeError: Assignment to constant variable. You declared it const, which promises it never gets reassigned — then reassigned it. If a value needs to change, it must be `let`.",
+            right: "let total = 0;\ntotal = total + 5;",
+          },
+          {
+            wrong: "const name = 'Ada';\nconsole.log('hello ${name}');",
+            problem:
+              "Shows the literal text `hello ${name}`. Those are ordinary single quotes, so `${}` means nothing. Template substitution only happens inside backticks.",
+            right: "const name = 'Ada';\nconsole.log(`hello ${name}`);",
+          },
+          {
+            wrong: "let count = 1;\nlet count = 2;",
+            problem:
+              "SyntaxError: Identifier 'count' has already been declared. `let` and `const` announce a NEW name — you use the keyword once. To change an existing variable, just assign to it without a keyword.",
+            right: "let count = 1;\ncount = 2;",
+          },
+        ],
+      },
+      {
+        kind: "cloze",
+        id: "cl1",
+        title: "Fill in the template literal",
+        prompt:
+          "This should log exactly: Ada scored 92.5%  — fill in the three gaps. (The first and last gaps are the same character.)",
+        template: "const name = 'Ada';\nconst score = 92.5;\nconsole.log({{0}}${name} scored {{1}}{score}%{{2}});\n",
+        blanks: [
+          { answer: "`", width: 2 },
+          { answer: "$", width: 2 },
+          { answer: "`", width: 2 },
+        ],
+        explanation:
+          "Backticks open and close a template literal — ordinary quotes wouldn't substitute anything. Each slot needs the `$` immediately before its `{`; without it, `{score}` is just literal braces.",
+      },
+      {
+        kind: "read",
+        id: "r3",
         title: "Blocks, and the types you'll use daily",
         body:
-          "A pair of curly braces `{ ... }` marks a **block** — a chunk of code, for example the body of an `if` or a loop. A variable made with `let` or `const` only exists **inside** the block where you made it; step outside those braces and it's gone. This is called being **block-scoped**, and it's a safety feature — it stops code in one part of your program from accidentally reaching into and messing with a variable from somewhere else.\n\nEvery value in JavaScript has a type. The core ones, called **primitives** because they're the simplest building blocks: `string` (text), `number` (numbers — JS doesn't separate int/float like Python does), `boolean` (true/false), `undefined` (a variable that hasn't been given a value yet), `null` (deliberately 'no value'), plus two you'll meet later: `bigint` and `symbol`.",
+          "A pair of curly braces `{ ... }` marks a **block** — a chunk of code, for example the body of an `if` or a loop. A variable made with `let` or `const` only exists **inside** the block where it was made; step outside those braces and it's gone.\n\nThis is called being **block-scoped**, and it's a safety feature: it stops code in one part of your program from accidentally reaching into and clobbering a variable somewhere else. It also means you can reuse a short name like `i` in two different loops without them interfering.\n\nEvery value in JavaScript has a type. The core ones — called **primitives** because they're the simplest building blocks:\n\n- `string` — text\n- `number` — all numbers (unlike Python, JavaScript doesn't split whole numbers and decimals into separate types)\n- `boolean` — true or false\n- `undefined` — a variable that exists but hasn't been given a value\n- `null` — deliberately 'no value'\n- plus `bigint` and `symbol`, which you'll meet later\n\nEverything else — arrays, objects, functions — is **not** primitive.",
       },
       {
         kind: "predict",
@@ -41,15 +119,28 @@ export const javascriptLessons: Lesson[] = [
         code:
           "let outer = 1;\n{ let outer = 2; console.log(outer); }\nconsole.log(outer);\n",
         answer: "2\n1",
-        hint: "The inner `let outer` is a new variable shadowing the outer one, only inside the block.",
+        hints: [
+          "There are two separate `let outer` declarations — one outside the braces, one inside.",
+          "The inner one is a brand-new variable that only exists inside the block. It doesn't touch the outer one.",
+          "Inside the block, `outer` refers to the inner variable (2). After the block closes, that one is gone and `outer` means the original again (1).",
+        ],
+        why:
+          "The inner `let outer` creates a separate variable that shadows the outer one for the length of the block. Once the closing brace is passed, the inner one no longer exists and the name refers to the original — which was never modified.",
       },
       {
         kind: "fix",
         id: "f1",
-        title: "Fix: 'reassigning const' error",
+        title: "Fix: 'assignment to constant variable' error",
         buggy: "const n = 10;\nn = 20;\nconsole.log(n);\n",
         expected: "20",
-        hint: "Use `let` when the value must be reassigned.",
+        hints: [
+          "Run it and read the error — it names exactly what went wrong.",
+          "The value needs to change on line 2, but line 1 declared it in a way that forbids that.",
+          "Swap the keyword on line 1 for the one that permits reassignment.",
+        ],
+        solution: "let n = 10;\nn = 20;\nconsole.log(n);\n",
+        solutionWhy:
+          "`const` is a promise the value never gets reassigned, and line 2 breaks that promise. Since this variable genuinely does need to change, `let` is the correct choice. (Note the fix is on line 1, even though the error points at line 2 — the error is where the promise was broken, but the decision that caused it was made earlier.)",
       },
       {
         kind: "write",
@@ -58,6 +149,14 @@ export const javascriptLessons: Lesson[] = [
         prompt: "With user='ren' and level=7, use a template literal to log exactly: [ren] level 7",
         starter: "const user = 'ren';\nconst level = 7;\n// console.log(...)\n",
         expected: "[ren] level 7",
+        hints: [
+          "Use backticks rather than quotes so `${}` substitution works.",
+          "The square brackets are ordinary characters — type them literally, outside any `${}`.",
+          "The shape is: backtick, [, ${user}, ], space, the word level, space, ${level}, backtick.",
+        ],
+        solution: "const user = 'ren';\nconst level = 7;\nconsole.log(`[${user}] level ${level}`);\n",
+        solutionWhy:
+          "The two `${}` slots get replaced by the values; the brackets, the word 'level' and the spaces are ordinary text copied through exactly as written. `const` is right here because neither value ever changes.",
       },
       {
         kind: "mcq",
@@ -71,7 +170,24 @@ export const javascriptLessons: Lesson[] = [
           "string, number, boolean, array, object",
         ],
         correctIndex: 1,
-        why: "Arrays and objects are not primitive.",
+        optionFeedback: [
+          "Array isn't a primitive — it's a kind of object. The other three are.",
+          "Correct — that's the complete list of the seven primitive types.",
+          "Object and function are both non-primitive. Number and string are primitives.",
+          "Array and object are both non-primitive; the first three are.",
+        ],
+        why:
+          "There are exactly seven primitives: string, number, boolean, null, undefined, symbol and bigint. Anything else — arrays, objects, functions, dates — is an object.",
+      },
+      {
+        kind: "explain",
+        id: "x1",
+        title: "In your own words",
+        prompt:
+          "Why prefer `const` by default when `let` is more flexible? What does choosing `const` tell someone reading your code later?",
+        minWords: 25,
+        sampleAnswer:
+          "`const` says this value never changes, so a reader doesn't have to scan the rest of the function wondering whether it gets modified somewhere. Most variables genuinely never change, so marking them const makes the few that do change stand out — and it turns an accidental reassignment into an immediate error rather than a silent bug.",
       },
     ],
   },

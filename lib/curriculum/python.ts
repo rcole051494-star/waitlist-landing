@@ -221,26 +221,132 @@ export const pythonLessons: Lesson[] = [
       {
         kind: "read",
         id: "r1",
-        title: "int and float",
+        title: "Two kinds of number",
         body:
-          "`int` has **arbitrary precision** — no overflow. `float` is IEEE 754 double.\n\nOperators: `+`, `-`, `*`, `/` (true division → float), `//` (floor division), `%` (modulo), `**` (power).\n\nUse `_` as a digit separator: `1_000_000`.",
+          "Python splits numbers into two types:\n\n- **`int`** — whole numbers: `5`, `-200`, `0`\n- **`float`** — numbers with a decimal point: `3.14`, `-0.5`, `2.0`\n\nNote `2.0` is a float even though the value is whole. The decimal point is what decides it, not the value.\n\nOne genuinely lovely thing about Python: **ints have no size limit.** In most languages a whole number silently wraps around or overflows once it gets past a few billion. Python just keeps going — `2 ** 1000` works fine and gives you the exact answer, all 302 digits.\n\nFloats aren't like that. They trade exactness for range, which causes a surprise you'll meet later in this lesson.\n\nOne bit of syntax worth knowing now: you can put underscores in long numbers to make them readable. `1_000_000` is exactly the same value as `1000000` — Python ignores the underscores, they're purely for your eyes.",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "The operators — and the two division signs",
+        body:
+          "The usual suspects work as you'd expect: `+` add, `-` subtract, `*` multiply.\n\nThen three that need a moment:\n\n**`/` — true division.** Always gives a float, *even when it divides evenly*. `6 / 2` is `3.0`, not `3`.\n\n**`//` — floor division.** Divides and throws away anything after the decimal point. `7 // 2` is `3`. Use it when you want a whole number of things — how many complete boxes, how many full pages.\n\n**`%` — modulo.** Gives the *remainder* after division. `7 % 2` is `1`. Enormously useful: `n % 2 == 0` tests for even, `n % 5 == 0` tests for a multiple of 5, and `seconds % 60` gives you the leftover seconds.\n\nAnd **`**` — power.** `2 ** 10` is 1024. Not `^` — that means something else entirely in Python.\n\nThink of `//` and `%` as a pair: they're the two halves of the answer to \"how many times does this go in, and what's left over?\"",
       },
       {
         kind: "example",
         id: "e1",
-        title: "Division kinds",
+        title: "See them side by side",
         code:
-          "print(7 / 2)    # 3.5   (true division)\n" +
-          "print(7 // 2)   # 3     (floor division)\n" +
-          "print(-7 // 2)  # -4    (rounds toward -infinity)\n" +
-          "print(7 % 2)    # 1     (modulo)\n" +
-          "print(2 ** 10)  # 1024  (power)\n",
+          "print(7 / 2)     # true division -> float\n" +
+          "print(7 // 2)    # floor division -> whole part\n" +
+          "print(7 % 2)     # modulo -> remainder\n" +
+          "print(2 ** 10)   # power\n" +
+          "print(6 / 2)     # even division still gives a float\n" +
+          "print(2 ** 200)  # ints have no size limit\n",
+        note:
+          "Try changing 7 and 2 to other numbers and re-running. Watch how // and % relate: 7 // 2 is 3 and 7 % 2 is 1, because 2 goes into 7 three times with 1 left over.",
       },
       {
-        kind: "example",
-        id: "e2",
-        title: "Big ints just work",
-        code: "print(2 ** 200)\n",
+        kind: "categorize",
+        id: "cat1",
+        title: "Which operator do you need?",
+        prompt:
+          "Sort each job into the operator that does it. These four come up constantly.",
+        buckets: ["/  (true division)", "//  (floor division)", "%  (modulo)", "**  (power)"],
+        items: [
+          { text: "average of two numbers", bucket: 0, why: "You want the exact fractional answer, so true division." },
+          { text: "how many whole boxes of 12", bucket: 1, why: "You want the whole count with the leftover discarded — floor division." },
+          { text: "is this number even?", bucket: 2, why: "Check the remainder after dividing by 2: n % 2 == 0." },
+          { text: "area of a square (side × side)", bucket: 3, why: "side ** 2 — squaring is raising to a power." },
+          { text: "leftover seconds after whole minutes", bucket: 2, why: "seconds % 60 gives exactly the remainder." },
+          { text: "split a bill exactly between 3 people", bucket: 0, why: "You want the precise share including pence, so true division." },
+        ],
+      },
+      {
+        kind: "trace",
+        id: "t1",
+        title: "Walk through a calculation",
+        intro:
+          "Python follows the same precedence rules as maths — powers first, then multiply/divide, then add/subtract. Brackets override everything. Watch the order.",
+        code: "total = 2 + 3 * 4 ** 2\nprint(total)\n",
+        lines: [
+          {
+            code: "4 ** 2",
+            what:
+              "Powers bind tightest, so this happens first — before the multiply, before the add. 4 squared is 16.",
+            state: "expression is now: 2 + 3 * 16",
+          },
+          {
+            code: "3 * 16",
+            what: "Multiplication comes next, ahead of addition. 3 times 16 is 48.",
+            state: "expression is now: 2 + 48",
+          },
+          {
+            code: "2 + 48",
+            what: "Addition last. The whole right side comes to 50, which then gets stuck onto the name total.",
+            state: "total = 50",
+          },
+          {
+            code: "print(total)",
+            what: "Shows the finished value. If you'd wanted the addition first you'd have written (2 + 3) * 4 ** 2 — brackets beat everything.",
+            state: "total = 50",
+            output: "50",
+          },
+        ],
+        takeaway:
+          "Powers → multiply/divide → add/subtract, left to right within each level. When in doubt, add brackets: they cost nothing and make your intent obvious to the next reader.",
+      },
+      {
+        kind: "read",
+        id: "r3",
+        title: "The float surprise",
+        body:
+          "Run this and brace yourself:\n\n```\nprint(0.1 + 0.2)\n```\n\nYou get `0.30000000000000004`.\n\nThis is not a Python bug. It happens in JavaScript, Java, C, your phone's calculator app — almost everywhere. Here's why.\n\nComputers store numbers in binary. In binary, some perfectly ordinary decimals have no exact representation — `0.1` is one of them, in the same way that `1/3` has no exact representation in decimal (0.3333… forever). So the computer stores the closest value it can, which is very slightly off. Add two slightly-off numbers and the tiny errors show up.\n\nThe practical consequence: **never compare floats with `==`.**\n\n```\nprint(0.1 + 0.2 == 0.3)    # False!\n```\n\nInstead, ask whether they're close enough:\n\n```\nimport math\nprint(math.isclose(0.1 + 0.2, 0.3))    # True\n```\n\nInts are completely immune to this — `1 + 2 == 3` is always exactly True. It's only floats. And if you're dealing with money, the professional answer is to work in whole pennies as ints, or use Python's `decimal` module, precisely to dodge this.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "The number mistakes that bite",
+        items: [
+          {
+            wrong: "people = 10 / 2\nprint(f'{people} people')",
+            problem:
+              "Shows '5.0 people', not '5 people'. `/` always gives a float, even when it divides exactly. If you want a whole number, use `//`.",
+            right: "people = 10 // 2\nprint(f'{people} people')",
+          },
+          {
+            wrong: "if 0.1 + 0.2 == 0.3:\n    print('equal')",
+            problem:
+              "Never prints. Floats carry tiny representation errors, so this is False. Any `==` between computed floats is a latent bug.",
+            right: "import math\nif math.isclose(0.1 + 0.2, 0.3):\n    print('equal')",
+          },
+          {
+            wrong: "print(2 ^ 10)",
+            problem:
+              "Gives 8, not 1024. In Python `^` is a bitwise XOR, not a power. The power operator is two asterisks: `**`. This one is nasty because it doesn't error — it silently gives you a wrong number.",
+            right: "print(2 ** 10)",
+          },
+          {
+            wrong: "total = '5' + 3",
+            problem:
+              "TypeError. '5' in quotes is text, not a number — you can't add text to a number. If a value came from input or a file it will be text, and you have to convert it with `int(...)` first.",
+            right: "total = int('5') + 3",
+          },
+        ],
+      },
+      {
+        kind: "cloze",
+        id: "cl1",
+        title: "Fill in the operators",
+        prompt:
+          "You have 100 minutes. Work out how many whole hours that is, and how many minutes are left over. Fill in the two operators.",
+        template: "minutes = 100\nhours = minutes {{0}} 60\nleftover = minutes {{1}} 60\nprint(hours, 'hours', leftover, 'minutes')\n",
+        blanks: [
+          { answer: "//", width: 3 },
+          { answer: "%", width: 3 },
+        ],
+        explanation:
+          "`//` gives the whole number of times 60 fits into 100 (that's 1), and `%` gives what's left over (40). Together they answer 'how many, and what remains' — that's why these two operators travel as a pair.",
       },
       {
         kind: "predict",
@@ -248,39 +354,77 @@ export const pythonLessons: Lesson[] = [
         title: "Predict",
         code: "print(0.1 + 0.2 == 0.3)\n",
         answer: "False",
-        hint: "Binary floating point can't represent 0.1 exactly.",
+        hints: [
+          "Try running just `print(0.1 + 0.2)` on its own first and look closely at the result.",
+          "It shows 0.30000000000000004 — not quite 0.3. So is the comparison true or false?",
+        ],
+        why:
+          "0.1 and 0.2 can't be stored exactly in binary, so their sum lands a hair above 0.3. `==` demands they be identical, and they aren't. This is why float comparisons use math.isclose instead.",
       },
       {
         kind: "fix",
         id: "f1",
-        title: "Fix: safe float compare within 1e-9",
+        title: "Fix: compare the floats safely",
         buggy: "import math\na = 0.1 + 0.2\nb = 0.3\nprint(a == b)\n",
         expected: "True",
-        hint: "Use math.isclose(a, b).",
+        hints: [
+          "`==` demands the two values be bit-for-bit identical, which floats rarely are after arithmetic.",
+          "The `math` module is already imported. It has a function for exactly this job.",
+          "Use `math.isclose(a, b)` instead of `a == b`.",
+        ],
+        solution: "import math\na = 0.1 + 0.2\nb = 0.3\nprint(math.isclose(a, b))\n",
+        solutionWhy:
+          "`math.isclose` asks 'are these within a tiny tolerance of each other?' rather than 'are these identical?'. That's almost always the question you actually mean when comparing floats. It's part of the standard library, so there's nothing to install.",
       },
       {
         kind: "write",
         id: "w1",
         title: "Compound interest",
         prompt:
-          "Given principal=1000, rate=0.05, years=10 print the final amount rounded to 2 decimals (compounded annually). Expected: 1628.89",
+          "With principal=1000, rate=0.05 and years=10, print the final amount compounded annually, rounded to 2 decimals. Expected: 1628.89",
         starter:
           "principal = 1000\nrate = 0.05\nyears = 10\n# print the final amount with 2 decimals\n",
         expected: "1628.89",
+        hints: [
+          "Compound interest multiplies by (1 + rate) once per year. Ten years means multiplying by that factor ten times over.",
+          "'Multiply by something ten times' is exactly what the power operator does: (1 + rate) ** years.",
+          "Then format it to two decimals with an f-string: f'{amount:.2f}'.",
+        ],
+        solution:
+          "principal = 1000\nrate = 0.05\nyears = 10\nprint(f'{principal * (1 + rate) ** years:.2f}')\n",
+        solutionWhy:
+          "`(1 + rate) ** years` is the growth factor over the whole period — 1.05 multiplied by itself ten times. Multiply the principal by that and you have the final balance. The `:.2f` rounds the display to two decimal places, which is what you want for money.\n\nNote the operator precedence is doing work for you here: `**` binds tighter than `*`, so the power is worked out before the multiplication, with no brackets needed.",
       },
       {
         kind: "mcq",
         id: "m1",
         title: "Which is true?",
-        prompt: "About integer division in Python 3:",
+        prompt: "About the two division operators in Python 3:",
         options: [
           "`/` returns an int if both operands are ints",
           "`//` always returns a float",
-          "`/` always returns a float; `//` returns an int if both are ints",
+          "`/` always returns a float; `//` returns an int if both operands are ints",
           "`%` is undefined for negative numbers",
         ],
         correctIndex: 2,
-        why: "`/` is true division (always float); `//` follows the operand types.",
+        optionFeedback: [
+          "`/` gives a float regardless — even 6 / 2 is 3.0, not 3.",
+          "`//` follows its operands: 7 // 2 gives the int 3, but 7.0 // 2 gives the float 3.0.",
+          "Right. `/` is always true division and always yields a float; `//` keeps the type of what you gave it.",
+          "`%` works fine with negatives — in Python the result takes the sign of the right operand, so -7 % 2 is 1.",
+        ],
+        why:
+          "`/` is always true division and always yields a float. `//` follows the types you feed it — two ints give an int, but a float anywhere gives a float.",
+      },
+      {
+        kind: "explain",
+        id: "x1",
+        title: "In your own words",
+        prompt:
+          "A colleague's shopping-cart code checks `if total == 19.99:` and it sometimes fails even when the total looks exactly right on screen. Explain what's happening and what they should do instead.",
+        minWords: 30,
+        sampleAnswer:
+          "The total is a float, and floats can't hold most decimals exactly — after a few additions it might be 19.989999999999998, which displays as 19.99 but isn't equal to it. They should compare with math.isclose, or better for money, work in whole pennies as integers so the values are exact.",
       },
     ],
   },
@@ -296,22 +440,131 @@ export const pythonLessons: Lesson[] = [
       {
         kind: "read",
         id: "r1",
-        title: "Strings are immutable sequences of Unicode code points",
+        title: "A string is a sequence of characters",
         body:
-          "You can index (`s[0]`) and slice (`s[1:4]`, `s[::-1]`). Every method returns a **new string** — the original is never changed.\n\nCore methods to know: `.upper()`, `.lower()`, `.strip()`, `.startswith()`, `.endswith()`, `.replace()`, `.split()`, `.join()`, `.find()`, `.count()`.\n\nSlicing form: `s[start:stop:step]`, all optional. Negative indexes count from the end.",
+          "Text in Python is a `str`, and it behaves like a numbered row of characters. You can pull out any single one by its **position**, counting from **zero**:\n\n```\ns = 'code'\ns[0]    # 'c'  — the first character\ns[1]    # 'o'\ns[3]    # 'e'  — the last one\n```\n\nStarting at 0 feels wrong for about a week and then becomes invisible. It means the position is really \"how far in from the start\", so the first character is zero steps in.\n\nNegative positions count backwards from the end, which saves a lot of arithmetic:\n\n```\ns[-1]   # 'e'  — last character, no need to know the length\ns[-2]   # 'd'  — second from last\n```\n\nThe other thing to know up front: **strings never change.** Every method that looks like it modifies a string actually builds a brand-new one and hands it back. `s.upper()` doesn't shout at `s`; it returns a new shouty string and leaves `s` exactly as it was. If you want to keep the result, you have to assign it somewhere.",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "Slicing: taking a piece",
+        body:
+          "A **slice** pulls out a range of characters. The form is `s[start:stop]` — starting at `start`, stopping **before** `stop`.\n\nThat exclusive endpoint is the same rule as `range`, and for the same reason: it makes `s[0:3]` exactly 3 characters long, and lets `s[:3]` and `s[3:]` fit together with no overlap and no gap.\n\n```\ns = 'code forge'\ns[0:4]    # 'code'\ns[:4]     # 'code'   — leave start off and it means 'from the beginning'\ns[5:]     # 'forge'  — leave stop off and it means 'to the end'\ns[:]      # the whole thing\n```\n\nThere's an optional third part, the **step**: `s[start:stop:step]`. A step of 2 takes every other character. A step of `-1` walks backwards — which is the classic way to reverse a string:\n\n```\ns[::-1]   # 'egrof edoc'\n```\n\nRead that as: no start, no stop, step backwards.",
+      },
+      {
+        kind: "trace",
+        id: "t1",
+        title: "Walk through some slices",
+        intro:
+          "Positions are the thing to get straight. Here the string is 'code forge' — note the space is a character too, at position 4.",
+        code: "s = 'code forge'\nprint(s[0])\nprint(s[-1])\nprint(s[:4])\nprint(s[5:])\nprint(s[::-1])\n",
+        lines: [
+          {
+            code: "s = 'code forge'",
+            what:
+              "Ten characters, positions 0 to 9: c=0, o=1, d=2, e=3, space=4, f=5, o=6, r=7, g=8, e=9.",
+            state: "s = 'code forge'",
+          },
+          {
+            code: "print(s[0])",
+            what: "A single position, not a slice — hand back just the character sitting at 0.",
+            output: "c",
+          },
+          {
+            code: "print(s[-1])",
+            what:
+              "Negative counts back from the end: -1 is the last character. Same as s[9] here, but it works without knowing the length.",
+            output: "c\ne",
+          },
+          {
+            code: "print(s[:4])",
+            what:
+              "No start, so from the beginning; stop at 4, meaning up to but NOT including position 4. Positions 0,1,2,3 — which is 'code'. Position 4 is the space, and it's excluded.",
+            output: "c\ne\ncode",
+          },
+          {
+            code: "print(s[5:])",
+            what:
+              "Start at 5 (the 'f'), no stop, so run to the end. Notice s[:4] and s[5:] skip position 4 — the space — between them.",
+            output: "c\ne\ncode\nforge",
+          },
+          {
+            code: "print(s[::-1])",
+            what:
+              "No start, no stop, step of -1: walk the whole string backwards one character at a time.",
+            output: "c\ne\ncode\nforge\negrof edoc",
+          },
+        ],
+        takeaway:
+          "`start` is included, `stop` is excluded, and a negative step walks backwards. Everything else about slicing follows from those three facts.",
+      },
+      {
+        kind: "read",
+        id: "r3",
+        title: "The methods worth memorising",
+        body:
+          "These come up constantly. All of them return something new rather than changing the original.\n\n**Cleaning up:**\n- `.strip()` — remove whitespace from both ends. Essential for anything a human typed.\n- `.lower()` / `.upper()` — change case. `.lower()` is how you compare text case-insensitively.\n\n**Asking questions** (these give True/False):\n- `.startswith(x)` / `.endswith(x)`\n- `x in s` — is this substring anywhere in it?\n\n**Reshaping:**\n- `.replace(old, new)` — swap every occurrence\n- `.split(sep)` — break into a list. With no argument it splits on whitespace.\n- `sep.join(list)` — the opposite: glue a list of strings together with `sep` between them\n\nThat last one reads backwards to almost everyone at first. You call `.join` **on the separator**, and pass it the list:\n\n```\n', '.join(['a', 'b', 'c'])    # 'a, b, c'\n```\n\nThink of it as \"use this separator to join these together\".",
       },
       {
         kind: "example",
         id: "e1",
-        title: "Slicing",
+        title: "Methods in action",
         code:
-          "s = 'code forge'\n" +
-          "print(s[0])       # 'c'\n" +
-          "print(s[-1])      # 'e'\n" +
-          "print(s[:4])      # 'code'\n" +
-          "print(s[5:])      # 'forge'\n" +
-          "print(s[::-1])    # 'egrof edoc'  (reverse)\n" +
-          "print(s.split())  # ['code', 'forge']\n",
+          "s = '  Code Forge  '\n"
+          + "print(s.strip())\n"
+          + "print(s.strip().lower())\n"
+          + "print(s.strip().split())\n"
+          + "print('-'.join(['a', 'b', 'c']))\n"
+          + "print('forge' in s.lower())\n"
+          + "print(s)\n",
+        note:
+          "The last line proves the point: after all that, `s` is still exactly what it started as. Methods can be chained — each one hands its result to the next.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "The string mistakes that catch people",
+        items: [
+          {
+            wrong: "name = '  Ada  '\nname.strip()\nprint(f'[{name}]')",
+            problem:
+              "Still shows the spaces. `.strip()` returns a cleaned copy — it doesn't modify `name`. The returned value was thrown away because nothing captured it.",
+            right: "name = '  Ada  '\nname = name.strip()\nprint(f'[{name}]')",
+          },
+          {
+            wrong: "s = 'hello'\ns[0] = 'H'",
+            problem:
+              "TypeError: 'str' object does not support item assignment. Strings can't be edited in place at all. Build a new one instead — here, s.capitalize() or 'H' + s[1:].",
+            right: "s = 'hello'\ns = 'H' + s[1:]",
+          },
+          {
+            wrong: "s = 'code forge'\nprint(s[0:4])   # wanting 'code '",
+            problem:
+              "Gives 'code' with no trailing space. The stop position is excluded, so s[0:4] stops before position 4 — and position 4 is the space. To include it you'd need s[0:5].",
+            right: "s = 'code forge'\nprint(s[0:5])",
+          },
+          {
+            wrong: "parts = ['a', 'b', 'c']\nprint(parts.join('-'))",
+            problem:
+              "AttributeError: 'list' object has no attribute 'join'. It reads naturally but it's backwards — `join` is a string method, not a list method. Call it on the separator and pass the list.",
+            right: "parts = ['a', 'b', 'c']\nprint('-'.join(parts))",
+          },
+        ],
+      },
+      {
+        kind: "cloze",
+        id: "cl1",
+        title: "Fill in the slice",
+        prompt:
+          "Given s = 'programming', pull out the word 'gram' (positions 3 to 6) and also print the string reversed.",
+        template: "s = 'programming'\nprint(s[{{0}}:{{1}}])\nprint(s[::{{2}}])\n",
+        blanks: [
+          { answer: "3", width: 2 },
+          { answer: "7", width: 2 },
+          { answer: "-1", width: 3 },
+        ],
+        explanation:
+          "'gram' sits at positions 3,4,5,6 — so the slice is s[3:7], because the stop is excluded and has to be one past the last character you want. A step of -1 walks the whole string backwards.",
       },
       {
         kind: "predict",
@@ -319,30 +572,54 @@ export const pythonLessons: Lesson[] = [
         title: "Predict",
         code: "print(' - '.join(['a', 'b', 'c']))\n",
         answer: "a - b - c",
+        hints: [
+          "`join` is called on the separator, and the separator here is ' - ' — a space, a dash, another space.",
+          "It puts that separator BETWEEN the items — so it appears twice for three items, not three times. There's nothing added at the start or the end.",
+        ],
+        why:
+          "The separator goes between adjacent items only, so three items give two separators. That's why 'a - b - c' has no leading or trailing dash.",
       },
       {
         kind: "fix",
         id: "f1",
-        title: "Fix: normalize input, print greeting",
+        title: "Fix: tidy the input, then greet",
         buggy: "user = '   Ada   '\ngreeting = 'hello, ' + user + '!'\nprint(greeting)\n",
         expected: "hello, Ada!",
-        hint: "Strip whitespace before concatenating.",
+        hints: [
+          "Run it and look closely at the output — there's extra whitespace either side of the name.",
+          "The user's value has spaces on both ends. Which method removes whitespace from both ends of a string?",
+          "`.strip()` — but remember it returns a new string rather than changing user, so you need to use the returned value.",
+        ],
+        solution: "user = '   Ada   '\ngreeting = 'hello, ' + user.strip() + '!'\nprint(greeting)\n",
+        solutionWhy:
+          "`.strip()` hands back a cleaned copy, which gets used straight away in the concatenation. You could equally have written `user = user.strip()` on its own line first — what you can't do is call `.strip()` and ignore what it returns.\n\nThis matters in real programs: anything typed by a human or read from a file routinely arrives with stray whitespace, and stripping it is the standard first move.",
       },
       {
         kind: "write",
         id: "w1",
         title: "Reverse the words in a sentence",
         prompt:
-          "Given s = 'the quick brown fox', print the words in reverse order: 'fox brown quick the'",
+          "Given s = 'the quick brown fox', print the words in reverse order: fox brown quick the",
         starter: "s = 'the quick brown fox'\n# print the reversed sentence\n",
         expected: "fox brown quick the",
+        hints: [
+          "This is words in reverse order, not characters — so s[::-1] alone won't do it (that would give 'xof nworb kciuq eht').",
+          "Three moves: break the sentence into a list of words, reverse that list, then glue it back together with spaces.",
+          "`.split()` breaks it up, `reversed(...)` or `[::-1]` flips the list, and `' '.join(...)` puts it back together.",
+        ],
+        solution: "s = 'the quick brown fox'\nprint(' '.join(s.split()[::-1]))\n",
+        solutionWhy:
+          "`s.split()` gives ['the','quick','brown','fox']. `[::-1]` reverses that list — slicing works on lists exactly like it does on strings. `' '.join(...)` then glues the words back with single spaces.\n\nReading it inside-out like that is the normal way to make sense of a chained expression: find the innermost call and work outwards.",
       },
       {
         kind: "explain",
         id: "x1",
         title: "Explain",
-        prompt: "Why does `s.upper()` not change `s` itself?",
-        minWords: 10,
+        prompt:
+          "Why does calling `s.upper()` on its own line leave `s` unchanged? What do you have to do to actually keep the uppercase version?",
+        minWords: 20,
+        sampleAnswer:
+          "Strings are immutable, so `.upper()` can't modify `s` — it builds a brand-new uppercase string and returns it. On a line by itself that returned value is simply discarded. To keep it you have to assign it to something, either back onto `s` or onto a new name.",
       },
     ],
   },
@@ -360,17 +637,76 @@ export const pythonLessons: Lesson[] = [
         id: "r1",
         title: "Falsy values",
         body:
-          "In Python, the following are **falsy**: `False`, `None`, `0`, `0.0`, `''`, `[]`, `()`, `{}`, `set()`.\n\nEverything else is truthy. `and`/`or` **short-circuit** and return one of the operands — not necessarily `True`/`False`.\n\nComparisons chain: `0 < x < 10` is equivalent to `0 < x and x < 10`.",
+          "A **bool** is a value that's either `True` or `False` — capital letter, no quotes. Every comparison produces one:\n\n```\nprint(5 > 3)      # True\nprint(5 == 3)     # False\n```\n\nThe comparison operators: `==` equal, `!=` not equal, `<`, `>`, `<=`, `>=`.\n\nA nice Python touch: comparisons **chain**, exactly as they do in maths. `0 < x < 10` means what you'd hope — x is between 0 and 10. Most languages make you write `0 < x and x < 10`.\n\nCombine conditions with `and`, `or`, `not`:\n\n```\nif age >= 18 and has_ticket:\n    print('come in')\n```\n\nPython uses those English words where many languages use `&&`, `||` and `!`.",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "Truthiness: things that aren't bools but act like them",
+        body:
+          "Here's where Python differs from what you might expect. An `if` doesn't demand an actual True or False — it accepts **any** value and decides whether it counts as true.\n\nThe rule is short: **empty things are false, everything else is true.**\n\nThese are all **falsy**:\n\n- `False`\n- `None` (Python's 'no value')\n- `0` and `0.0`\n- `''` — the empty string\n- `[]`, `()`, `{}`, `set()` — empty collections\n\nEverything else is **truthy** — including `'0'` (a non-empty string), `'False'` (also a non-empty string), `-1`, and `[0]` (a list with something in it, even though that something is falsy).\n\nThis is why the idiomatic Python check for 'does this list have anything in it' is simply:\n\n```\nif items:\n    ...\n```\n\nrather than `if len(items) > 0:`. Both work; the first is what Python programmers write and read.",
+      },
+      {
+        kind: "categorize",
+        id: "cat1",
+        title: "Truthy or falsy?",
+        prompt:
+          "Sort each value by whether Python treats it as true or false in an `if`. Several of these look falsy but aren't — those are the ones worth getting right.",
+        buckets: ["truthy", "falsy"],
+        items: [
+          { text: "0", bucket: 1, why: "Zero is falsy — the only number that is." },
+          { text: "'0'", bucket: 0, why: "A string containing the character 0. It's not empty, so it's truthy — a classic trap when reading numbers from text input." },
+          { text: "''", bucket: 1, why: "The empty string is falsy." },
+          { text: "'False'", bucket: 0, why: "A non-empty string. The contents are irrelevant — only emptiness matters." },
+          { text: "[]", bucket: 1, why: "An empty list is falsy." },
+          { text: "[0]", bucket: 0, why: "A list with one item in it. The list isn't empty, so it's truthy, even though the item inside is falsy." },
+          { text: "None", bucket: 1, why: "None is always falsy." },
+          { text: "-1", bucket: 0, why: "Every number except 0 is truthy, negatives included." },
+        ],
+      },
+      {
+        kind: "read",
+        id: "r3",
+        title: "and / or return a value, not just True or False",
+        body:
+          "This surprises people, and it's genuinely useful once it clicks.\n\n`and` and `or` **short-circuit** — they stop as soon as the answer is settled — and they hand back **one of the original values**, not a bool.\n\n**`or`** returns the first truthy value it finds (or the last one if none are truthy):\n\n```\nprint(0 or 'fallback')     # 'fallback'  — 0 is falsy, so move on\nprint('yes' or 'nope')     # 'yes'       — first one is truthy, stop there\n```\n\nThat second line matters: `'nope'` is never even looked at. If it had been a function call, it wouldn't have run.\n\n**`and`** returns the first falsy value (or the last one if all are truthy):\n\n```\nprint(1 and 2)             # 2     — both truthy, so the last one\nprint(None and 'never')    # None  — first is falsy, stop immediately\n```\n\nThe practical uses:\n\n- **Defaults:** `name = user_input or 'anonymous'` — falls back when the input is empty.\n- **Guarding:** `if user and user.is_admin:` — if `user` is None, Python never tries `.is_admin` and never crashes.\n\nThat second pattern is worth remembering. Short-circuiting is what makes it safe.",
       },
       {
         kind: "example",
         id: "e1",
         title: "Short-circuit returns",
         code:
-          "print(0 or 'fallback')       # 'fallback'\n" +
-          "print('yes' or 'nope')       # 'yes'\n" +
-          "print(1 and 2)               # 2  (last truthy)\n" +
-          "print(None and 'never')      # None (short-circuits)\n",
+          "print(0 or 'fallback')       # 0 is falsy -> take the next one\n" +
+          "print('yes' or 'nope')       # first is truthy -> stop there\n" +
+          "print(1 and 2)               # both truthy -> last one\n" +
+          "print(None and 'never')      # first is falsy -> stop immediately\n" +
+          "name = '' or 'anonymous'\n" +
+          "print(name)                  # the default-value trick\n",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "The boolean mistakes to avoid",
+        items: [
+          {
+            wrong: "name = 'Ada'\nif name == True:\n    print('has a name')",
+            problem:
+              "Never prints. `name` is truthy, but it isn't *equal to* `True` — 'Ada' == True is False. Testing truthiness and testing equality with True are different questions. Just use the value directly.",
+            right: "name = 'Ada'\nif name:\n    print('has a name')",
+          },
+          {
+            wrong: "answer = 'yes'\nif answer == 'yes' or 'y':\n    print('confirmed')",
+            problem:
+              "Looks right, always fires — even when answer is 'no'. Python reads it as `(answer == 'yes') or ('y')`, and the bare string 'y' is truthy, so the whole condition is always true. You have to write out both comparisons.",
+            right: "answer = 'yes'\nif answer == 'yes' or answer == 'y':\n    print('confirmed')",
+          },
+          {
+            wrong: "count = 0\nif count:\n    print('we have some')\nelse:\n    print('none')",
+            problem:
+              "Not a bug exactly, but a trap: this treats 0 as 'none'. If 0 is a legitimate value you care about — a count that's genuinely zero versus a value that was never set — check explicitly with `if count is not None:` instead.",
+            right: "count = 0\nif count is not None:\n    print('we have a count:', count)",
+          },
+        ],
       },
       {
         kind: "predict",
@@ -378,6 +714,12 @@ export const pythonLessons: Lesson[] = [
         title: "Predict",
         code: "x = 5\nprint(0 < x < 10)\n",
         answer: "True",
+        hints: [
+          "Python allows chained comparisons, so read this the way you'd read it in maths.",
+          "It means 'is x greater than 0 AND less than 10?'. x is 5.",
+        ],
+        why:
+          "`0 < x < 10` is shorthand for `0 < x and x < 10`. Both halves hold for 5, so the whole thing is True. Most languages would reject this syntax; Python handles it the way maths notation does.",
       },
       {
         kind: "fix",
@@ -386,7 +728,31 @@ export const pythonLessons: Lesson[] = [
         buggy:
           "name = ''\nif name == True:\n    print(f'hi {name}')\nelse:\n    print('nobody home')\n",
         expected: "nobody home",
-        hint: "Test the name for truthiness directly, don't compare with True.",
+        hints: [
+          "Run it — it happens to print the right thing here. Now mentally change name to 'Ada' and work out what it would do.",
+          "With name = 'Ada' it still says 'nobody home', because 'Ada' == True is False. The comparison is asking the wrong question.",
+          "Don't compare to True at all — just test the value itself: `if name:`",
+        ],
+        solution: "name = ''\nif name:\n    print(f'hi {name}')\nelse:\n    print('nobody home')\n",
+        solutionWhy:
+          "`if name:` asks 'is this truthy?', which is the actual question — an empty string is falsy and anything else is truthy. `if name == True:` asks something different and much narrower: 'is this value literally the boolean True?', which no string ever is.\n\nThe original passed its test purely by luck. Fixing it required noticing it would fail for every non-empty name — a good reminder that a passing test doesn't mean correct code.",
+      },
+      {
+        kind: "write",
+        id: "w1",
+        title: "Give an empty name a default",
+        prompt:
+          "Given `user_input = ''`, use the `or` trick to set `name` to 'anonymous' when the input is empty, then print exactly: welcome, anonymous",
+        starter: "user_input = ''\n# set name using or, then print the greeting\n",
+        expected: "welcome, anonymous",
+        hints: [
+          "`or` hands back the first truthy value it finds — and an empty string is falsy.",
+          "So `'' or 'anonymous'` evaluates to 'anonymous'. Assign that to name.",
+          "name = user_input or 'anonymous', then print with an f-string.",
+        ],
+        solution: "user_input = ''\nname = user_input or 'anonymous'\nprint(f'welcome, {name}')\n",
+        solutionWhy:
+          "Because `user_input` is falsy, `or` moves past it and returns 'anonymous'. If the input had been 'Ada', `or` would have stopped at the first value and name would be 'Ada'.\n\nOne caveat worth carrying forward: this pattern treats *any* falsy value as missing. If 0 or an empty string were legitimate inputs you wanted to keep, you'd need an explicit `if user_input is None:` check instead.",
       },
       {
         kind: "mcq",
@@ -400,7 +766,24 @@ export const pythonLessons: Lesson[] = [
           "if bool(items) is True:",
         ],
         correctIndex: 2,
-        why: "Empty sequences are falsy — testing the object directly is idiomatic.",
+        optionFeedback: [
+          "Works and is perfectly clear, but it's spelling out what truthiness already gives you. Fine in other languages; wordy in Python.",
+          "Works for lists but breaks for other empty collections — a tuple or a set would never equal []. Also fails if items is None.",
+          "Right — empty collections are falsy, so testing the object directly says exactly what you mean, and works for any container type.",
+          "Correct but doubly redundant: bool() then `is True` on something already usable as a condition.",
+        ],
+        why:
+          "Empty sequences are falsy, so testing the object directly is both shortest and most general — it works for lists, tuples, sets, dicts and strings alike.",
+      },
+      {
+        kind: "explain",
+        id: "x1",
+        title: "Explain",
+        prompt:
+          "Someone writes `if user and user.is_admin:` instead of `if user.is_admin:`. What does the extra `and user` buy them, and what would go wrong without it?",
+        minWords: 25,
+        sampleAnswer:
+          "If user is None, `user.is_admin` would raise an AttributeError because None has no such attribute. Because `and` short-circuits, Python checks `user` first and stops immediately when it's falsy, never evaluating the second half. So the guard turns a potential crash into a clean False.",
       },
     ],
   },
