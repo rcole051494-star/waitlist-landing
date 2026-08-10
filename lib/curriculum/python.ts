@@ -1050,15 +1050,111 @@ export const pythonLessons: Lesson[] = [
       {
         kind: "read",
         id: "r1",
-        title: "Lists mutate in place",
+        title: "A list holds many values in order",
         body:
-          "`.append(x)`, `.extend(iter)`, `.insert(i, x)`, `.pop(i=-1)`, `.remove(x)`, `.sort()`, `.reverse()` all mutate.\n\n`sorted(xs)` and `reversed(xs)` return **new** iterables.\n\nAssignment aliases — it does not copy: `b = a` then `b.append(1)` mutates `a` too. Copy with `a[:]`, `list(a)`, or `copy.deepcopy(a)` (for nested).",
+          "A **list** is an ordered collection. Square brackets, comma separated:\n\n```\nscores = [90, 85, 77]\nnames = ['Ada', 'Ren']\nmixed = [1, 'two', 3.0]      # allowed, though usually a smell\nempty = []\n```\n\nYou reach items by position, counting from 0, exactly like string characters — and slicing works the same way too:\n\n```\nscores[0]     # 90\nscores[-1]    # 77\nscores[:2]    # [90, 85]\nlen(scores)   # 3\n```\n\nAdding and removing:\n\n- `.append(x)` — add one item to the end\n- `.insert(i, x)` — add at a position\n- `.pop()` — remove and hand back the last item; `.pop(i)` for a position\n- `.remove(x)` — remove the first item equal to x\n\nAnd `x in xs` asks whether something is present.",
       },
       {
-        kind: "example",
-        id: "e1",
-        title: "Aliasing",
-        code: "a = [1, 2, 3]\nb = a\nb.append(4)\nprint(a)\n",
+        kind: "read",
+        id: "r2",
+        title: "The big difference from strings: lists change",
+        body:
+          "Strings are **immutable** — every method hands back a new string and leaves the original alone. Lists are the opposite: they're **mutable**, and many list methods change the list *in place* and return nothing.\n\nThat difference is the source of nearly every list bug beginners hit, so it's worth stating plainly:\n\n**Methods that change the list itself** (and return `None`):\n`.append()`, `.insert()`, `.remove()`, `.sort()`, `.reverse()`, `.extend()`\n\n**Functions that leave it alone** (and return a new thing):\n`sorted(xs)`, `reversed(xs)`, `xs + [1]`, `xs[:]`\n\nSo:\n\n```\nxs = [3, 1, 2]\nxs.sort()          # changes xs, returns None\nprint(xs)          # [1, 2, 3]\n\nys = [3, 1, 2]\nzs = sorted(ys)    # ys untouched, zs is new\nprint(ys, zs)      # [3, 1, 2] [1, 2, 3]\n```\n\nThe naming is a genuine hint once you notice it: the **method** `.sort()` acts on the thing you called it on; the **function** `sorted()` takes a thing and gives you back a sorted copy.",
+      },
+      {
+        kind: "categorize",
+        id: "cat1",
+        title: "Changes the list, or returns a new one?",
+        prompt:
+          "Sort each of these by whether it modifies the original list or leaves it alone and hands back something new. Getting this reflex right prevents a whole class of bug.",
+        buckets: ["changes the original", "returns a new thing"],
+        items: [
+          { text: "xs.append(4)", bucket: 0, why: "A method that adds to the list itself, and returns None." },
+          { text: "xs.sort()", bucket: 0, why: "Sorts in place and returns None — the list itself is reordered." },
+          { text: "sorted(xs)", bucket: 1, why: "A function that builds and returns a new sorted list; xs is untouched." },
+          { text: "xs.reverse()", bucket: 0, why: "Reverses in place, returns None." },
+          { text: "xs[::-1]", bucket: 1, why: "A slice, and slicing always builds a new list." },
+          { text: "xs + [99]", bucket: 1, why: "The + operator makes a new combined list rather than modifying either side." },
+          { text: "xs.pop()", bucket: 0, why: "Removes the last item from the list AND returns that item — it does both." },
+        ],
+      },
+      {
+        kind: "read",
+        id: "r3",
+        title: "Two names, one list",
+        body:
+          "Here's the one that catches everyone.\n\n```\na = [1, 2, 3]\nb = a\nb.append(4)\nprint(a)        # [1, 2, 3, 4]  — a changed too!\n```\n\nGo back to the sticky-note picture. `b = a` does **not** copy the list. It sticks a second note onto the *same* list. Now `a` and `b` are two names for one object, and changing it through either name changes the thing both point at.\n\nThis never bit you with numbers or strings, because those are immutable — you can't change them in place, so the question never came up.\n\nTo get an actual copy, ask for one explicitly:\n\n```\nb = a[:]          # slice of the whole thing — a new list\nb = list(a)       # same idea, arguably clearer\nb = a.copy()      # also same idea\n```\n\nOne caveat for later: these are **shallow** copies. If your list contains other lists, the inner ones are still shared. `copy.deepcopy(a)` handles that, and you'll want it eventually.",
+      },
+      {
+        kind: "trace",
+        id: "t1",
+        title: "Watch two names share one list",
+        intro:
+          "Follow what each name points at. The key moment is line 2 — notice no new list gets made.",
+        code: "a = [1, 2, 3]\nb = a\nb.append(4)\nprint(a)\nprint(b)\n",
+        lines: [
+          {
+            code: "a = [1, 2, 3]",
+            what: "Build a list and stick the name a onto it. One list exists.",
+            state: "a → [1, 2, 3]",
+          },
+          {
+            code: "b = a",
+            what:
+              "Look up a, find the list, and stick the name b onto that same list. No copy is made — nothing here says 'build a new list'. There is still exactly one list, now with two names on it.",
+            state: "a → [1, 2, 3] ← b   (one list, two names)",
+          },
+          {
+            code: "b.append(4)",
+            what:
+              "Modify the list through the name b. Because a and b point at the same object, there's only one list to modify — and it now ends in 4.",
+            state: "a → [1, 2, 3, 4] ← b",
+          },
+          {
+            code: "print(a)",
+            what:
+              "a was never assigned to again, but the object it points at has changed underneath it. This is the surprise: a line that never mentions a still altered what a shows.",
+            output: "[1, 2, 3, 4]",
+          },
+          {
+            code: "print(b)",
+            what: "Same object, so identical output. They aren't two lists that happen to match — they are one list.",
+            output: "[1, 2, 3, 4]\n[1, 2, 3, 4]",
+          },
+        ],
+        takeaway:
+          "`=` never copies a list; it adds another name to the same one. If you need an independent list, say so explicitly with `a[:]`, `list(a)` or `a.copy()`.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "The list mistakes that cost real time",
+        items: [
+          {
+            wrong: "xs = [3, 1, 2]\nxs = xs.sort()\nprint(xs)",
+            problem:
+              "Prints None. `.sort()` sorts the list in place and returns nothing, so assigning its result wipes out your list. Either call it without assigning, or use `sorted()`.",
+            right: "xs = [3, 1, 2]\nxs.sort()\nprint(xs)",
+          },
+          {
+            wrong: "original = [1, 2, 3]\nbackup = original\noriginal.append(4)\nprint(backup)",
+            problem:
+              "Prints [1, 2, 3, 4] — the 'backup' isn't a backup at all. `=` gave the same list a second name rather than copying it.",
+            right: "original = [1, 2, 3]\nbackup = original[:]\noriginal.append(4)\nprint(backup)",
+          },
+          {
+            wrong: "xs = [1, 2, 3]\nprint(xs[3])",
+            problem:
+              "IndexError: list index out of range. Three items live at positions 0, 1 and 2 — there is no position 3. The last valid index is always len(xs) - 1, which is why xs[-1] is the safer way to say 'the last one'.",
+            right: "xs = [1, 2, 3]\nprint(xs[-1])",
+          },
+          {
+            wrong: "xs = [2, 4, 6]\nfor x in xs:\n    if x % 2 == 0:\n        xs.remove(x)\nprint(xs)",
+            problem:
+              "Prints [4] — every value was even, yet one survived. Removing an item shifts everything after it left, but the loop's position keeps advancing, so it steps straight over the next element. Never modify a list while looping over it; build a new one instead.",
+            right: "xs = [2, 4, 6]\nxs = [x for x in xs if x % 2 != 0]\nprint(xs)",
+          },
+        ],
       },
       {
         kind: "predict",
@@ -1067,6 +1163,13 @@ export const pythonLessons: Lesson[] = [
         code:
           "xs = [3, 1, 2]\nys = sorted(xs)\nxs.append(0)\nprint(xs, ys)\n",
         answer: "[3, 1, 2, 0] [1, 2, 3]",
+        hints: [
+          "Is `sorted(xs)` one of the things that changes xs, or one that returns something new?",
+          "It returns a new list and leaves xs alone — so after line 2, xs is still [3, 1, 2] in its original order.",
+          "Line 3 then appends to xs only. ys was built earlier as a separate list and isn't affected.",
+        ],
+        why:
+          "`sorted()` builds a brand-new list, so ys is independent from the moment it's created. xs keeps its original order and gets 0 appended; ys stays as the sorted snapshot taken before that.",
       },
       {
         kind: "fix",
@@ -1075,29 +1178,58 @@ export const pythonLessons: Lesson[] = [
         buggy:
           "nums = [1, 2, 3]\ncopy = nums\ncopy.append(99)\nprint('nums:', nums)\nprint('copy:', copy)\n",
         expected: "nums: [1, 2, 3]\ncopy: [1, 2, 3, 99]",
-        hint: "Make copy with `nums[:]` or `list(nums)`.",
+        hints: [
+          "Run it — both lines show the 99, even though only `copy` was appended to.",
+          "Line 2 doesn't make a copy. It points a second name at the same list, so there's only one list to append to.",
+          "Ask for a real copy: `nums[:]`, `list(nums)` or `nums.copy()` all work.",
+        ],
+        solution:
+          "nums = [1, 2, 3]\ncopy = nums[:]\ncopy.append(99)\nprint('nums:', nums)\nprint('copy:', copy)\n",
+        solutionWhy:
+          "`nums[:]` is a slice covering the whole list, and slicing always builds a new list. Now there are genuinely two lists, so appending to one leaves the other alone.\n\nNaming a variable `copy` didn't make it one — the name is just a label, and only an explicit copying operation actually duplicates the data.",
       },
       {
         kind: "write",
         id: "w1",
         title: "Squares of odd numbers 1..9",
-        prompt: "Print a list of squares of odd numbers from 1 to 9 inclusive. Expected: [1, 9, 25, 49, 81]",
+        prompt: "Print a list of the squares of the odd numbers from 1 to 9 inclusive. Expected: [1, 9, 25, 49, 81]",
         starter: "# print the list here\n",
         expected: "[1, 9, 25, 49, 81]",
+        hints: [
+          "One approach: start with an empty list, loop over the numbers, and append the ones you want.",
+          "To include 9 your range has to stop at 10. Test for odd with `n % 2 != 0` (or just `n % 2`, since 1 is truthy).",
+          "Build with `squares = []` then `squares.append(n * n)` inside an if, and print squares at the end.",
+        ],
+        solution:
+          "squares = []\nfor n in range(1, 10):\n    if n % 2 != 0:\n        squares.append(n * n)\nprint(squares)\n",
+        solutionWhy:
+          "Start empty, loop 1 through 9, keep only the odds, and append each square.\n\nOnce you meet list comprehensions (a couple of lessons on) the same thing compresses to one line: `print([n * n for n in range(1, 10, 2)])`. The loop version is worth writing first — comprehensions are shorthand for exactly this shape, and they read much better once you've built it the long way.",
       },
       {
         kind: "mcq",
         id: "m1",
         title: "Which mutates?",
-        prompt: "Which of these mutates the original list?",
-        options: [
-          "sorted(xs)",
-          "reversed(xs)",
-          "xs.sort()",
-          "xs + [99]",
-        ],
+        prompt: "Which of these changes the original list?",
+        options: ["sorted(xs)", "reversed(xs)", "xs.sort()", "xs + [99]"],
         correctIndex: 2,
-        why: "Only in-place methods on the list itself mutate.",
+        optionFeedback: [
+          "A function that returns a new sorted list. xs is untouched.",
+          "Returns a new reversed iterator; xs is untouched. (`xs.reverse()` — the method — is the one that mutates.)",
+          "Right. A method called on the list, sorting it in place and returning None.",
+          "The + operator builds a new combined list rather than modifying either side.",
+        ],
+        why:
+          "Only methods called on the list itself mutate it. A rough rule: `xs.something()` often changes xs, while `something(xs)` gives you a new value back.",
+      },
+      {
+        kind: "explain",
+        id: "x1",
+        title: "Explain",
+        prompt:
+          "A colleague passes their list to a function to 'just check something', and afterwards their original list has changed. They insist the function never reassigned anything. How is this possible, and what would you tell them to do?",
+        minWords: 30,
+        sampleAnswer:
+          "The function received the same list object, not a copy — passing it in just gives the parameter another name for it. If the function called something like .append() or .sort(), it modified the one shared list, and the caller sees that change without any reassignment happening. They should either have the function work on a copy with list(xs), or make it build and return a new list instead of modifying what it was given.",
       },
     ],
   },
@@ -1315,16 +1447,123 @@ export const pythonLessons: Lesson[] = [
       {
         kind: "read",
         id: "r1",
-        title: "Signature grammar",
+        title: "What a function is, and why bother",
         body:
-          "`def f(pos, /, both, *args, kw_only, **kwargs)` covers every parameter kind.\n\n- `/` marks the end of **positional-only** params.\n- `*args` collects extra positional args into a tuple.\n- After `*args` (or a bare `*`), everything is **keyword-only**.\n- `**kwargs` collects extra keyword args into a dict.\n\n**Default-args trap**: default values are evaluated once at `def` time. Never use mutable defaults like `def f(x=[])`.",
+          "A **function** is a named chunk of code you can run whenever you like, as many times as you like.\n\n```\ndef greet(name):\n    return f'hello, {name}'\n\nprint(greet('Ada'))\nprint(greet('Ren'))\n```\n\nBreaking that down:\n\n- **`def`** starts a definition. Like `if` and `for`, the line ends in a colon and the body is indented.\n- **`greet`** is the name you're giving it.\n- **`name`** in the brackets is a **parameter** — a placeholder for a value that gets supplied later.\n- **`return`** hands a value back to whoever called it.\n\nDefining a function doesn't run it. `def` just stores the recipe under a name; nothing happens until you **call** it by writing `greet('Ada')`.\n\nThe value you pass in when calling — `'Ada'` — is an **argument**. Parameter is the name in the definition, argument is the actual value at the call. People mix the words up constantly and it rarely matters, but it's useful to know they're different things.\n\nWhy bother? Two reasons that matter immediately: you write the logic once instead of copying it around, and you get to give a chunk of code a **name**, which makes the code that uses it readable. `total = calculate_tax(income)` says what's happening; ten lines of inline arithmetic doesn't.",
       },
       {
-        kind: "example",
-        id: "e1",
-        title: "Keyword-only args",
-        code:
-          "def make(name, *, upper=False):\n    return name.upper() if upper else name\n\nprint(make('ada'))\nprint(make('ada', upper=True))\n",
+        kind: "trace",
+        id: "t1",
+        title: "Watch a function call jump and come back",
+        intro:
+          "Calling a function makes execution jump somewhere else and then return to where it left off. That jump is worth watching once.",
+        code: "def double(n):\n    result = n * 2\n    return result\n\nx = double(5)\nprint(x)\n",
+        lines: [
+          {
+            code: "def double(n):",
+            what:
+              "Python reads the definition and stores it under the name `double`. It does NOT run the body — the lines inside are just filed away for later. Execution skips straight past to after the definition.",
+            state: "double is defined (not run)",
+          },
+          {
+            code: "x = double(5)",
+            what:
+              "Right side first, as always. This is a call, so execution jumps into the function — and the argument 5 gets bound to the parameter n.",
+            state: "inside double, with n = 5",
+          },
+          {
+            code: "    result = n * 2",
+            what:
+              "Now inside the body. n is 5, so result becomes 10. Note `result` only exists inside this call — it's local to the function and vanishes when the call ends.",
+            state: "n = 5, result = 10",
+          },
+          {
+            code: "    return result",
+            what:
+              "`return` does two things: it hands the value 10 back, and it ends the function immediately. Any lines after a return would never run.",
+            state: "returning 10",
+          },
+          {
+            code: "x = double(5)      # back at the call",
+            what:
+              "Execution lands back where it jumped from. The call expression is now just the value 10, which gets stuck onto x.",
+            state: "x = 10",
+          },
+          {
+            code: "print(x)",
+            what: "Shows 10. Note `result` and `n` no longer exist out here — they only lived inside the call.",
+            state: "x = 10",
+            output: "10",
+          },
+        ],
+        takeaway:
+          "A call jumps in, binds the arguments to the parameters, runs until it hits `return`, then jumps back with that value. Names created inside a function are local — they don't leak out.",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "return vs print — the one that confuses everyone",
+        body:
+          "These look similar and do completely different jobs. Getting them muddled is the single most common early function bug.\n\n**`print`** shows something to a human. The value goes to the screen and is gone.\n\n**`return`** hands a value back to the code that made the call, so it can be stored, added, passed on, whatever.\n\n```\ndef add_printing(a, b):\n    print(a + b)         # shows it\n\ndef add_returning(a, b):\n    return a + b         # hands it back\n\nx = add_printing(2, 3)     # displays 5\nprint(x)                   # None! nothing was returned\n\ny = add_returning(2, 3)    # displays nothing\nprint(y)                   # 5\n```\n\nA function with no `return` gives back **`None`** automatically. So if you print a function's result and get `None`, that's almost always the diagnosis: the function displayed its answer instead of returning it.\n\nRule of thumb: **functions that compute something should return it.** Let the caller decide whether to print it. A function that prints is much harder to reuse — you can't add its result to anything, test it, or feed it into another function.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "The function mistakes to expect",
+        items: [
+          {
+            wrong: "def add(a, b):\n    print(a + b)\n\ntotal = add(2, 3)\nprint(total * 2)",
+            problem:
+              "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int'. The function printed 5 but returned nothing, so total is None — and you can't multiply None. Return the value instead of printing it.",
+            right: "def add(a, b):\n    return a + b\n\ntotal = add(2, 3)\nprint(total * 2)",
+          },
+          {
+            wrong: "def greet():\n    return 'hello'\n\nprint(greet)",
+            problem:
+              "Shows something like <function greet at 0x...> instead of 'hello'. Without the brackets you're referring to the function itself rather than calling it. The `()` is what actually runs it.",
+            right: "def greet():\n    return 'hello'\n\nprint(greet())",
+          },
+          {
+            wrong: "def check(n):\n    if n > 0:\n        return 'positive'\n\nprint(check(-5))",
+            problem:
+              "Prints None. The if didn't match, so the function ran off the end without hitting a return — and a function that returns nothing returns None. Make sure every path returns something.",
+            right: "def check(n):\n    if n > 0:\n        return 'positive'\n    return 'not positive'\n\nprint(check(-5))",
+          },
+          {
+            wrong: "def scale(n):\n    factor = 3\n    return n * factor\n\nprint(scale(2))\nprint(factor)",
+            problem:
+              "NameError: name 'factor' is not defined. Names created inside a function are local to it and disappear when the call ends. That's a feature — it stops functions interfering with each other.",
+            right: "def scale(n):\n    factor = 3\n    return n * factor\n\nprint(scale(2))",
+          },
+        ],
+      },
+      {
+        kind: "parsons",
+        id: "pa1",
+        title: "Assemble a function",
+        prompt:
+          "Put these lines in order to define a function that squares a number, then call it and show the result. Watch the indentation — the indented lines are the body.",
+        solution: [
+          "def square(n):",
+          "    answer = n * n",
+          "    return answer",
+          "print(square(4))",
+        ],
+        expectedOutput: "16",
+        hints: [
+          "A function has to be defined before it can be called, so the print line can't come first.",
+          "Inside the body you need to work the value out before you can return it.",
+          "def line, then the calculation, then the return — all indented — and finally the unindented call.",
+        ],
+        explanation:
+          "The three indented lines are the body, stored for later. The unindented print is the only line that actually runs anything, and it triggers the jump into the function.",
+      },
+      {
+        kind: "read",
+        id: "r3",
+        title: "Default values and named arguments",
+        body:
+          "A parameter can have a **default**, making it optional at the call:\n\n```\ndef greet(name, greeting='hello'):\n    return f'{greeting}, {name}'\n\ngreet('Ada')                      # 'hello, Ada'\ngreet('Ada', 'welcome')           # 'welcome, Ada'\ngreet('Ada', greeting='hi')       # 'hi, Ada'\n```\n\nParameters with defaults must come **after** ones without — Python can't work out which is which otherwise.\n\nThat third call passes the argument **by name**. Worth doing whenever the meaning isn't obvious from the value alone. Compare:\n\n```\ncreate_user('Ada', True, False)\ncreate_user('Ada', is_admin=True, send_email=False)\n```\n\nThe second needs no explanation. Bare `True, False` at a call site is a small mystery for every future reader.\n\nTwo more pieces of syntax you'll see around, worth recognising now even if you don't reach for them yet:\n\n- **`*args`** collects any extra positional arguments into a tuple\n- **`**kwargs`** collects any extra named arguments into a dict\n\nSo `def total(*nums)` accepts any number of values and gets them as `nums`.",
       },
       {
         kind: "predict",
@@ -1333,6 +1572,19 @@ export const pythonLessons: Lesson[] = [
         code:
           "def add(x, y=10):\n    return x + y\nprint(add(1), add(1, 2))\n",
         answer: "11 3",
+        hints: [
+          "The second parameter has a default, so the first call supplies only one argument.",
+          "In `add(1)`, x is 1 and y falls back to its default of 10. In `add(1, 2)`, the 2 overrides that default.",
+        ],
+        why:
+          "`add(1)` uses the default y=10, giving 11. `add(1, 2)` supplies y explicitly, so the default is ignored and you get 3. print shows both results separated by a space.",
+      },
+      {
+        kind: "read",
+        id: "r4",
+        title: "The mutable default trap",
+        body:
+          "This one is genuinely surprising, and it catches experienced people too.\n\n**A default value is created once, when the `def` line runs — not fresh on each call.**\n\nFor an immutable default like `10` or `'hello'` that's harmless. But for a list or a dict it means every call that relies on the default shares the *same object*:\n\n```\ndef append_to(x, xs=[]):\n    xs.append(x)\n    return xs\n\nprint(append_to(1))    # [1]\nprint(append_to(2))    # [1, 2]  — not [2]!\n```\n\nThe second call didn't get a fresh empty list. It got the same list the first call already put something in.\n\nThe fix is a standard pattern you'll see everywhere:\n\n```\ndef append_to(x, xs=None):\n    if xs is None:\n        xs = []\n    xs.append(x)\n    return xs\n```\n\n`None` is immutable and safe as a default, and the check creates a genuinely new list on each call that needs one.\n\n**Rule: never use a list, dict or set as a default value.** Use `None` and build it inside.",
       },
       {
         kind: "fix",
@@ -1341,15 +1593,32 @@ export const pythonLessons: Lesson[] = [
         buggy:
           "def append_to(x, xs=[]):\n    xs.append(x)\n    return xs\nprint(append_to(1))\nprint(append_to(2))\n",
         expected: "[1]\n[2]",
-        hint: "Use `xs=None` and create a new list inside the function.",
+        hints: [
+          "Run it — the second call shows [1, 2] when you'd expect [2]. The list from the first call survived.",
+          "The default `[]` was built once when the def line ran, so both calls share that one list.",
+          "Use `xs=None` as the default, then inside the function do `if xs is None: xs = []` before appending.",
+        ],
+        solution:
+          "def append_to(x, xs=None):\n    if xs is None:\n        xs = []\n    xs.append(x)\n    return xs\nprint(append_to(1))\nprint(append_to(2))\n",
+        solutionWhy:
+          "`None` is immutable, so there's no shared object to accumulate into. The `if xs is None` check runs on every call and builds a genuinely fresh list each time the caller didn't supply one.\n\nNote you still get the useful behaviour when a caller *does* pass a list — `append_to(3, my_list)` appends to theirs, exactly as before. Only the default case changed.",
       },
       {
         kind: "write",
         id: "w1",
         title: "Variadic sum",
-        prompt: "Write `total(*nums)` that returns the sum. Print total(1,2,3,4). Expected: 10",
+        prompt:
+          "Write a function `total(*nums)` that returns the sum of however many numbers it's given. Print total(1, 2, 3, 4). Expected: 10",
         starter: "def total(*nums):\n    ...\n\nprint(total(1,2,3,4))\n",
         expected: "10",
+        hints: [
+          "The `*nums` means all the arguments arrive as a single collection called nums, which you can loop over.",
+          "You could loop with a running total, or use Python's built-in sum() function on nums directly.",
+          "Remember to `return` the answer rather than printing it — the print is already there on the calling line.",
+        ],
+        solution: "def total(*nums):\n    return sum(nums)\n\nprint(total(1,2,3,4))\n",
+        solutionWhy:
+          "`*nums` gathers all four arguments into a tuple, and the built-in `sum()` adds up any collection of numbers.\n\nWriting it out longhand works identically and is worth being able to do:\n\n```\ndef total(*nums):\n    running = 0\n    for n in nums:\n        running += n\n    return running\n```\n\nNote the `return` in both. Printing inside the function instead would show the number but hand back None, so the outer print would display None.",
       },
       {
         kind: "mcq",
@@ -1363,7 +1632,24 @@ export const pythonLessons: Lesson[] = [
           "Slower than a fresh list",
         ],
         correctIndex: 1,
-        why: "Defaults evaluate at def time, so callers share the same list.",
+        optionFeedback: [
+          "That's the intuitive expectation, and exactly why this trap catches people — but it isn't what happens.",
+          "Right. The default is built once when the def line runs, so every call relying on it shares that one object.",
+          "It's perfectly valid syntax — which is what makes it dangerous. Python won't warn you.",
+          "Speed isn't the issue at all; the problem is state leaking between calls.",
+        ],
+        why:
+          "Defaults are evaluated once at definition time, so all callers relying on the default share the same list. Use None and create the list inside the function.",
+      },
+      {
+        kind: "explain",
+        id: "x1",
+        title: "Explain",
+        prompt:
+          "Someone's function seems to work — it displays the right number when they run it — but when they try to use its result in a calculation they get a TypeError about NoneType. What have they done, and what's the fix?",
+        minWords: 25,
+        sampleAnswer:
+          "They used print inside the function instead of return. The number appears on screen, so it looks correct, but the function hands back None — and None can't be used in arithmetic. They should return the value and let whoever calls it decide whether to print it.",
       },
     ],
   },
