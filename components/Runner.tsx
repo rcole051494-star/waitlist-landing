@@ -32,6 +32,16 @@ export function Runner({
   const [pyLoading, setPyLoading] = useState(false);
   const { setCtx } = useTutor();
 
+  // Moving to another step swaps in different starter code. Without this the
+  // component instance is reused and keeps the previous exercise's buffer and
+  // output, so the learner sees the wrong code and a stale result.
+  useEffect(() => {
+    setCode(initial);
+    setStdout("");
+    setStderr("");
+    setStatus("idle");
+  }, [initial]);
+
   // Keep the tutor's view of "what's in the editor" live as the learner types.
   useEffect(() => {
     setCtx({ userCode: code });

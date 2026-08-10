@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Lesson, Step } from "@/lib/curriculum/types";
-import { Prose } from "./Prose";
+import { Prose, InlineProse } from "./Prose";
 import { Runner } from "./Runner";
 import { StuckHelp } from "./StuckHelp";
 import { TraceStep } from "./TraceStep";
@@ -374,7 +374,7 @@ function StepBody({
     return (
       <div className="space-y-3">
         {step.note && <p className="text-ink-300 text-sm">{step.note}</p>}
-        <Runner initial={step.code} track={track} runLabel="Run this example" onResult={() => onAttempt(true)} />
+        <Runner key={step.id} initial={step.code} track={track} runLabel="Run this example" onResult={() => onAttempt(true)} />
         <p className="text-xs text-ink-400">
           Tweak the code above — try changing a value and re-running. Learning by messing with real code is the point.
         </p>
@@ -420,13 +420,13 @@ function StepBody({
         {checked !== null && step.why && (
           <div className="rounded-lg border border-ink-700 bg-ink-900/60 p-3 text-sm text-ink-200 leading-relaxed">
             <span className="text-ink-400 text-xs uppercase tracking-wider mr-1.5">Why</span>
-            {step.why}
+            <InlineProse text={step.why} />
           </div>
         )}
         {checked === false && (
           <div className="pt-2">
             <p className="text-xs text-ink-400 mb-2">Run it here to see what happens:</p>
-            <Runner initial={step.code} track={track} expected={step.answer} runLabel="Run" />
+            <Runner key={step.id} initial={step.code} track={track} expected={step.answer} runLabel="Run" />
           </div>
         )}
       </div>
@@ -438,6 +438,7 @@ function StepBody({
       <div className="space-y-3">
         <p className="text-ink-300">Fix the code so its output matches the expected output below.</p>
         <Runner
+          key={step.id}
           initial={step.buggy}
           track={track}
           expected={step.expected}
@@ -458,6 +459,7 @@ function StepBody({
       <div className="space-y-3">
         <p className="text-ink-200">{step.prompt}</p>
         <Runner
+          key={step.id}
           initial={step.starter}
           track={track}
           expected={step.expected}
@@ -539,7 +541,7 @@ function ExplainStep({
           <div className="text-[11px] uppercase tracking-wider text-ink-400 mb-1.5">
             One way to put it
           </div>
-          <p className="text-sm text-ink-200 leading-relaxed">{step.sampleAnswer}</p>
+          <div className="text-sm text-ink-200 leading-relaxed"><Prose text={step.sampleAnswer} /></div>
           <p className="mt-2 text-[11px] text-ink-500">
             Yours doesn't need to match this — if you captured the same idea in your own words,
             that's the point.
@@ -592,7 +594,7 @@ function Mcq({
                     isCorrect ? "text-good/90" : "text-bad/90"
                   }`}
                 >
-                  {step.optionFeedback[i]}
+                  <InlineProse text={step.optionFeedback[i]} />
                 </span>
               )}
             </button>
@@ -619,7 +621,7 @@ function Mcq({
         )}
       </div>
       {checked && step.why && (
-        <div className="text-sm text-ink-300 border-l-2 border-ink-500 pl-3">{step.why}</div>
+        <div className="text-sm text-ink-300 border-l-2 border-ink-500 pl-3"><InlineProse text={step.why} /></div>
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 "use client";
+import { InlineProse } from "./Prose";
 import { useEffect, useState } from "react";
 
 // Sort items into categories. Tap an item to pick it up, tap a bucket to drop
@@ -176,7 +177,7 @@ export function CategorizeStep({
             placement[i] !== it.bucket && it.why ? (
               <div key={i} className="text-sm text-ink-300 border-l-2 border-warm pl-3">
                 <code className="mono text-ink-100">{it.text}</code> belongs in{" "}
-                <b className="text-ink-100">{buckets[it.bucket]}</b> — {it.why}
+                <b className="text-ink-100">{buckets[it.bucket]}</b> — <InlineProse text={it.why} />
               </div>
             ) : null
           )}

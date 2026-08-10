@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { TraceLine } from "@/lib/curriculum/types";
-import { Prose } from "./Prose";
+import { Prose, InlineProse } from "./Prose";
 
 // A worked example the learner steps through one line at a time, seeing what
 // each line does and what the program's state looks like afterwards. Studying
@@ -71,7 +71,9 @@ export function TraceStep({
           {lines[current].code}
         </pre>
 
-        <p className="mt-3 text-ink-200 leading-relaxed text-[14.5px]">{lines[current].what}</p>
+        <p className="mt-3 text-ink-200 leading-relaxed text-[14.5px]">
+          <InlineProse text={lines[current].what} />
+        </p>
 
         {lines[current].state && (
           <div className="mt-3 flex items-start gap-2 text-sm">

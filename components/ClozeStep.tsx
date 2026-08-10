@@ -1,4 +1,5 @@
 "use client";
+import { InlineProse } from "./Prose";
 import { useState } from "react";
 import { StuckHelp } from "./StuckHelp";
 
@@ -103,7 +104,7 @@ export function ClozeStep({
 
       {allRight && explanation && (
         <div className="rounded-lg border border-good/40 bg-good/10 p-3 text-sm text-ink-100 leading-relaxed">
-          {explanation}
+          <InlineProse text={explanation} />
         </div>
       )}
     </div>

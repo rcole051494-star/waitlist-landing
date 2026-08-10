@@ -1,4 +1,5 @@
 "use client";
+import { InlineProse } from "./Prose";
 import { useEffect, useRef, useState } from "react";
 import { StuckHelp } from "./StuckHelp";
 
@@ -191,7 +192,7 @@ export function ParsonsStep({
 
       {checked === true && explanation && (
         <div className="rounded-lg border border-good/40 bg-good/10 p-3 text-sm text-ink-100 leading-relaxed">
-          {explanation}
+          <InlineProse text={explanation} />
         </div>
       )}
     </div>

@@ -1,4 +1,5 @@
 "use client";
+import { InlineProse } from "./Prose";
 import { useState } from "react";
 
 // Progressive help for an exercise. Hints reveal one at a time so the learner
@@ -53,7 +54,7 @@ export function StuckHelp({
           className="text-sm text-ink-200 border-l-2 border-warm pl-3 py-1 bg-warm/5 rounded-r"
         >
           <span className="text-warm text-xs font-medium mr-1.5">Hint {i + 1}:</span>
-          {h}
+          <InlineProse text={h} />
         </div>
       ))}
 
@@ -67,7 +68,7 @@ export function StuckHelp({
           </pre>
           {solutionWhy && (
             <div className="px-3 py-2.5 border-t border-ink-800 text-sm text-ink-200 leading-relaxed">
-              {solutionWhy}
+              <InlineProse text={solutionWhy} />
             </div>
           )}
           <div className="px-3 pb-3 text-[11px] text-ink-500">

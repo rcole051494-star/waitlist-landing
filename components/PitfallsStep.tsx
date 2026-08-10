@@ -1,6 +1,6 @@
 "use client";
 import type { Pitfall } from "@/lib/curriculum/types";
-import { Prose } from "./Prose";
+import { Prose, InlineProse } from "./Prose";
 
 // Shows the mistakes a learner is about to make, before they make them.
 // Seeing a wrong version next to the right one — and understanding *why*
@@ -26,7 +26,7 @@ export function PitfallsStep({ intro, items }: { intro?: string; items: Pitfall[
           </pre>
 
           <div className="px-3 py-2.5 bg-ink-900/60 text-sm text-ink-200 leading-relaxed border-t border-ink-800">
-            {p.problem}
+            <InlineProse text={p.problem} />
           </div>
 
           {p.right && (

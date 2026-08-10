@@ -90,3 +90,10 @@ export function Prose({ text }: { text: string }) {
   }
   return <div className="space-y-3">{blocks}</div>;
 }
+
+// Inline-only markdown (**bold** and `code`) for the short explanation strings
+// scattered through the activity components, where a full Prose block — with
+// its own paragraph spacing — would be too heavy.
+export function InlineProse({ text }: { text: string }) {
+  return <>{inline(text)}</>;
+}

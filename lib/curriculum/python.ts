@@ -825,7 +825,7 @@ export const pythonLessons: Lesson[] = [
             output: "B",
           },
           {
-            code: "elif score >= 70:  /  else:",
+            code: "elif score >= 70:\nelse:",
             what:
               "These are never even looked at. Once one branch in the chain runs, Python skips the whole rest of the chain and continues below it. 85 >= 70 is perfectly true, but it doesn't matter — we already matched.",
             output: "B",
@@ -857,23 +857,23 @@ export const pythonLessons: Lesson[] = [
             state: "i = 1, total = 0",
           },
           {
-            code: "    total = total + i      # pass 1",
+            code: "    total = total + i",
             what:
               "Right side first, as always: total (0) plus i (1) is 1. Stick that back onto total. The block is finished, so Python loops back up to the for line.",
             state: "i = 1, total = 1",
           },
           {
-            code: "for i in range(1, 4):      # next value",
+            code: "for i in range(1, 4):",
             what: "There are more numbers to come, so i is re-pointed at 2 and the block runs again.",
             state: "i = 2, total = 1",
           },
           {
-            code: "    total = total + i      # pass 2",
+            code: "    total = total + i",
             what: "total (1) plus i (2) is 3. Back up to the top again.",
             state: "i = 2, total = 3",
           },
           {
-            code: "    total = total + i      # pass 3",
+            code: "    total = total + i",
             what: "i is now 3. total (3) plus 3 is 6. After this pass, range has run out of numbers.",
             state: "i = 3, total = 6",
           },
@@ -1245,15 +1245,75 @@ export const pythonLessons: Lesson[] = [
       {
         kind: "read",
         id: "r1",
-        title: "Tuples are frozen lists — with a purpose",
+        title: "A tuple is a list that can't change",
         body:
-          "Use a tuple when the position **means** something: `(x, y)`, `(name, age)`. Tuples are hashable, so they can be dict keys.\n\nUnpacking: `a, b = (1, 2)`. `*` collects the rest: `first, *middle, last = [1, 2, 3, 4]` → middle == [2, 3].",
+          "A **tuple** is an ordered collection like a list, but **immutable** — once built, you can't add, remove or replace anything.\n\nRound brackets instead of square:\n\n```\npoint = (3, 4)\nperson = ('Ada', 36, 'London')\n```\n\nIndexing and slicing work exactly as they do for lists. What doesn't work is anything that would change it — no `.append()`, no `point[0] = 5`.\n\nSo why would you want the *less* capable thing? Two real reasons:\n\n**It signals intent.** A list says \"a collection of similar things, probably growing\". A tuple says \"a fixed record where each position means something\". `(x, y)` is a point — swapping or appending would be nonsense.\n\n**It can be a dict key.** Only immutable things can be dict keys, so `(3, 4)` can be, and `[3, 4]` can't. That single fact makes tuples the natural choice for coordinates, database-style composite keys, and anything you want to put in a set.\n\nOne quirk: the brackets are often optional. `a = 1, 2` makes a tuple. And a one-item tuple needs a trailing comma — `(5,)` — because `(5)` is just the number 5 in brackets.",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "Unpacking: pulling a tuple apart",
+        body:
+          "You can assign several names at once from any collection. This is called **unpacking**, and it's used constantly in real Python.\n\n```\npoint = (3, 4)\nx, y = point\nprint(x, y)      # 3 4\n```\n\nThe number of names has to match the number of items, or you get a ValueError.\n\nThat's what makes the famous no-temp-variable swap work:\n\n```\na, b = b, a\n```\n\nThe right side builds a tuple `(b, a)` **first**, and only then unpacks it into the names on the left. Because the whole right side is worked out before any assigning happens, nothing gets clobbered.\n\nWhen you don't know or care how many items are in the middle, `*` collects the rest into a list:\n\n```\nfirst, *rest = [10, 20, 30, 40]     # first=10, rest=[20, 30, 40]\nfirst, *middle, last = [1, 2, 3, 4] # middle=[2, 3]\n```\n\nOnly one `*` per unpacking — with two, Python couldn't tell where one ends and the other starts.",
+      },
+      {
+        kind: "trace",
+        id: "t1",
+        title: "Watch the swap work",
+        intro:
+          "This is the line that looks like it shouldn't work. The trick is that the whole right side is evaluated before anything is assigned.",
+        code: "a = 1\nb = 2\na, b = b, a\nprint(a, b)\n",
+        lines: [
+          { code: "a = 1", what: "Stick 1 onto the name a.", state: "a = 1" },
+          { code: "b = 2", what: "Stick 2 onto the name b.", state: "a = 1, b = 2" },
+          {
+            code: "a, b = b, a",
+            what:
+              "Python builds the tuple on the right BEFORE touching anything on the left. It looks up b (2) and a (1), giving the tuple (2, 1). Both old values are now safely captured.",
+            state: "a = 1, b = 2, right side = (2, 1)",
+          },
+          {
+            code: "a, b = b, a",
+            what:
+              "Only now does assignment happen: the tuple is unpacked, so a gets 2 and b gets 1. Nothing was overwritten mid-way, which is exactly why no temporary variable is needed.",
+            state: "a = 2, b = 1",
+          },
+          { code: "print(a, b)", what: "They've swapped.", state: "a = 2, b = 1", output: "2 1" },
+        ],
+        takeaway:
+          "Right side fully evaluated, then assigned. That single rule is why the swap works, and it's the same rule behind `x = x + 1`.",
       },
       {
         kind: "example",
         id: "e1",
         title: "Swap without a temp",
         code: "a, b = 1, 2\na, b = b, a\nprint(a, b)\n",
+        note: "Try adding a third variable and rotating them: a, b, c = c, a, b. The same rule applies.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "Tuple gotchas",
+        items: [
+          {
+            wrong: "single = (5)\nprint(type(single).__name__)",
+            problem:
+              "Prints 'int', not 'tuple'. Brackets alone don't make a tuple — the comma does. A one-item tuple needs a trailing comma.",
+            right: "single = (5,)\nprint(type(single).__name__)",
+          },
+          {
+            wrong: "point = (3, 4)\npoint[0] = 5",
+            problem:
+              "TypeError: 'tuple' object does not support item assignment. Tuples are immutable. If you need a changed version, build a new tuple.",
+            right: "point = (3, 4)\npoint = (5, point[1])",
+          },
+          {
+            wrong: "x, y = (1, 2, 3)",
+            problem:
+              "ValueError: too many values to unpack (expected 2). The number of names must match exactly — unless you use * to soak up the extras.",
+            right: "x, *rest = (1, 2, 3)",
+          },
+        ],
       },
       {
         kind: "predict",
@@ -1261,24 +1321,46 @@ export const pythonLessons: Lesson[] = [
         title: "Predict",
         code: "first, *rest = [10, 20, 30, 40]\nprint(first, rest)\n",
         answer: "10 [20, 30, 40]",
+        hints: [
+          "`first` takes one value; `*rest` soaks up everything that's left.",
+          "The starred name always comes out as a **list**, even when unpacking a tuple.",
+        ],
+        why:
+          "`first` binds to the single first item. `*rest` collects all remaining items into a list — note it's a list, not a tuple, regardless of what you unpacked from.",
       },
       {
         kind: "fix",
         id: "f1",
-        title: "Fix: split a name into first, middle-list, last",
+        title: "Fix: split a name into first, middles, last",
         buggy:
           "parts = 'John Fitzgerald Kennedy'.split()\nfirst, last = parts\nprint(first, last)\n",
         expected: "John ['Fitzgerald'] Kennedy",
-        hint: "Use `first, *middles, last = parts` then print all three.",
+        hints: [
+          "Run it — ValueError, because there are three words but only two names to unpack into.",
+          "You want the first, the last, and whatever middle names happen to be there. Which unpacking form handles 'and everything in between'?",
+          "Use `first, *middles, last = parts`, then print all three.",
+        ],
+        solution:
+          "parts = 'John Fitzgerald Kennedy'.split()\nfirst, *middles, last = parts\nprint(first, middles, last)\n",
+        solutionWhy:
+          "`*middles` sits between two fixed names, so it soaks up everything not claimed by first and last. This works for any number of middle names — including none, in which case middles is just an empty list.",
       },
       {
         kind: "write",
         id: "w1",
         title: "Return two values",
         prompt:
-          "Write a function `stats(xs)` that returns a tuple (min, max). Call `stats([4,1,7,2])` and print the tuple.",
+          "Write a function `stats(xs)` that returns a tuple of (smallest, largest). Call stats([4,1,7,2]) and print the result. Expected: (1, 7)",
         starter: "def stats(xs):\n    ...\n\nprint(stats([4,1,7,2]))\n",
         expected: "(1, 7)",
+        hints: [
+          "Python has built-in min() and max() functions that each take a collection.",
+          "To return two things, return them separated by a comma — that makes a tuple automatically.",
+          "`return min(xs), max(xs)`",
+        ],
+        solution: "def stats(xs):\n    return min(xs), max(xs)\n\nprint(stats([4,1,7,2]))\n",
+        solutionWhy:
+          "`return a, b` builds a tuple, which is how Python functions return multiple values — there's no special syntax for it.\n\nThe caller usually unpacks it straight away: `low, high = stats(nums)`. That pairing of tuple-return and unpacking is one of the most common idioms in Python.",
       },
     ],
   },
@@ -1288,23 +1370,119 @@ export const pythonLessons: Lesson[] = [
     track: "python",
     index: 8,
     title: "Dictionaries",
-    summary: "Key-value maps: get/set, .get(), .setdefault(), iteration, dict comprehensions.",
+    summary: "Key-value maps: get/set, .get(), iteration, and dict comprehensions.",
     concepts: ["py:dict", "py:dict-methods", "py:iteration"],
     steps: [
       {
         kind: "read",
         id: "r1",
-        title: "Dicts preserve insertion order (guaranteed since 3.7)",
+        title: "Looking things up by name instead of position",
         body:
-          "`d = {'a': 1}` — access `d['a']` raises `KeyError` if missing. `d.get('a', default)` never raises.\n\nIteration: `for k in d` iterates keys. `d.items()` yields `(k, v)` pairs. `d.values()` yields values.\n\nMerge: `d1 | d2` (Python 3.9+) returns a new dict.",
+          "A list finds things by **position**. A **dict** finds them by whatever label you choose — a name, an id, a word.\n\n```\nages = {'Ada': 36, 'Ren': 29}\nprint(ages['Ada'])       # 36\n```\n\nEach entry is a **key** (the label) and a **value** (the thing stored). Keys must be unique and immutable — strings, numbers and tuples are fine; lists aren't.\n\nAdding and changing use the same syntax, which is worth noticing:\n\n```\nages['Kai'] = 41       # adds a new entry\nages['Ada'] = 37       # replaces the existing one\ndel ages['Ren']        # removes\n'Ada' in ages          # True — checks keys, not values\nlen(ages)              # how many entries\n```\n\nDicts remember insertion order (guaranteed since Python 3.7), so looping gives you entries in the order you added them.\n\nWhy dicts matter: looking up a key is fast no matter how big the dict is. Finding something in a list of a million items means potentially checking a million items; in a dict it's effectively instant. When you're matching things up by name or id, a dict is almost always the right structure.",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "Missing keys, and how to survive them",
+        body:
+          "Asking for a key that isn't there **raises KeyError** and stops your program:\n\n```\nages = {'Ada': 36}\nages['Nobody']        # KeyError: 'Nobody'\n```\n\nThat's often what you want — a missing key usually means a real bug. But when absence is expected, `.get()` returns `None` instead of exploding, and lets you supply a fallback:\n\n```\nages.get('Nobody')          # None\nages.get('Nobody', 0)       # 0\n```\n\nThat second form powers the single most common dict pattern in Python — counting things:\n\n```\ncounts = {}\nfor ch in 'banana':\n    counts[ch] = counts.get(ch, 0) + 1\n```\n\nOn the first sighting of a character, `.get(ch, 0)` gives 0, so it stores 1. On every later sighting it gives the running count. Without `.get`, the first line would KeyError before it ever got started.",
+      },
+      {
+        kind: "trace",
+        id: "t1",
+        title: "Watch a word count build up",
+        intro:
+          "This pattern comes up constantly. Follow the counts dict as the loop goes round — pay attention to the first time each letter appears.",
+        code: "counts = {}\nfor ch in 'bab':\n    counts[ch] = counts.get(ch, 0) + 1\nprint(counts)\n",
+        lines: [
+          { code: "counts = {}", what: "Start with an empty dict — no keys at all yet.", state: "counts = {}" },
+          {
+            code: "    counts[ch] = counts.get(ch, 0) + 1",
+            what:
+              "First pass, ch is 'b'. counts.get('b', 0) — there's no 'b' key yet, so instead of raising KeyError it hands back the fallback 0. Add 1, store under 'b'.",
+            state: "counts = {'b': 1}",
+          },
+          {
+            code: "    counts[ch] = counts.get(ch, 0) + 1",
+            what: "Second pass, ch is 'a'. Same story: not present, so get returns 0, and 1 gets stored.",
+            state: "counts = {'b': 1, 'a': 1}",
+          },
+          {
+            code: "    counts[ch] = counts.get(ch, 0) + 1",
+            what:
+              "Third pass, ch is 'b' again — and this time it IS present, so get returns its current value 1. Add 1 to get 2, and store it back — replacing the old entry rather than adding a second one.",
+            state: "counts = {'b': 2, 'a': 1}",
+          },
+          {
+            code: "print(counts)",
+            what:
+              "Keys appear in first-insertion order — 'b' was seen first, so it's listed first, even though 'a' was added later and 'b' was updated after that. Updating a value doesn't move the key.",
+            output: "{'b': 2, 'a': 1}",
+          },
+        ],
+        takeaway:
+          "`d[k] = d.get(k, 0) + 1` is the counting idiom. The fallback handles the first sighting; every later one just increments.",
+      },
+      {
+        kind: "read",
+        id: "r3",
+        title: "Looping over a dict",
+        body:
+          "Looping over a dict directly gives you its **keys**:\n\n```\nfor name in ages:\n    print(name)\n```\n\nMost of the time you want both halves, and `.items()` gives you each entry as a (key, value) pair — which you unpack straight into two names, exactly as in the last lesson:\n\n```\nfor name, age in ages.items():\n    print(f'{name} is {age}')\n```\n\nThe three views:\n\n- `.keys()` — the labels (same as looping the dict directly)\n- `.values()` — the stored values, no labels\n- `.items()` — both, as pairs\n\nAnd a **dict comprehension** builds a new dict in one line — same shape as a list comprehension but with `key: value`:\n\n```\nsquares = {n: n * n for n in range(4)}     # {0: 0, 1: 1, 2: 4, 3: 9}\nflipped = {v: k for k, v in ages.items()}  # swap keys and values\n```\n\nMerging with `|` (Python 3.9+) gives a new dict, with the right-hand side winning any clashes.",
       },
       {
         kind: "example",
         id: "e1",
-        title: "Common patterns",
+        title: "The patterns you'll reuse",
         code:
-          "counts = {}\nfor ch in 'banana':\n    counts[ch] = counts.get(ch, 0) + 1\nprint(counts)\n" +
-          "print({v: k for k, v in {'a':1,'b':2}.items()})  # invert\n",
+          "counts = {}\nfor ch in 'banana':\n    counts[ch] = counts.get(ch, 0) + 1\nprint(counts)\n\n"
+          + "ages = {'Ada': 36, 'Ren': 29}\nfor name, age in ages.items():\n    print(f'{name} is {age}')\n\n"
+          + "print({v: k for k, v in ages.items()})\n",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "Dict mistakes",
+        items: [
+          {
+            wrong: "prices = {'apple': 1.0}\nprint(prices['banana'])",
+            problem:
+              "KeyError: 'banana'. Square brackets demand the key exists. When it might not, use .get() with a sensible fallback.",
+            right: "prices = {'apple': 1.0}\nprint(prices.get('banana', 0))",
+          },
+          {
+            wrong: "d = {}\nd[['a', 'b']] = 1",
+            problem:
+              "TypeError: unhashable type: 'list'. Keys must be immutable, because a key that could change would break the lookup. Use a tuple instead.",
+            right: "d = {}\nd[('a', 'b')] = 1",
+          },
+          {
+            wrong: "ages = {'Ada': 36, 'Ren': 29}\nfor name in ages:\n    print(name, ages[name])",
+            problem:
+              "Not wrong exactly — it works — but it looks up each key again on every pass when .items() already has the value to hand. Use .items() when you need both.",
+            right: "ages = {'Ada': 36, 'Ren': 29}\nfor name, age in ages.items():\n    print(name, age)",
+          },
+          {
+            wrong: "ages = {'Ada': 36}\nif 36 in ages:\n    print('found')",
+            problem:
+              "Never prints. `in` checks **keys**, not values — and 36 is a value here. To search values you'd need `36 in ages.values()`.",
+            right: "ages = {'Ada': 36}\nif 36 in ages.values():\n    print('found')",
+          },
+        ],
+      },
+      {
+        kind: "cloze",
+        id: "cl1",
+        title: "Fill in the counter",
+        prompt:
+          "Complete the standard counting pattern so it tallies each character. Two gaps: the method that survives a missing key, and its fallback value.",
+        template: "counts = {}\nfor ch in 'banana':\n    counts[ch] = counts.{{0}}(ch, {{1}}) + 1\nprint(counts)\n",
+        blanks: [
+          { answer: "get", width: 4 },
+          { answer: "0", width: 2 },
+        ],
+        explanation:
+          "`.get(ch, 0)` returns the current count if the key exists, or 0 the first time it's seen — which is exactly what lets `+ 1` work on the very first sighting without a KeyError.",
       },
       {
         kind: "predict",
@@ -1312,37 +1490,61 @@ export const pythonLessons: Lesson[] = [
         title: "Predict",
         code: "d = {'a': 1} | {'a': 2, 'b': 3}\nprint(d)\n",
         answer: "{'a': 2, 'b': 3}",
+        hints: [
+          "`|` merges two dicts into a new one. The question is what happens to the key they share.",
+          "The right-hand dict wins any clash — think of it as the left one being updated by the right.",
+        ],
+        why:
+          "Merging keeps every key from both sides, and when both define the same key the right-hand value wins. So 'a' becomes 2, and 'b' comes along from the right.",
       },
       {
         kind: "fix",
         id: "f1",
-        title: "Fix: safe lookup with default 0",
+        title: "Fix: safe lookup with a default of 0",
         buggy: "prices = {'apple': 1.0, 'pear': 1.5}\nprint(prices['banana'])\n",
         expected: "0",
-        hint: "Use `.get(key, default)`.",
+        hints: [
+          "Run it — KeyError, because 'banana' isn't in the dict and square brackets insist the key exists.",
+          "There's a method that returns a fallback instead of raising when the key is missing.",
+          "`prices.get('banana', 0)`",
+        ],
+        solution: "prices = {'apple': 1.0, 'pear': 1.5}\nprint(prices.get('banana', 0))\n",
+        solutionWhy:
+          "`.get(key, default)` returns the default rather than raising. Use it when a missing key is a normal, expected situation.\n\nKeep using square brackets when a missing key means something has genuinely gone wrong — an exception you can see beats a silent 0 that quietly corrupts a calculation later.",
       },
       {
         kind: "write",
         id: "w1",
         title: "Word count",
         prompt:
-          "Given `text = 'to be or not to be'`, print a dict of word→count. Expected: {'to': 2, 'be': 2, 'or': 1, 'not': 1}",
+          "Given text = 'to be or not to be', print a dict mapping each word to how many times it appears. Expected: {'to': 2, 'be': 2, 'or': 1, 'not': 1}",
         starter: "text = 'to be or not to be'\n# print counts dict here\n",
         expected: "{'to': 2, 'be': 2, 'or': 1, 'not': 1}",
+        hints: [
+          "Same pattern as counting characters, but loop over words instead — `.split()` gives you the list.",
+          "Start with an empty dict, then for each word do the `counts.get(word, 0) + 1` step.",
+          "The expected order is insertion order: 'to' appears first in the text, so it's first in the dict.",
+        ],
+        solution:
+          "text = 'to be or not to be'\ncounts = {}\nfor word in text.split():\n    counts[word] = counts.get(word, 0) + 1\nprint(counts)\n",
+        solutionWhy:
+          "Identical to the character-counting trace, just splitting into words first.\n\nThe standard library has `collections.Counter` which does this in one line — `Counter(text.split())` — and you'll meet it later. Writing it by hand once makes clear what Counter is actually doing for you.",
       },
       {
         kind: "mcq",
         id: "m1",
         title: "Which value can be a dict key?",
-        prompt: "Only hashable values can be dict keys.",
-        options: [
-          "['a', 'b']",
-          "{'x': 1}",
-          "(1, 'two')",
-          "{1, 2, 3}",
-        ],
+        prompt: "Keys must be hashable, which in practice means immutable.",
+        options: ["['a', 'b']", "{'x': 1}", "(1, 'two')", "{1, 2, 3}"],
         correctIndex: 2,
-        why: "Tuples of hashables are hashable. Lists, dicts, and sets are not.",
+        optionFeedback: [
+          "A list is mutable, so it can't be a key — its contents could change and the lookup would break.",
+          "A dict is mutable too, so it can't be a key either.",
+          "Right. A tuple of immutable values is itself immutable, and makes a perfectly good key.",
+          "A set is mutable. (A frozenset, its immutable cousin, would work.)",
+        ],
+        why:
+          "Only immutable values can be keys, because a key that changed after insertion could no longer be found. Tuples of immutables qualify; lists, dicts and sets don't.",
       },
     ],
   },
@@ -1352,22 +1554,72 @@ export const pythonLessons: Lesson[] = [
     track: "python",
     index: 9,
     title: "Sets & uniqueness",
-    summary: "Unordered collections of unique hashables; union/intersection/difference.",
+    summary: "Unordered collections of unique values; fast membership; set algebra.",
     concepts: ["py:set", "py:set-algebra"],
     steps: [
       {
         kind: "read",
         id: "r1",
-        title: "When to reach for a set",
+        title: "A collection with no duplicates and no order",
         body:
-          "Sets test membership in O(1) and enforce uniqueness. Operators: `|` union, `&` intersection, `-` difference, `^` symmetric difference.\n\n`{}` is an empty dict, not an empty set — use `set()` for that.",
+          "A **set** holds unique values, with no positions and no order:\n\n```\ncolours = {'red', 'green', 'red'}\nprint(colours)          # {'red', 'green'} — the duplicate is gone\n```\n\nBecause there's no order, there's no indexing — `colours[0]` is an error. What you get instead is **very fast membership testing**, and automatic de-duplication.\n\n```\ncolours.add('blue')\ncolours.discard('red')     # no error if it's missing\n'green' in colours         # True — and fast\n```\n\nThe speed point is the real reason sets exist. Checking `x in some_list` may have to scan the entire list; `x in some_set` is effectively instant however large the set is. If you're repeatedly asking \"have I seen this before?\", a set is the tool.\n\nOne trap worth knowing now: `{}` is an **empty dict**, not an empty set. Python gave the braces to dicts first. For an empty set you must write `set()`.",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "Set algebra",
+        body:
+          "Sets support the operations from school maths, and they're genuinely useful for comparing two collections:\n\n```\na = {1, 2, 3}\nb = {2, 3, 4}\n\na | b     # {1, 2, 3, 4}  union — in either\na & b     # {2, 3}        intersection — in both\na - b     # {1}           difference — in a but not b\na ^ b     # {1, 4}        symmetric difference — in one but not both\n```\n\nThese answer real questions in one line. Which users are in both groups? `group_a & group_b`. Which permissions does this role have that the other doesn't? `role_a - role_b`. Doing that with nested loops takes ten lines and runs slower.\n\nSets also make de-duplication trivial:\n\n```\nunique = set([1, 2, 2, 3])       # {1, 2, 3}\nunique = list(set(items))        # back to a list, order NOT preserved\n```\n\nThat last caveat matters — if order matters to you, `set()` will scramble it, and you need the loop-with-a-seen-set pattern instead.",
+      },
+      {
+        kind: "categorize",
+        id: "cat1",
+        title: "Which structure fits the job?",
+        prompt:
+          "Given what you now know about lists, dicts and sets, sort each requirement into the structure that suits it best.",
+        buckets: ["list", "dict", "set"],
+        items: [
+          { text: "keep items in the order added", bucket: 0, why: "Lists preserve order and allow duplicates — the default choice for a sequence." },
+          { text: "look up a price by product name", bucket: 1, why: "That's a key-to-value mapping, which is exactly what a dict is for." },
+          { text: "check 'have I seen this id before?'", bucket: 2, why: "Fast membership testing with no duplicates — the classic set use." },
+          { text: "strip duplicates out of some data", bucket: 2, why: "Sets discard duplicates automatically by construction." },
+          { text: "count how often each word appears", bucket: 1, why: "You're mapping each word to a number, so a dict." },
+          { text: "store a to-do list in priority order", bucket: 0, why: "Order is the whole point, and duplicates are allowed." },
+        ],
       },
       {
         kind: "example",
         id: "e1",
         title: "Dedupe while preserving order",
         code:
-          "seen = set()\nout = []\nfor x in [1, 2, 2, 3, 1, 4]:\n    if x not in seen:\n        seen.add(x)\n        out.append(x)\nprint(out)\n",
+          "seen = set()\nout = []\nfor x in [1, 2, 2, 3, 1, 4]:\n    if x not in seen:\n        seen.add(x)\n        out.append(x)\nprint(out)\nprint(list(set([1, 2, 2, 3, 1, 4])))\n",
+        note:
+          "Two approaches. The loop keeps first-seen order; `set()` alone is shorter but gives no order guarantee. Use the loop when order matters.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "Set gotchas",
+        items: [
+          {
+            wrong: "s = {}\ns.add(1)",
+            problem:
+              "AttributeError: 'dict' object has no attribute 'add'. `{}` creates an empty DICT, not an empty set — braces belong to dicts when there's nothing inside to disambiguate.",
+            right: "s = set()\ns.add(1)",
+          },
+          {
+            wrong: "s = {3, 1, 2}\nprint(s[0])",
+            problem:
+              "TypeError: 'set' object is not subscriptable. Sets have no order, so there's no 'first' item to index. Convert to a list first if you need positions.",
+            right: "s = {3, 1, 2}\nprint(sorted(s)[0])",
+          },
+          {
+            wrong: "items = ['b', 'a', 'b']\nprint(list(set(items)))",
+            problem:
+              "De-duplicates correctly, but the order is not guaranteed to match the original. If you need first-seen order, loop with a `seen` set instead of converting.",
+            right: "items = ['b', 'a', 'b']\nseen = set()\nout = [x for x in items if not (x in seen or seen.add(x))]\nprint(out)",
+          },
+        ],
       },
       {
         kind: "predict",
@@ -1375,14 +1627,27 @@ export const pythonLessons: Lesson[] = [
         title: "Predict",
         code: "print({1,2,3} & {2,3,4})\n",
         answer: "{2, 3}",
+        hints: [
+          "`&` is the intersection operator — it keeps only what appears in both sets.",
+          "Which values are present in {1,2,3} AND in {2,3,4}?",
+        ],
+        why: "Intersection keeps only values found in both sets. 1 is only in the first, 4 only in the second, so 2 and 3 remain.",
       },
       {
         kind: "write",
         id: "w1",
         title: "Unique letters",
-        prompt: "Print the number of unique letters in 'mississippi'. Expected: 4",
+        prompt: "Print how many different letters appear in 'mississippi'. Expected: 4",
         starter: "# print the count\n",
         expected: "4",
+        hints: [
+          "A string can be handed straight to set() — you get a set of its characters.",
+          "Sets drop duplicates automatically, so all that's left is to measure the size.",
+          "`print(len(set('mississippi')))`",
+        ],
+        solution: "print(len(set('mississippi')))\n",
+        solutionWhy:
+          "`set('mississippi')` gives {'m','i','s','p'} — every repeat collapses away — and `len` counts them. Four distinct letters.\n\nThis one-liner replaces what would otherwise be a loop with a seen-list and a membership check on every character.",
       },
     ],
   },
@@ -1392,22 +1657,113 @@ export const pythonLessons: Lesson[] = [
     track: "python",
     index: 10,
     title: "Comprehensions",
-    summary: "List, dict, and set comprehensions with conditions and nested loops.",
+    summary: "List, dict and set comprehensions with conditions and nested loops.",
     concepts: ["py:comprehensions", "py:filter-map"],
     steps: [
       {
         kind: "read",
         id: "r1",
-        title: "Read them as pipelines",
+        title: "A loop that builds a list, in one line",
         body:
-          "`[expr for x in xs if cond]` reads: **for each** x in xs, **if** cond, produce expr.\n\nSet: `{...}`. Dict: `{k: v for ...}`. Generator: `(...)` — lazy, doesn't materialize.\n\nPrefer comprehensions over `map`/`filter` in idiomatic Python.",
+          "You've already written this shape several times: make an empty list, loop, append.\n\n```\nsquares = []\nfor n in range(5):\n    squares.append(n * n)\n```\n\nThat pattern is so common Python has dedicated syntax for it — a **list comprehension**:\n\n```\nsquares = [n * n for n in range(5)]\n```\n\nSame result, one line. The pieces map directly onto the loop version:\n\n- `n * n` — what to append (this goes **first**, which is the bit that feels backwards at first)\n- `for n in range(5)` — the loop header, unchanged\n\nRead it left to right as: *\"n times n, for each n in range 5\"*.\n\nAdd a condition on the end to skip items:\n\n```\n[n * n for n in range(5) if n % 2 == 0]     # only even n\n```\n\nWhich corresponds to putting an `if` inside the loop before the append.\n\nThe reason to use them isn't brevity for its own sake — it's that the whole operation reads as a single thought (\"the squares of the even numbers\") rather than four lines you have to mentally execute.",
+      },
+      {
+        kind: "trace",
+        id: "t1",
+        title: "Translate a loop into a comprehension",
+        intro:
+          "Watch the four-line version become the one-line version, piece by piece. The pieces don't change — only where they sit.",
+        code: "squares = []\nfor n in range(5):\n    if n % 2 == 0:\n        squares.append(n * n)\n\n# becomes:\nsquares = [n * n for n in range(5) if n % 2 == 0]\n",
+        lines: [
+          {
+            code: "squares = []",
+            what:
+              "The empty list disappears entirely in the comprehension — the square brackets around the whole expression take its place.",
+            state: "nothing left to write for this line",
+          },
+          {
+            code: "for n in range(5):",
+            what: "This moves into the middle of the comprehension, completely unchanged.",
+            state: "[ ...            for n in range(5)            ]",
+          },
+          {
+            code: "    if n % 2 == 0:",
+            what: "The condition moves to the end, also unchanged apart from losing its colon.",
+            state: "[ ...            for n in range(5) if n % 2 == 0 ]",
+          },
+          {
+            code: "        squares.append(n * n)",
+            what:
+              "Whatever you were appending moves to the FRONT. This is the only piece that changes position, and it's why comprehensions read oddly until you've done a few.",
+            state: "[ n * n          for n in range(5) if n % 2 == 0 ]",
+          },
+          {
+            code: "squares = [n * n for n in range(5) if n % 2 == 0]",
+            what: "The finished comprehension. Same loop, same condition, same appended value — rearranged.",
+            output: "[0, 4, 16]",
+          },
+        ],
+        takeaway:
+          "expression first, then the for, then the if. If a comprehension confuses you, mentally unfold it back into the loop — they're exactly equivalent.",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "The other three kinds",
+        body:
+          "The same syntax builds sets and dicts, just with different brackets:\n\n```\n{n * n for n in range(5)}          # set — braces\n{n: n * n for n in range(5)}       # dict — braces with key: value\n(n * n for n in range(5))          # generator — round brackets\n```\n\nThe **dict** version is the one you'll use most after lists — it's the natural way to build a lookup table from something you already have:\n\n```\nnames = ['Ada', 'Ren']\nlengths = {name: len(name) for name in names}     # {'Ada': 3, 'Ren': 3}\n```\n\nThe **generator** version doesn't build anything up front — it produces values one at a time as you ask for them. For a big sequence that saves a lot of memory, and it's why `sum(n * n for n in range(1000000))` is fine while building the full list first would be wasteful.\n\nYou can also nest loops. The order reads the same as nested for-loops would:\n\n```\n[(x, y) for x in range(3) for y in range(3) if x != y]\n```\n\nA word of caution: comprehensions stop being an improvement once they get long. If you're nesting two loops and two conditions, a plain loop is easier to read and easier to debug. Brevity isn't the goal — clarity is.",
       },
       {
         kind: "example",
         id: "e1",
-        title: "Nested",
+        title: "All four in action",
         code:
-          "pairs = [(x, y) for x in range(3) for y in range(3) if x != y]\nprint(pairs)\n",
+          "print([n * n for n in range(5)])\n"
+          + "print({n % 3 for n in range(10)})\n"
+          + "print({name: len(name) for name in ['Ada', 'Ren']})\n"
+          + "print(sum(n * n for n in range(5)))\n"
+          + "print([(x, y) for x in range(3) for y in range(3) if x != y])\n",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "Comprehension mistakes",
+        items: [
+          {
+            wrong: "print([n for n in range(5) if n % 2])",
+            problem:
+              "Gives the ODD numbers [1, 3], which surprises people expecting evens. `n % 2` is the remainder — it's 1 (truthy) for odds and 0 (falsy) for evens. Compare explicitly if you mean evens.",
+            right: "print([n for n in range(5) if n % 2 == 0])",
+          },
+          {
+            wrong: "squares = [n * n for n in range(5)]\nprint(squares.append(25))",
+            problem:
+              "Prints None. A comprehension does produce a real list, but `.append()` still returns None like always — the comprehension isn't the problem, the printed append is.",
+            right: "squares = [n * n for n in range(5)]\nsquares.append(25)\nprint(squares)",
+          },
+          {
+            wrong: "gen = (n * n for n in range(3))\nprint(list(gen))\nprint(list(gen))",
+            problem:
+              "The second line prints []. A generator is consumed as you read it — once exhausted, it's empty. If you need the values more than once, build a list instead.",
+            right: "vals = [n * n for n in range(3)]\nprint(list(vals))\nprint(list(vals))",
+          },
+        ],
+      },
+      {
+        kind: "parsons",
+        id: "pa1",
+        title: "Assemble a comprehension",
+        prompt:
+          "These fragments make a comprehension that collects the squares of the odd numbers below 10. Put them in the right order.",
+        solution: ["result = [", "    n * n", "    for n in range(10)", "    if n % 2 != 0", "]", "print(result)"],
+        expectedOutput: "[1, 9, 25, 49, 81]",
+        hints: [
+          "A comprehension always goes: the value you want, then the loop, then the filter.",
+          "The expression comes first — that's the piece that moved when you translated from a loop.",
+          "Opening bracket, expression, for-clause, if-clause, closing bracket, then the print.",
+        ],
+        explanation:
+          "Split across lines like this, the structure is much easier to see — and it's perfectly valid Python. Long comprehensions are often written this way precisely for that reason.",
       },
       {
         kind: "predict",
@@ -1415,23 +1771,44 @@ export const pythonLessons: Lesson[] = [
         title: "Predict",
         code: "print([x*x for x in range(1,6) if x % 2])\n",
         answer: "[1, 9, 25]",
+        hints: [
+          "range(1,6) gives 1,2,3,4,5. Now — what does the bare `if x % 2` actually keep?",
+          "`x % 2` is 1 for odd numbers (truthy) and 0 for even (falsy). So it keeps the ODD ones.",
+        ],
+        why:
+          "`if x % 2` with no comparison keeps values whose remainder is truthy — that is, the odds. So 1, 3 and 5 survive, and their squares are 1, 9 and 25.",
       },
       {
         kind: "fix",
         id: "f1",
-        title: "Fix: dict of number → square, only evens",
+        title: "Fix: dict of number → square, evens only",
         buggy: "print({n: n*n for n in range(6) if n % 2})\n",
         expected: "{0: 0, 2: 4, 4: 16}",
-        hint: "`n % 2` is true for odds. Flip it with `not` or compare `== 0`.",
+        hints: [
+          "Run it — you get the odds, not the evens.",
+          "`n % 2` is truthy for odd numbers. You want the opposite.",
+          "Change the condition to `if n % 2 == 0`.",
+        ],
+        solution: "print({n: n*n for n in range(6) if n % 2 == 0})\n",
+        solutionWhy:
+          "`n % 2` on its own is truthy for odds. Writing `== 0` makes the intent explicit and selects evens.\n\nThis is worth a habit: even though bare `if n % 2` works, spelling out `== 0` reads as 'divides evenly' and eliminates a very easy off-by-one-concept mistake.",
       },
       {
         kind: "write",
         id: "w1",
         title: "Flatten",
         prompt:
-          "Given `m = [[1,2],[3,4],[5,6]]`, print a single flat list: [1, 2, 3, 4, 5, 6]",
+          "Given m = [[1,2],[3,4],[5,6]], print a single flat list containing every number: [1, 2, 3, 4, 5, 6]",
         starter: "m = [[1,2],[3,4],[5,6]]\n# print here\n",
         expected: "[1, 2, 3, 4, 5, 6]",
+        hints: [
+          "You need two loops: one over the inner lists, then one over the numbers inside each.",
+          "In a comprehension, nested loops are written left to right in the same order you'd nest them normally.",
+          "`[n for row in m for n in row]` — outer loop first, inner loop second, expression at the front.",
+        ],
+        solution: "m = [[1,2],[3,4],[5,6]]\nprint([n for row in m for n in row])\n",
+        solutionWhy:
+          "The two for-clauses read in the same order as nested loops: for each row in m, then for each n in that row, produce n.\n\nUnfolded, it's exactly:\n\n```\nout = []\nfor row in m:\n    for n in row:\n        out.append(n)\n```\n\nIf the nested form ever confuses you, writing it out like that is the fastest way to check you've got the order right.",
       },
     ],
   },
@@ -1484,7 +1861,7 @@ export const pythonLessons: Lesson[] = [
             state: "returning 10",
           },
           {
-            code: "x = double(5)      # back at the call",
+            code: "x = double(5)",
             what:
               "Execution lands back where it jumped from. The call expression is now just the value 10, which gets stuck onto x.",
             state: "x = 10",
@@ -1665,24 +2042,56 @@ export const pythonLessons: Lesson[] = [
       {
         kind: "read",
         id: "r1",
-        title: "Modern hint syntax (3.10+/3.12+)",
+        title: "Writing down what you meant",
         body:
-          "You no longer need to import from `typing` for most things:\n\n- `list[int]`, `dict[str, float]`, `tuple[int, ...]` — built-in generics.\n- `int | None` — union type (replaces `Optional[int]`).\n- `type Vec = list[float]` — new PEP 695 type alias (3.12+).\n\nType hints are optional and non-enforced at runtime; they document intent and enable checkers.",
+          "Python doesn't require you to declare types. But you can **annotate** them anyway, purely as documentation:\n\n```\ndef greet(name: str) -> str:\n    return f'hello, {name}'\n```\n\n`name: str` says the parameter should be a string; `-> str` says the function hands back a string.\n\nThe crucial thing to understand up front: **Python does not check these at runtime.** Nothing stops you passing a number. The hint is a note for humans and for tools.\n\nSo what's the point? Three things, all real:\n\n- **Editors** use them for autocomplete and to flag mistakes as you type.\n- **Type checkers** like mypy or pyright read them and catch whole classes of bug before you run anything.\n- **Readers** — including you in six months — can see what a function expects without reading its body.\n\nThey're optional. Plenty of good Python has none. But on anything that lives longer than a script, they pay for themselves quickly.",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "The modern syntax",
+        body:
+          "Older Python needed imports from the `typing` module for anything beyond the basics. Modern Python mostly doesn't:\n\n**Built-in generics** — say what's inside a container:\n\n```\ndef total(nums: list[int]) -> int: ...\ndef lookup(d: dict[str, float]) -> float: ...\n```\n\n**Unions with `|`** (3.10+) — when a value could be one of several types:\n\n```\ndef parse(s: str) -> int | None:      # an int, or nothing\n```\n\n`X | None` is extremely common — it's how you say \"this might not be there\". You'll see the older spelling `Optional[int]` in existing code; they mean exactly the same thing.\n\n**Type aliases** (3.12+) — give a name to a complicated type:\n\n```\ntype Vec = list[float]\n\ndef norm(v: Vec) -> float: ...\n```\n\nHandy when the same shape appears in a dozen signatures and `list[tuple[str, int]]` is getting hard to read.",
       },
       {
         kind: "example",
         id: "e1",
-        title: "Hinting a function",
+        title: "Hints in practice",
         code:
-          "def parse_age(s: str) -> int | None:\n" +
-          "    return int(s) if s.isdigit() else None\n" +
-          "\nprint(parse_age('42'), parse_age('x'))\n",
+          "def parse_age(s: str) -> int | None:\n"
+          + "    return int(s) if s.isdigit() else None\n\n"
+          + "print(parse_age('42'), parse_age('x'))\n\n"
+          + "type Vec = list[float]\n"
+          + "def norm(v: Vec) -> float:\n"
+          + "    return sum(x*x for x in v) ** 0.5\n"
+          + "print(norm([3.0, 4.0]))\n",
+        note:
+          "Both functions run exactly as they would without the annotations. Try passing parse_age a number and see that Python doesn't complain — only a type checker would.",
       },
       {
-        kind: "example",
-        id: "e2",
-        title: "PEP 695 type alias",
-        code: "type Vec = list[float]\ndef norm(v: Vec) -> float:\n    return sum(x*x for x in v) ** 0.5\nprint(norm([3.0, 4.0]))\n",
+        kind: "pitfalls",
+        id: "pf1",
+        title: "What hints do and don't do",
+        items: [
+          {
+            wrong: "def double(n: int) -> int:\n    return n * 2\n\nprint(double('ab'))",
+            problem:
+              "Prints 'abab' — no error at all. The hint says int, but Python never checks. Strings support `*`, so it happily does something you didn't intend. Hints catch this only when you run a type checker.",
+            right: "def double(n: int) -> int:\n    if not isinstance(n, int):\n        raise TypeError('expected int')\n    return n * 2",
+          },
+          {
+            wrong: "def add_item(item: str, items: list = []) -> list:\n    items.append(item)\n    return items",
+            problem:
+              "Annotating the parameter doesn't rescue you from the mutable-default trap — the shared list is still shared. Hints are documentation, not protection.",
+            right: "def add_item(item: str, items: list[str] | None = None) -> list[str]:\n    if items is None:\n        items = []\n    items.append(item)\n    return items",
+          },
+          {
+            wrong: "def f(x: int = 'hello') -> int:\n    return x",
+            problem:
+              "Runs without complaint despite the default contradicting the annotation. Python only stores annotations; it never validates them against the defaults.",
+            right: "def f(x: int = 0) -> int:\n    return x",
+          },
+        ],
       },
       {
         kind: "predict",
@@ -1690,16 +2099,30 @@ export const pythonLessons: Lesson[] = [
         title: "Predict",
         code: "def f(x: int) -> str:\n    return x  # hints don't enforce\nprint(type(f(5)).__name__)\n",
         answer: "int",
-        hint: "Hints are advisory. The function returns whatever it actually returns.",
+        hints: [
+          "The annotation claims the return is a str. But what does the body actually return?",
+          "Annotations are never enforced at runtime — the function hands back whatever the code hands back, which here is the int it was given.",
+        ],
+        why:
+          "The `-> str` is a note, not a rule. The body returns x unchanged, so an int comes out and `type(...)` reports int. A type checker would flag this line; Python itself never will.",
       },
       {
         kind: "write",
         id: "w1",
         title: "Annotate a signature",
         prompt:
-          "Write `def top(nums, k)` returning the k largest ints. Hint the parameters as list[int] and int, and the return as list[int]. Print top([4,1,7,2,8], 3). Expected: [8, 7, 4]",
+          "Write `top(nums, k)` returning the k largest numbers, largest first. Annotate the parameters as list[int] and int, and the return as list[int]. Print top([4,1,7,2,8], 3). Expected: [8, 7, 4]",
         starter: "def top(nums, k):\n    ...\n\nprint(top([4,1,7,2,8], 3))\n",
         expected: "[8, 7, 4]",
+        hints: [
+          "Annotations go after each parameter name with a colon, and the return type after a `->` before the final colon.",
+          "For the logic: sort descending, then take the first k. `sorted(nums, reverse=True)` sorts biggest-first.",
+          "Slice the first k off the sorted list with `[:k]`.",
+        ],
+        solution:
+          "def top(nums: list[int], k: int) -> list[int]:\n    return sorted(nums, reverse=True)[:k]\n\nprint(top([4,1,7,2,8], 3))\n",
+        solutionWhy:
+          "`sorted(nums, reverse=True)` builds a new descending list (leaving nums untouched), and `[:k]` takes the first k.\n\nThe annotations change nothing about how it runs — but `top(nums: list[int], k: int) -> list[int]` tells the next reader everything they need without opening the body.",
       },
     ],
   },
@@ -1709,22 +2132,126 @@ export const pythonLessons: Lesson[] = [
     track: "python",
     index: 13,
     title: "Classes & dataclasses",
-    summary: "OOP basics, `__init__`, methods, and `@dataclass` for records.",
+    summary: "Bundling data with behaviour; `__init__`, `self`, methods, and `@dataclass`.",
     concepts: ["py:classes", "py:oop", "py:dataclass"],
     steps: [
       {
         kind: "read",
         id: "r1",
-        title: "The shape of a class",
+        title: "Bundling data with the things you do to it",
         body:
-          "`__init__(self, ...)` sets up instance attributes. Methods take `self` as their first parameter.\n\nFor plain data records, use `@dataclass` — it writes `__init__`, `__repr__`, and `__eq__` for you.",
+          "So far your data has been loose — a name here, an age there, maybe a dict holding both. A **class** lets you define a new kind of thing, with its own data and its own functions.\n\n```\nclass Dog:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        return f'{self.name} says woof'\n\nd = Dog('Rex')\nprint(d.speak())        # Rex says woof\n```\n\nThe vocabulary:\n\n- **class** — the blueprint. `Dog` describes what any dog has and does.\n- **instance** — one actual thing built from it. `d` is one dog.\n- **attribute** — data on the instance. `d.name`.\n- **method** — a function belonging to the class. `speak`.\n\n**`__init__`** runs automatically when you create an instance. Its job is to set up the starting data. The double underscores mark it as special to Python — you never call it directly, `Dog('Rex')` does.\n\nAnd **`self`** is the instance itself, handed to every method automatically. Inside a method, `self.name` means \"this particular dog's name\". It's the thing that lets one method see what another one stored.",
+      },
+      {
+        kind: "trace",
+        id: "t1",
+        title: "Watch an instance get built and used",
+        intro:
+          "`self` is the piece everyone stumbles on. Follow where it comes from and what it refers to.",
+        code: "class Dog:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        return f'{self.name} says woof'\n\nd = Dog('Rex')\nprint(d.speak())\n",
+        lines: [
+          {
+            code: "class Dog:",
+            what:
+              "Python reads the whole class body and files it away as a blueprint. No dog exists yet — nothing has run, exactly like `def` storing a function without calling it.",
+            state: "Dog is defined; no instances",
+          },
+          {
+            code: "d = Dog('Rex')",
+            what:
+              "Calling the class creates a new empty instance and immediately calls __init__ on it. Python passes the new object in as `self`, and 'Rex' as `name`.",
+            state: "inside __init__: self = the new dog, name = 'Rex'",
+          },
+          {
+            code: "        self.name = name",
+            what:
+              "Store the value onto the instance. Note the two are different things: `name` is the local parameter, `self.name` is an attribute that lives on the object and survives after __init__ finishes.",
+            state: "the new dog now has .name = 'Rex'",
+          },
+          {
+            code: "d = Dog('Rex')",
+            what: "__init__ returns nothing useful; Python hands back the finished instance, and d points at it.",
+            state: "d → Dog with .name = 'Rex'",
+          },
+          {
+            code: "print(d.speak())",
+            what:
+              "Calling a method on an instance passes that instance as `self` automatically. You wrote `d.speak()` with no arguments, but speak receives self = d. That's why the definition has a parameter you never seem to pass.",
+            state: "inside speak: self = d",
+          },
+          {
+            code: "        return f'{self.name} says woof'",
+            what: "self.name looks up the attribute stored earlier by __init__ — 'Rex'. The finished string goes back to print.",
+            output: "Rex says woof",
+          },
+        ],
+        takeaway:
+          "`Dog('Rex')` creates an instance then calls __init__ on it. Every method gets that instance as `self` automatically, which is how methods reach the data __init__ stored.",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "@dataclass — when it's mostly just data",
+        body:
+          "A lot of classes exist only to hold a few fields. Writing `__init__` for those is tedious and repetitive:\n\n```\nclass Point:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n```\n\n`@dataclass` writes that for you from the field names alone:\n\n```\nfrom dataclasses import dataclass\n\n@dataclass\nclass Point:\n    x: float\n    y: float\n```\n\nThat's the same class, plus two bonuses you'd otherwise have to write by hand:\n\n- **A readable repr.** `print(p)` shows `Point(x=3, y=4)` rather than `<__main__.Point object at 0x7f...>`.\n- **Sensible equality.** `Point(1, 2) == Point(1, 2)` is True. Without a dataclass, two separately-built points with identical values compare as different, because the default comparison asks \"are these literally the same object?\"\n\nYou can still add methods normally. Reach for `@dataclass` whenever a class is mostly fields — which is most of the time.",
       },
       {
         kind: "example",
         id: "e1",
         title: "Dataclass",
         code:
-          "from dataclasses import dataclass\n\n@dataclass\nclass Point:\n    x: float\n    y: float\n    def dist(self) -> float:\n        return (self.x**2 + self.y**2) ** 0.5\n\np = Point(3, 4)\nprint(p, p.dist())\n",
+          "from dataclasses import dataclass\n\n@dataclass\nclass Point:\n    x: float\n    y: float\n    def dist(self) -> float:\n        return (self.x**2 + self.y**2) ** 0.5\n\np = Point(3, 4)\nprint(p, p.dist())\nprint(Point(1, 2) == Point(1, 2))\n",
+        note:
+          "That last line is the equality bonus. Try removing the @dataclass line and re-running — you'll need to write __init__ yourself, and the comparison becomes False.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "The class mistakes everyone makes",
+        items: [
+          {
+            wrong: "class Dog:\n    def speak():\n        return 'woof'\n\nd = Dog()\nprint(d.speak())",
+            problem:
+              "TypeError: speak() takes 0 positional arguments but 1 was given. Calling a method on an instance always passes that instance in, so the definition must have a parameter to receive it. That parameter is `self`.",
+            right: "class Dog:\n    def speak(self):\n        return 'woof'\n\nd = Dog()\nprint(d.speak())",
+          },
+          {
+            wrong: "class Dog:\n    def __init__(self, name):\n        name = name\n\nd = Dog('Rex')\nprint(d.name)",
+            problem:
+              "AttributeError: 'Dog' object has no attribute 'name'. `name = name` just reassigns the local parameter to itself and is thrown away when __init__ ends. To store it on the object you need `self.`",
+            right: "class Dog:\n    def __init__(self, name):\n        self.name = name\n\nd = Dog('Rex')\nprint(d.name)",
+          },
+          {
+            wrong: "class Basket:\n    items = []\n    def add(self, x):\n        self.items.append(x)\n\na, b = Basket(), Basket()\na.add('apple')\nprint(b.items)",
+            problem:
+              "Prints ['apple'] — b got a's apple. A list defined in the class body belongs to the CLASS, so every instance shares it. Same trap as mutable default arguments. Per-instance data belongs in __init__.",
+            right: "class Basket:\n    def __init__(self):\n        self.items = []\n    def add(self, x):\n        self.items.append(x)\n\na, b = Basket(), Basket()\na.add('apple')\nprint(b.items)",
+          },
+        ],
+      },
+      {
+        kind: "parsons",
+        id: "pa1",
+        title: "Assemble a class",
+        prompt:
+          "Put these lines in order to define a Circle with a radius and an area method, then use it. Watch the indentation levels.",
+        solution: [
+          "class Circle:",
+          "    def __init__(self, r):",
+          "        self.r = r",
+          "    def area(self):",
+          "        return 3.14159 * self.r ** 2",
+          "c = Circle(2)",
+          "print(round(c.area(), 2))",
+        ],
+        expectedOutput: "12.57",
+        hints: [
+          "The class header comes first, then its methods indented inside it.",
+          "__init__ has to store the radius before area can use it — and both method bodies are indented one level deeper than their def lines.",
+          "Class, then __init__ and its body, then area and its body, then the two unindented lines that create and use the instance.",
+        ],
+        explanation:
+          "Three indentation levels: the class body, the method definitions inside it, and the statements inside each method. The final two lines sit at the outer level because they're not part of the class.",
       },
       {
         kind: "predict",
@@ -1733,6 +2260,12 @@ export const pythonLessons: Lesson[] = [
         code:
           "class C:\n    n = 0\n    def __init__(self): C.n += 1\n\na, b, c = C(), C(), C()\nprint(C.n)\n",
         answer: "3",
+        hints: [
+          "`n = 0` sits in the class body, so it belongs to the class itself rather than to any instance.",
+          "__init__ runs once per instance created, and each run increments that single shared class attribute.",
+        ],
+        why:
+          "`C.n` is one value shared by the whole class, not one per instance. Three instances are created, so __init__ runs three times, each adding 1. This is the legitimate use of a class attribute — counting instances — as opposed to the mutable-list version in the pitfalls, which is a bug.",
       },
       {
         kind: "fix",
@@ -1741,17 +2274,34 @@ export const pythonLessons: Lesson[] = [
         buggy:
           "class Rect:\n    def __init__(self, w, h):\n        self.w = w\n        self.h = h\n\nr = Rect(3, 4)\nprint(r.area())\n",
         expected: "12",
-        hint: "Add a method `area(self)` returning `self.w * self.h`.",
+        hints: [
+          "Run it — AttributeError, because Rect has no method called area.",
+          "Add a method inside the class, indented to the same level as __init__.",
+          "It needs `self` as its first parameter so it can reach self.w and self.h.",
+        ],
+        solution:
+          "class Rect:\n    def __init__(self, w, h):\n        self.w = w\n        self.h = h\n\n    def area(self):\n        return self.w * self.h\n\nr = Rect(3, 4)\nprint(r.area())\n",
+        solutionWhy:
+          "`area` is defined at the same indentation as __init__, making it part of the class. Its `self` parameter gives it access to the attributes __init__ stored.\n\nNote it returns rather than prints — the caller decides what to do with the number, exactly as in the functions lesson.",
       },
       {
         kind: "write",
         id: "w1",
         title: "Counter class",
         prompt:
-          "Write a class `Counter` with methods `tick()` and `value()`. Create one, tick 5 times, then print value(). Expected: 5",
+          "Write a class Counter with methods tick() and value(). Create one, tick 5 times, then print value(). Expected: 5",
         starter:
           "class Counter:\n    def __init__(self):\n        ...\n    def tick(self):\n        ...\n    def value(self):\n        ...\n\nc = Counter()\nfor _ in range(5):\n    c.tick()\nprint(c.value())\n",
         expected: "5",
+        hints: [
+          "__init__ should set the starting count to 0 — and it must be stored on self, not as a plain local.",
+          "tick adds one to that stored count; value hands it back.",
+          "self.count = 0 in __init__, self.count += 1 in tick, return self.count in value.",
+        ],
+        solution:
+          "class Counter:\n    def __init__(self):\n        self.count = 0\n    def tick(self):\n        self.count += 1\n    def value(self):\n        return self.count\n\nc = Counter()\nfor _ in range(5):\n    c.tick()\nprint(c.value())\n",
+        solutionWhy:
+          "`self.count` lives on the instance, so each Counter has its own tally — build a second one and it starts at 0 independently.\n\nPutting `count = 0` in the class body instead would appear to work here, but every Counter would then share one number, which is the bug from the pitfalls step.",
       },
     ],
   },
@@ -1761,22 +2311,86 @@ export const pythonLessons: Lesson[] = [
     track: "python",
     index: 14,
     title: "Errors & exceptions",
-    summary: "Raising, catching, `else`/`finally`, and custom exceptions.",
+    summary: "Catching what you expect, letting the rest surface, and raising your own.",
     concepts: ["py:exceptions", "py:try-except", "py:custom-exceptions"],
     steps: [
       {
         kind: "read",
         id: "r1",
-        title: "try / except / else / finally",
+        title: "Catching what might go wrong",
         body:
-          "- `try:` — code that might raise.\n- `except SomeError as e:` — catches this class (and subclasses).\n- `else:` — runs only if `try` didn't raise.\n- `finally:` — always runs, even on `return` or `raise`.\n\nRaise with `raise ValueError('bad input')`. Never catch bare `except:` — it swallows `KeyboardInterrupt`.",
+          "Some failures are genuinely expected — a file that isn't there, text that isn't a number, a network that's down. **`try` / `except`** lets you handle those without your program dying.\n\n```\ntry:\n    n = int(user_input)\nexcept ValueError:\n    print(\"that wasn't a number\")\n```\n\nIf the `try` block raises the named error, the `except` block runs instead of the program stopping. If nothing goes wrong, the except is skipped.\n\nYou can capture the error object itself to see what it said:\n\n```\nexcept ValueError as e:\n    print(f'bad input: {e}')\n```\n\nTwo extras complete the picture:\n\n- **`else:`** runs only if the try block did NOT raise. Useful for the code that should only happen on success.\n- **`finally:`** runs no matter what — success, failure, even an early `return`. It's for cleanup that must happen either way.\n\nAnd you can raise errors yourself when something is wrong:\n\n```\nif amount < 0:\n    raise ValueError('amount cannot be negative')\n```",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "Catch narrowly — the most important rule here",
+        body:
+          "It's tempting to write a bare `except:` that swallows everything. Don't.\n\n```\ntry:\n    result = compute()\nexcept:                 # catches literally everything\n    print('failed')\n```\n\nThat hides typos, name errors, out-of-memory, and even your Ctrl-C. A bug that should have announced itself loudly instead prints 'failed' and carries on with wrong data. Debugging that is miserable.\n\nCatch the specific thing you actually expect:\n\n```\nexcept ValueError:\n```\n\nand let everything else propagate. **An error you didn't anticipate should crash**, because a crash with a traceback tells you exactly where and why. Silence tells you nothing.\n\nIf you genuinely must catch broadly — a top-level handler in a long-running service, say — use `except Exception as e:` and log the error rather than discarding it. `except Exception` at least leaves Ctrl-C and system-exit alone.\n\nThe common exception types you'll meet:\n\n- `ValueError` — right type, wrong value (`int('abc')`)\n- `TypeError` — wrong type entirely (`'a' + 1`)\n- `KeyError` / `IndexError` — missing dict key / list position\n- `FileNotFoundError`, `ZeroDivisionError`, `AttributeError`",
+      },
+      {
+        kind: "trace",
+        id: "t1",
+        title: "Watch try / except / finally flow",
+        intro:
+          "The surprise here is `finally` running even though the function already returned. Follow the order carefully.",
+        code: "def f():\n    try:\n        return 1\n    finally:\n        print('cleanup')\n\nprint(f())\n",
+        lines: [
+          { code: "print(f())", what: "Evaluate f() first — execution jumps into the function.", state: "inside f" },
+          {
+            code: "    try:\n        return 1",
+            what:
+              "The try block runs and hits a return. The value 1 is worked out and held ready — but the function does NOT exit yet, because there's a finally still to honour.",
+            state: "return value 1 held pending",
+          },
+          {
+            code: "    finally:\n        print('cleanup')",
+            what:
+              "finally runs on the way out, no matter how the block is leaving — normally, via an exception, or via a return. So 'cleanup' prints first.",
+            output: "cleanup",
+          },
+          {
+            code: "print(f())",
+            what: "Only now does f actually return the 1 it was holding, and the outer print shows it.",
+            output: "cleanup\n1",
+          },
+        ],
+        takeaway:
+          "`finally` always runs before control genuinely leaves the block — which is exactly why it's the right place for cleanup like closing a file or releasing a lock.",
       },
       {
         kind: "example",
         id: "e1",
         title: "Custom exception",
         code:
-          "class NotEnough(Exception): pass\n\ndef withdraw(balance, amt):\n    if amt > balance: raise NotEnough(f'need {amt}, have {balance}')\n    return balance - amt\n\ntry:\n    withdraw(10, 20)\nexcept NotEnough as e:\n    print('error:', e)\n",
+          "class NotEnough(Exception):\n    pass\n\ndef withdraw(balance, amt):\n    if amt > balance:\n        raise NotEnough(f'need {amt}, have {balance}')\n    return balance - amt\n\ntry:\n    withdraw(10, 20)\nexcept NotEnough as e:\n    print('error:', e)\n",
+        note:
+          "Defining your own exception type is just subclassing Exception with an empty body. It lets callers catch exactly your failure without also swallowing unrelated ValueErrors.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "Exception-handling mistakes",
+        items: [
+          {
+            wrong: "try:\n    total = compte_total()\nexcept:\n    total = 0",
+            problem:
+              "`compte_total` is a typo, which raises NameError — and the bare except swallows it, silently setting total to 0. You'd hunt for that for hours. Catch only what you expect.",
+            right: "try:\n    total = compute_total()\nexcept ValueError:\n    total = 0",
+          },
+          {
+            wrong: "try:\n    risky()\nexcept Exception as e:\n    pass",
+            problem:
+              "Catching and then doing nothing is worse than not catching. The failure is invisible and the program carries on in an unknown state. At minimum, log it.",
+            right: "try:\n    risky()\nexcept Exception as e:\n    print(f'risky() failed: {e}')",
+          },
+          {
+            wrong: "try:\n    n = int('x')\nexcept TypeError:\n    print('nope')",
+            problem:
+              "The except never fires — int('x') raises ValueError, not TypeError, so the error escapes uncaught. Catching the wrong class is the same as not catching at all.",
+            right: "try:\n    n = int('x')\nexcept ValueError:\n    print('nope')",
+          },
+        ],
       },
       {
         kind: "predict",
@@ -1785,24 +2399,46 @@ export const pythonLessons: Lesson[] = [
         code:
           "def f():\n    try:\n        return 1\n    finally:\n        print('cleanup')\nprint(f())\n",
         answer: "cleanup\n1",
+        hints: [
+          "There are two things being output — the print inside finally, and the print of the returned value.",
+          "finally runs on the way out of the block, before the return actually completes. So which prints first?",
+        ],
+        why:
+          "The return value is computed and held, then finally runs (printing 'cleanup'), and only then does the function hand back 1 for the outer print. finally always gets its turn before control leaves.",
       },
       {
         kind: "fix",
         id: "f1",
         title: "Fix: catch the specific error, not everything",
-        buggy:
-          "try:\n    n = int('x')\nexcept:\n    print('failed')\n",
+        buggy: "try:\n    n = int('x')\nexcept:\n    print('failed')\n",
         expected: "bad int: invalid literal for int() with base 10: 'x'",
-        hint: "Catch `ValueError as e` and print exactly `bad int: {e}`.",
+        hints: [
+          "The bare `except:` catches everything, which hides what actually went wrong. Which specific error does int('x') raise?",
+          "It's a ValueError — right type, wrong value. Catch that specifically.",
+          "Capture the error with `as e` and print exactly `bad int: {e}` using an f-string.",
+        ],
+        solution:
+          "try:\n    n = int('x')\nexcept ValueError as e:\n    print(f'bad int: {e}')\n",
+        solutionWhy:
+          "Naming ValueError means a genuinely unexpected error — a typo'd function name, say — would still crash loudly instead of being swallowed.\n\nCapturing with `as e` also gives you Python's own message, which is far more useful than a generic 'failed'. Here it tells you exactly which value couldn't be converted.",
       },
       {
         kind: "write",
         id: "w1",
         title: "Safe divide",
         prompt:
-          "Write `safe_div(a, b)` that returns a/b, or the string 'undefined' when b == 0. Print safe_div(6, 3) and safe_div(1, 0).",
+          "Write safe_div(a, b) that returns a / b, or the string 'undefined' when b is 0. Print safe_div(6, 3) and safe_div(1, 0).",
         starter: "def safe_div(a, b):\n    ...\n\nprint(safe_div(6, 3))\nprint(safe_div(1, 0))\n",
         expected: "2.0\nundefined",
+        hints: [
+          "Dividing by zero raises ZeroDivisionError — you can either check for it first, or catch it.",
+          "With try/except: attempt the division in the try, and return 'undefined' from the except.",
+          "Remember `/` always gives a float, so 6 / 3 shows as 2.0.",
+        ],
+        solution:
+          "def safe_div(a, b):\n    try:\n        return a / b\n    except ZeroDivisionError:\n        return 'undefined'\n\nprint(safe_div(6, 3))\nprint(safe_div(1, 0))\n",
+        solutionWhy:
+          "The try attempts the division; if b is 0 the ZeroDivisionError is caught and the fallback string returned instead.\n\n`if b == 0: return 'undefined'` would work equally well here, and is arguably clearer for a condition this simple. Exceptions earn their keep when the failure is buried deeper — several calls down, where an if-check at the top can't see it.",
       },
     ],
   },
@@ -1812,22 +2448,87 @@ export const pythonLessons: Lesson[] = [
     track: "python",
     index: 15,
     title: "Iterators & generators",
-    summary: "Lazy sequences with `yield`; the iterator protocol; generator expressions.",
+    summary: "Producing values one at a time with `yield`, instead of building whole lists.",
     concepts: ["py:iterator", "py:generator", "py:yield"],
     steps: [
       {
         kind: "read",
         id: "r1",
-        title: "yield produces a lazy sequence",
+        title: "Producing values on demand",
         body:
-          "A function containing `yield` returns a **generator** — you get values one at a time on demand. Ideal for large or infinite streams.\n\nGenerator expression: `(x*x for x in xs)` — same idea, inline.",
+          "A normal function computes everything and returns it in one go. If it's building a list of a million items, all million exist in memory before you see any of them.\n\nA **generator** hands back values one at a time, only when asked. You write one by using **`yield`** instead of `return`:\n\n```\ndef countdown(n):\n    while n > 0:\n        yield n\n        n -= 1\n\nfor x in countdown(3):\n    print(x)        # 3, 2, 1\n```\n\nThe difference from `return` is the important part: **`yield` pauses the function rather than ending it.** The function's whole state — every local variable, the position in the loop — is frozen. When the next value is asked for, it picks up exactly where it left off.\n\nCalling a generator function doesn't run any of the body. It hands back a generator object, ready and waiting. The body only advances when something asks for a value — a `for` loop, `next()`, `list()`, `sum()`.\n\nWhy bother:\n\n- **Memory.** Processing a huge file line by line never holds the whole thing.\n- **Infinite sequences** become possible — the generator only ever produces what you take.\n- **Speed to first result.** You get value one immediately rather than after all the work.",
+      },
+      {
+        kind: "trace",
+        id: "t1",
+        title: "Watch yield pause and resume",
+        intro:
+          "This is the part that feels like magic. Follow how the function stops mid-loop and later carries on from that exact spot.",
+        code: "def countdown(n):\n    while n > 0:\n        yield n\n        n -= 1\n\ng = countdown(3)\nprint(next(g))\nprint(next(g))\nprint(next(g))\n",
+        lines: [
+          {
+            code: "g = countdown(3)",
+            what:
+              "None of the body runs. Because the function contains yield, calling it just builds a generator object, paused before the first line. n isn't even set up yet.",
+            state: "g = generator, not started",
+          },
+          {
+            code: "next(g)  ->  while n > 0:  /  yield n",
+            what:
+              "First request. NOW the body starts: n is 3, the while condition holds, and it reaches `yield n`. It hands back 3 and freezes right there — mid-loop, with n still 3.",
+            state: "paused at yield, n = 3",
+            output: "3",
+          },
+          {
+            code: "next(g)  ->  n -= 1  /  loop  /  yield n",
+            what:
+              "Second request. Execution resumes on the line AFTER the yield: n becomes 2, the loop goes round, the condition still holds, and it yields 2 and freezes again.",
+            state: "paused at yield, n = 2",
+            output: "3\n2",
+          },
+          {
+            code: "next(g)  ->  n -= 1  /  loop  /  yield n",
+            what: "Same again: n becomes 1, yields 1, freezes. Note n survived between calls — the function's state was preserved, not rebuilt.",
+            state: "paused at yield, n = 1",
+            output: "3\n2\n1",
+          },
+        ],
+        takeaway:
+          "yield suspends the function with all its locals intact and resumes from the same line next time. A generator is a function you can pause.",
       },
       {
         kind: "example",
         id: "e1",
-        title: "Fibonacci",
+        title: "An infinite sequence",
         code:
           "def fib():\n    a, b = 0, 1\n    while True:\n        yield a\n        a, b = b, a + b\n\ng = fib()\nprint([next(g) for _ in range(10)])\n",
+        note:
+          "`while True` would hang forever in a normal function. Here it's fine — the generator only ever computes the values actually requested. Try changing 10 to 30.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "Generator gotchas",
+        items: [
+          {
+            wrong: "def squares(n):\n    for i in range(n):\n        yield i * i\n\ng = squares(3)\nprint(list(g))\nprint(list(g))",
+            problem:
+              "The second line prints []. A generator is consumed as it's read — once exhausted it stays exhausted. If you need the values more than once, store them in a list.",
+            right: "def squares(n):\n    for i in range(n):\n        yield i * i\n\nvals = list(squares(3))\nprint(vals)\nprint(vals)",
+          },
+          {
+            wrong: "def evens(n):\n    for i in range(n):\n        if i % 2 == 0:\n            yield i\n\nprint(evens(6))",
+            problem:
+              "Prints <generator object ...> rather than the numbers. Printing the generator itself shows the object; you have to consume it with list(), a for loop, or sum().",
+            right: "def evens(n):\n    for i in range(n):\n        if i % 2 == 0:\n            yield i\n\nprint(list(evens(6)))",
+          },
+          {
+            wrong: "def first_positive(xs):\n    for x in xs:\n        if x > 0:\n            yield x\n            return x",
+            problem:
+              "Confusing yield and return in one function. `return` inside a generator just stops it — the returned value isn't handed to the caller as you'd expect. Pick one: yield for a stream, return for a single value.",
+            right: "def first_positive(xs):\n    for x in xs:\n        if x > 0:\n            return x\n    return None",
+          },
+        ],
       },
       {
         kind: "predict",
@@ -1836,14 +2537,29 @@ export const pythonLessons: Lesson[] = [
         code:
           "def evens(n):\n    for i in range(n):\n        if i % 2 == 0:\n            yield i\nprint(list(evens(6)))\n",
         answer: "[0, 2, 4]",
+        hints: [
+          "range(6) gives 0,1,2,3,4,5. Which of those satisfy the if?",
+          "`list(...)` drains the generator completely, collecting every yielded value.",
+        ],
+        why:
+          "The generator yields only when the condition holds, so 0, 2 and 4 come out. `list()` runs it to exhaustion and gathers them.",
       },
       {
         kind: "write",
         id: "w1",
-        title: "Sum of squares up to 100 via generator expression",
-        prompt: "Print the sum of squares 1..100 using a generator expression. Expected: 338350",
+        title: "Sum of squares up to 100",
+        prompt:
+          "Print the sum of the squares of 1 to 100 using a generator expression rather than building a list. Expected: 338350",
         starter: "# print here using sum(...)\n",
         expected: "338350",
+        hints: [
+          "A generator expression looks like a list comprehension but with round brackets instead of square.",
+          "sum() takes any iterable, so you can hand it a generator expression directly.",
+          "`sum(n * n for n in range(1, 101))` — when a generator expression is the only argument, the brackets it needs are the function's own.",
+        ],
+        solution: "print(sum(n * n for n in range(1, 101)))\n",
+        solutionWhy:
+          "The generator produces each square as sum asks for it, so no hundred-element list is ever built.\n\nAt this size it makes no practical difference. At a hundred million it's the difference between working and running out of memory — which is why `sum(... for ...)` is the habit worth forming.",
       },
     ],
   },
@@ -1859,16 +2575,43 @@ export const pythonLessons: Lesson[] = [
       {
         kind: "read",
         id: "r1",
-        title: "match on shape, not just value",
+        title: "Matching on shape, not just value",
         body:
-          "`match x:` opens the block. Each `case pattern:` tries to match `x`.\n\nPatterns can be:\n- literals: `case 0:`, `case 'hi':`\n- captures: `case n:` binds n\n- sequences: `case [a, b, *rest]:`\n- mappings: `case {'type': 'circle', 'r': r}:`\n- classes: `case Point(x=0, y=y):`\n- OR: `case 1 | 2 | 3:`\n- wildcard: `case _:`",
+          "`match` looks like a switch statement from other languages, but it does considerably more: it matches on the **structure** of a value and pulls pieces out at the same time.\n\n```\nmatch command:\n    case 'quit':\n        ...\n    case _:\n        ...\n```\n\nPython tries each `case` top to bottom and runs the first that matches. `case _:` is the wildcard that matches anything — the equivalent of `else`.\n\nWhere it earns its place is destructuring:\n\n```\nmatch point:\n    case [0, 0]:            print('origin')\n    case [0, y]:            print(f'on the y-axis at {y}')\n    case [x, y]:            print(f'at {x}, {y}')\n```\n\nThat second case matches any two-item sequence whose first item is 0, **and** binds the second to `y` in one step. Writing that with if/elif takes length checks, index access and separate assignments.\n\nThe pattern kinds:\n\n- literals — `case 0:`, `case 'hi':`\n- captures — `case n:` matches anything and binds it to n\n- sequences — `case [a, b, *rest]:`\n- mappings — `case {'type': 'circle', 'r': r}:`\n- classes — `case Point(x=0, y=y):`\n- alternatives — `case 1 | 2 | 3:`\n- guards — `case n if n > 100:`",
       },
       {
         kind: "example",
         id: "e1",
-        title: "Shape router",
+        title: "Routing on shape",
         code:
-          "def describe(shape):\n    match shape:\n        case {'type': 'circle', 'r': r}: return f'circle r={r}'\n        case {'type': 'rect', 'w': w, 'h': h}: return f'{w}x{h}'\n        case _: return 'unknown'\n\nprint(describe({'type': 'circle', 'r': 5}))\nprint(describe({'type': 'rect', 'w': 3, 'h': 4}))\n",
+          "def describe(shape):\n    match shape:\n        case {'type': 'circle', 'r': r}: return f'circle r={r}'\n        case {'type': 'rect', 'w': w, 'h': h}: return f'{w}x{h}'\n        case _: return 'unknown'\n\nprint(describe({'type': 'circle', 'r': 5}))\nprint(describe({'type': 'rect', 'w': 3, 'h': 4}))\nprint(describe({'type': 'blob'}))\n",
+        note:
+          "A mapping pattern matches if the listed keys are present — extra keys are ignored. That makes it well suited to JSON-shaped data where you only care about a few fields.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "The pattern-matching trap",
+        items: [
+          {
+            wrong: "LIMIT = 10\n\ndef check(n):\n    match n:\n        case 0:\n            return 'zero'\n        case LIMIT:\n            return 'at the limit'\n\nprint(check(5))",
+            problem:
+              "Returns 'at the limit' for 5 — and for anything that isn't 0. A bare name in a case is a CAPTURE pattern: it matches absolutely anything and rebinds the name to it. It does NOT compare against your existing LIMIT variable. This is the biggest match/case gotcha. (Python does catch one arrangement of it: put a `case _:` after the capture and you get a helpful SyntaxError about unreachable patterns. Leave the capture last, as here, and it fails silently.)",
+            right: "LIMIT = 10\n\ndef check(n):\n    match n:\n        case 0:\n            return 'zero'\n        case x if x == LIMIT:\n            return 'at the limit'\n        case _:\n            return 'other'\n\nprint(check(5))",
+          },
+          {
+            wrong: "def f(xs):\n    match xs:\n        case [x, *rest]: return 'non-empty'\n        case []: return 'empty'\n\nprint(f([]))",
+            problem:
+              "Works here, but the ordering is fragile — put a broad pattern before a narrow one and the narrow one becomes unreachable. Always order cases most-specific first.",
+            right: "def f(xs):\n    match xs:\n        case []: return 'empty'\n        case [x, *rest]: return 'non-empty'\n\nprint(f([]))",
+          },
+          {
+            wrong: "def f(n):\n    match n:\n        case 1: return 'one'\n        case 2: return 'two'\n\nprint(f(99))",
+            problem:
+              "Prints None. If no case matches and there's no wildcard, match simply does nothing and the function falls off the end. Include a `case _:` unless you're certain you've covered everything.",
+            right: "def f(n):\n    match n:\n        case 1: return 'one'\n        case 2: return 'two'\n        case _: return 'other'\n\nprint(f(99))",
+          },
+        ],
       },
       {
         kind: "predict",
@@ -1877,15 +2620,30 @@ export const pythonLessons: Lesson[] = [
         code:
           "def describe(xs):\n    match xs:\n        case []: return 'empty'\n        case [x]: return f'one: {x}'\n        case [x, *rest]: return f'first={x}, rest={rest}'\nprint(describe([]), describe([1]), describe([1,2,3]))\n",
         answer: "empty one: 1 first=1, rest=[2, 3]",
+        hints: [
+          "Three calls, three different list lengths — work out which case each one lands on.",
+          "Cases are tried top to bottom, so [1] hits `case [x]` before it ever reaches the starred pattern.",
+        ],
+        why:
+          "The empty list matches the first case. [1] matches `[x]` — exactly one item. [1,2,3] falls through to the starred pattern, binding x to 1 and collecting the rest into a list.",
       },
       {
         kind: "write",
         id: "w1",
         title: "HTTP status classifier",
         prompt:
-          "Write `classify(code)` returning 'ok' for 200-299, 'client' for 400-499, 'server' for 500-599, else 'other'. Use match with guards (`case n if 200 <= n < 300`). Print classify(204), classify(404), classify(500), classify(302).",
+          "Write classify(code) returning 'ok' for 200-299, 'client' for 400-499, 'server' for 500-599, and 'other' otherwise. Use match with guards. Print classify for 204, 404, 500 and 302.",
         starter: "def classify(code):\n    ...\n\nfor c in (204, 404, 500, 302):\n    print(classify(c))\n",
         expected: "ok\nclient\nserver\nother",
+        hints: [
+          "A bare name in a case captures anything — so you need a guard (`if`) after it to narrow the match.",
+          "The form is `case n if 200 <= n < 300:` — capture into n, then test it.",
+          "Finish with `case _: return 'other'` to catch everything else, like 302.",
+        ],
+        solution:
+          "def classify(code):\n    match code:\n        case n if 200 <= n < 300: return 'ok'\n        case n if 400 <= n < 500: return 'client'\n        case n if 500 <= n < 600: return 'server'\n        case _: return 'other'\n\nfor c in (204, 404, 500, 302):\n    print(classify(c))\n",
+        solutionWhy:
+          "Each case captures the value into n and then applies a guard. If the guard fails, matching continues to the next case.\n\nHonestly, a plain if/elif chain would read just as well here — match earns its keep when you're destructuring shapes, not comparing ranges. Knowing when NOT to reach for a feature is part of learning it.",
       },
     ],
   },
@@ -1895,41 +2653,92 @@ export const pythonLessons: Lesson[] = [
     track: "python",
     index: 17,
     title: "Modules & the standard library",
-    summary: "Imports, `__name__`, and staple modules: pathlib, json, itertools, collections.",
+    summary: "Imports, and the batteries-included modules worth knowing by name.",
     concepts: ["py:modules", "py:imports", "py:stdlib"],
     steps: [
       {
         kind: "read",
         id: "r1",
-        title: "Import forms",
+        title: "Using code from elsewhere",
         body:
-          "- `import json` — access as `json.loads(...)`.\n- `from collections import Counter` — brings names in.\n- `import numpy as np` — alias.\n\nStaples to know:\n- `pathlib.Path` — filesystem paths, chainable.\n- `json` — dumps/loads.\n- `itertools` — chain, groupby, product, combinations.\n- `collections` — Counter, defaultdict, deque, namedtuple.\n- `functools` — cache, reduce, partial.",
+          "A **module** is just a Python file. Importing one gives you access to what's inside it.\n\nThree forms, and the difference matters:\n\n```\nimport json                       # json.loads(...)\nfrom collections import Counter   # Counter(...) directly\nimport numpy as np                # np.array(...)\n```\n\n- `import x` keeps the module name as a prefix. Most explicit — you can always see where something came from.\n- `from x import y` brings the name straight in. Convenient, but with several imports it becomes unclear which module a name belongs to.\n- `import x as y` renames it, usually because the community has settled on a short alias (`np`, `pd`, `plt`).\n\nAvoid `from x import *` — it dumps every name into your file, and you lose track of what came from where and what might have been silently overwritten.\n\nPython ships with a large standard library, which is why people say it comes 'batteries included'. Before installing anything, check whether the standard library already does it — very often it does.",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "The modules worth knowing by name",
+        body:
+          "You don't need to memorise these, but knowing they exist saves you from reinventing them:\n\n**`collections`**\n- `Counter` — counts things. `Counter('banana')` does that whole word-count exercise in one call.\n- `defaultdict` — a dict that creates missing values for you, removing the `.get(k, [])` dance.\n- `deque` — a list that's fast to add to and remove from at BOTH ends.\n\n**`pathlib`** — `Path` objects for filesystem paths. Joining with `/` beats string concatenation and works on every OS.\n\n**`json`** — convert between Python objects and JSON text.\n\n**`itertools`** — tools for looping. `accumulate` (running totals), `chain` (join sequences), `combinations`, `product`.\n\n**`functools`** — `cache` (memoise a function with one decorator), `reduce`, `partial`.\n\n**`datetime`**, **`re`** (regular expressions), **`random`**, **`math`**, **`statistics`** round out the everyday set.",
       },
       {
         kind: "example",
         id: "e1",
-        title: "Counter and Path",
+        title: "A few in action",
         code:
-          "from collections import Counter\nfrom pathlib import Path\n\nprint(Counter('mississippi').most_common(2))\np = Path('/tmp') / 'x' / 'y.txt'\nprint(p, p.suffix, p.name)\n",
+          "from collections import Counter, defaultdict\nfrom pathlib import Path\nfrom itertools import accumulate\n\n"
+          + "print(Counter('mississippi').most_common(2))\n\n"
+          + "p = Path('/tmp') / 'x' / 'y.txt'\nprint(p, p.suffix, p.name)\n\n"
+          + "print(list(accumulate([1, 2, 3, 4])))\n\n"
+          + "g = defaultdict(list)\ng['a'].append(1)\nprint(dict(g))\n",
+        note:
+          "That last one is the point of defaultdict: `g['a']` didn't exist, but instead of KeyError it created an empty list to append to.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "Import mistakes",
+        items: [
+          {
+            wrong: "import collections\nprint(Counter('abc'))",
+            problem:
+              "NameError. `import collections` keeps the prefix, so it's collections.Counter. Either use the prefix or import the name directly.",
+            right: "from collections import Counter\nprint(Counter('abc'))",
+          },
+          {
+            wrong: "from collections import defaultdict\ng = defaultdict(list)\ng['a'].append(1)\nprint(g)",
+            problem:
+              "Prints defaultdict(<class 'list'>, {'a': [1]}) — technically correct but noisy. Wrap it in dict() when you just want to see or compare the contents.",
+            right: "from collections import defaultdict\ng = defaultdict(list)\ng['a'].append(1)\nprint(dict(g))",
+          },
+          {
+            wrong: "import random\nrandom = 5\nprint(random.choice([1, 2]))",
+            problem:
+              "AttributeError: 'int' object has no attribute 'choice'. Assigning to a name you imported clobbers the module. Naming a file `random.py` in your project does the same thing to every import of it.",
+            right: "import random\nchoice_count = 5\nprint(random.choice([1, 2]))",
+          },
+        ],
       },
       {
         kind: "predict",
         id: "p1",
         title: "Predict",
-        code:
-          "from itertools import accumulate\nprint(list(accumulate([1,2,3,4])))\n",
+        code: "from itertools import accumulate\nprint(list(accumulate([1,2,3,4])))\n",
         answer: "[1, 3, 6, 10]",
+        hints: [
+          "`accumulate` produces running totals rather than one final sum.",
+          "Each output is the total so far: 1, then 1+2, then 1+2+3, and so on.",
+        ],
+        why:
+          "accumulate yields the running total at each step — 1, 3, 6, 10. It's lazy, hence the list() to see it all. Useful for cumulative sums without writing the loop.",
       },
       {
         kind: "write",
         id: "w1",
-        title: "Group by first letter with defaultdict",
+        title: "Group words by first letter",
         prompt:
-          "Given words = ['ant','ape','bee','bat','cat'], print a defaultdict-shaped dict mapping first letter → list of words in original order. Expected: {'a': ['ant', 'ape'], 'b': ['bee', 'bat'], 'c': ['cat']}",
+          "Given words = ['ant','ape','bee','bat','cat'], print a plain dict mapping each first letter to the list of words starting with it, in original order. Expected: {'a': ['ant', 'ape'], 'b': ['bee', 'bat'], 'c': ['cat']}",
         starter:
           "from collections import defaultdict\nwords = ['ant','ape','bee','bat','cat']\n# build and print\n",
         expected: "{'a': ['ant', 'ape'], 'b': ['bee', 'bat'], 'c': ['cat']}",
-        hint: "Use `dict(g)` to strip the defaultdict wrapper before printing.",
+        hints: [
+          "`defaultdict(list)` gives you an empty list automatically for any key you touch, so you can append without checking first.",
+          "The first letter of a word is `word[0]`.",
+          "Wrap the result in `dict(...)` when printing, or you'll see the defaultdict wrapper in the output.",
+        ],
+        solution:
+          "from collections import defaultdict\nwords = ['ant','ape','bee','bat','cat']\ng = defaultdict(list)\nfor w in words:\n    g[w[0]].append(w)\nprint(dict(g))\n",
+        solutionWhy:
+          "defaultdict removes the usual `if key not in d: d[key] = []` preamble — touching a missing key creates the empty list for you.\n\nWith a plain dict you'd write `g.setdefault(w[0], []).append(w)`, which does the same job. Both are fine; defaultdict reads better when the pattern repeats.",
       },
     ],
   },
@@ -1939,41 +2748,134 @@ export const pythonLessons: Lesson[] = [
     track: "python",
     index: 18,
     title: "async / await",
-    summary: "Concurrency for I/O-bound work with the asyncio event loop.",
+    summary: "Doing several slow things at once, when the slowness is waiting.",
     concepts: ["py:async", "py:await", "py:asyncio"],
     steps: [
       {
         kind: "read",
         id: "r1",
-        title: "Coroutines, not threads",
+        title: "Waiting is not working",
         body:
-          "`async def` defines a coroutine. Inside, `await other_coroutine()` yields control back to the event loop until the awaited coroutine is done.\n\nUse `asyncio.run(main())` to start it. Use `asyncio.gather(*tasks)` to run coroutines concurrently.\n\nAsync is for **I/O-bound** work (network, disk). CPU-bound work needs threads or processes.",
+          "Downloading three files takes three seconds if you do them one after another — but almost all of that time is spent *waiting* for the network, not computing anything. Your program sits idle.\n\n**async** lets a single thread work on something else during those waits.\n\n```\nimport asyncio\n\nasync def fetch(name):\n    await asyncio.sleep(1)      # pretend network delay\n    return f'{name} done'\n```\n\n- **`async def`** marks a **coroutine** — a function that can pause.\n- **`await`** marks a pause point: \"this will take a while; go do something else and come back to me.\"\n\nCalling a coroutine doesn't run it. It hands back a coroutine object, which does nothing until awaited or scheduled — a common early surprise.\n\nRun several concurrently with `asyncio.gather`:\n\n```\nresults = await asyncio.gather(fetch('a'), fetch('b'), fetch('c'))\n```\n\nThat takes about one second, not three. All three waits overlap.\n\n**Important limit:** async only helps when you're **waiting** — network, disk, timers. It does nothing for CPU-heavy work like crunching numbers, because there's no idle time to reclaim. For that you need threads or processes.",
+      },
+      {
+        kind: "trace",
+        id: "t1",
+        title: "Sequential vs concurrent",
+        intro:
+          "Same two one-second waits, two arrangements, very different totals. Follow the clock.",
+        code: "# sequential\nawait fetch('a')     # 1s\nawait fetch('b')     # 1s\n# total: 2s\n\n# concurrent\nawait asyncio.gather(fetch('a'), fetch('b'))\n# total: 1s\n",
+        lines: [
+          {
+            code: "await fetch('a')     # 1s",
+            what:
+              "Start a, and await it immediately. `await` means 'don't continue until this finishes' — so nothing else starts. One second passes with the program idle.",
+            state: "t = 1s, a done, b not started",
+          },
+          {
+            code: "await fetch('b')     # 1s",
+            what: "Only now does b begin, and we wait another full second for it.",
+            state: "t = 2s, both done",
+          },
+          {
+            code: "await asyncio.gather(fetch('a'), fetch('b'))",
+            what:
+              "gather starts BOTH before awaiting anything. Both are now in flight at once, and their waits overlap rather than queueing.",
+            state: "t = 0s, both running",
+          },
+          {
+            code: "await asyncio.gather(fetch('a'), fetch('b'))",
+            what:
+              "Wait for both to finish. They were started together, so after one second both are done — the total is set by the slowest, not the sum.",
+            state: "t = 1s, both done",
+          },
+        ],
+        takeaway:
+          "`await` on its own means 'stop here until done'. To overlap work you must start everything first — that's what gather does. Awaiting in a loop is the classic accidental way to make concurrent code sequential.",
       },
       {
         kind: "example",
         id: "e1",
         title: "Concurrent waits",
         code:
-          "import asyncio, time\n\nasync def work(name, secs):\n    await asyncio.sleep(secs)\n    return f'{name} done'\n\nasync def main():\n    start = time.perf_counter()\n    results = await asyncio.gather(work('a', 0.2), work('b', 0.2), work('c', 0.2))\n    print(results)\n    print(f'{time.perf_counter() - start:.2f}s')\n\nasyncio.run(main())\n",
+          "import asyncio, time\n\nasync def work(name, secs):\n    await asyncio.sleep(secs)\n    return f'{name} done'\n\nasync def main():\n    start = time.perf_counter()\n    results = await asyncio.gather(work('a', 0.2), work('b', 0.2), work('c', 0.2))\n    print(results)\n    print(f'{time.perf_counter() - start:.1f}s')\n\nawait main()\n",
+        note:
+          "Three 0.2s waits finish in about 0.2s total, not 0.6s. Try changing gather to three separate awaits and watch the time triple.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "async mistakes",
+        items: [
+          {
+            wrong: "async def get_value():\n    return 42\n\nasync def main():\n    v = get_value()\n    print(v)\n\nawait main()",
+            problem:
+              "Prints <coroutine object ...> rather than 42, plus a warning that it was never awaited. Calling a coroutine only creates it. You have to await it to get its value.",
+            right: "async def get_value():\n    return 42\n\nasync def main():\n    v = await get_value()\n    print(v)\n\nawait main()",
+          },
+          {
+            wrong: "async def main():\n    results = []\n    for name in ['a', 'b', 'c']:\n        results.append(await work(name))\n    return results",
+            problem:
+              "Runs them one at a time — the await inside the loop finishes each before starting the next, so nothing overlaps. This is the most common way concurrent code accidentally becomes sequential.",
+            right: "async def main():\n    return await asyncio.gather(*[work(n) for n in ['a', 'b', 'c']])",
+          },
+          {
+            wrong: "import time\n\nasync def work():\n    time.sleep(1)\n    return 'done'",
+            problem:
+              "`time.sleep` blocks the entire event loop — every other coroutine is frozen for that second. Inside async code you must use `asyncio.sleep`, which yields control while waiting.",
+            right: "import asyncio\n\nasync def work():\n    await asyncio.sleep(1)\n    return 'done'",
+          },
+        ],
       },
       {
         kind: "predict",
         id: "p1",
         title: "Predict (which order?)",
         code:
-          "import asyncio\nasync def slow():\n    await asyncio.sleep(0.05)\n    return 'slow'\nasync def fast():\n    return 'fast'\nasync def main():\n    a, b = await asyncio.gather(slow(), fast())\n    print(a, b)\nasyncio.run(main())\n",
+          "import asyncio\nasync def slow():\n    await asyncio.sleep(0.05)\n    return 'slow'\nasync def fast():\n    return 'fast'\nasync def main():\n    a, b = await asyncio.gather(slow(), fast())\n    print(a, b)\nawait main()\n",
         answer: "slow fast",
-        hint: "gather returns in the order of its arguments, not completion.",
+        hints: [
+          "fast() finishes long before slow() does. Does that affect the order of the results?",
+          "gather returns results positionally — matching the order you passed the coroutines in, not the order they completed.",
+        ],
+        why:
+          "gather preserves argument order in its results, which is what makes unpacking like `a, b = ...` safe. Completion order doesn't come into it — if it did, you could never rely on which result was which.",
+      },
+      {
+        kind: "fix",
+        id: "f1",
+        title: "Fix: make it actually concurrent",
+        buggy:
+          "import asyncio, time\nasync def a():\n    await asyncio.sleep(0.1)\nasync def b():\n    await asyncio.sleep(0.1)\nasync def main():\n    start = time.perf_counter()\n    await a()\n    await b()\n    print('concurrent:', time.perf_counter() - start < 0.15)\nawait main()\n",
+        expected: "concurrent: True",
+        hints: [
+          "Run it — it prints False, because the two waits are happening one after the other.",
+          "Awaiting a() on its own line means b() doesn't even start until a() has finished.",
+          "Start both together and await them as a pair with asyncio.gather(a(), b()).",
+        ],
+        solution:
+          "import asyncio, time\nasync def a():\n    await asyncio.sleep(0.1)\nasync def b():\n    await asyncio.sleep(0.1)\nasync def main():\n    start = time.perf_counter()\n    await asyncio.gather(a(), b())\n    print('concurrent:', time.perf_counter() - start < 0.15)\nawait main()\n",
+        solutionWhy:
+          "gather receives both coroutines and schedules them before waiting, so the two 0.1s sleeps overlap and the total is ~0.1s rather than ~0.2s.\n\nThe general shape: build all the work first, then await it all together. Any `await` sitting alone in a loop is a sign you've serialised something that didn't need to be.",
       },
       {
         kind: "write",
         id: "w1",
-        title: "Rewrite to run concurrently",
+        title: "Gather three coroutines",
         prompt:
-          "Given the two coroutines below, replace the two sequential awaits with a single asyncio.gather so total time is ~0.1s not ~0.2s. Print 'done'.",
+          "Complete main() so the three work() calls run concurrently and their results print as a list. Expected: ['a done', 'b done', 'c done']",
         starter:
-          "import asyncio\nasync def a():\n    await asyncio.sleep(0.1)\nasync def b():\n    await asyncio.sleep(0.1)\nasync def main():\n    await a()\n    await b()\n    print('done')\nasyncio.run(main())\n",
-        expected: "done",
+          "import asyncio\nasync def work(name):\n    await asyncio.sleep(0.05)\n    return f'{name} done'\n\nasync def main():\n    ...\n\nawait main()\n",
+        expected: "['a done', 'b done', 'c done']",
+        hints: [
+          "Pass all three coroutine calls to asyncio.gather at once.",
+          "gather itself has to be awaited to get the results out.",
+          "`results = await asyncio.gather(work('a'), work('b'), work('c'))` then print results.",
+        ],
+        solution:
+          "import asyncio\nasync def work(name):\n    await asyncio.sleep(0.05)\n    return f'{name} done'\n\nasync def main():\n    results = await asyncio.gather(work('a'), work('b'), work('c'))\n    print(results)\n\nawait main()\n",
+        solutionWhy:
+          "All three start together, so the total wait is one sleep rather than three. The results come back as a list in argument order.\n\nWhen the coroutines are built from a collection, the usual form is `await asyncio.gather(*[work(n) for n in names])` — the `*` spreads the list into separate arguments.",
       },
     ],
   },
@@ -1983,39 +2885,89 @@ export const pythonLessons: Lesson[] = [
     track: "python",
     index: 19,
     title: "Files, JSON, and pathlib",
-    summary: "Reading/writing text and JSON files with modern Path-based APIs.",
+    summary: "Reading and writing files safely, and moving data in and out of JSON.",
     concepts: ["py:files", "py:json", "py:pathlib"],
     steps: [
       {
         kind: "read",
         id: "r1",
-        title: "Use `with` for cleanup",
+        title: "Reading and writing, without leaking",
         body:
-          "`with open(path) as f:` guarantees the file is closed. `Path(path).read_text()` and `.write_text(s)` are one-liners when you don't need streaming.\n\nFor JSON: `json.dumps(obj)` (to string), `json.loads(s)` (from string), `json.dump(obj, f)` (to file).",
+          "An open file is a limited resource, and forgetting to close it eventually causes problems. The **`with`** statement guarantees closing, even if an error is raised partway through:\n\n```\nwith open('notes.txt') as f:\n    contents = f.read()\n# file is closed here, whatever happened\n```\n\nAlways use `with`. Manually calling `.close()` works right up until something raises before you reach it.\n\nThe modes:\n\n- `'r'` — read (the default)\n- `'w'` — write, **replacing** the file entirely\n- `'a'` — append to the end\n\nThat `'w'` truncates immediately, so opening the wrong path in write mode destroys it. Worth a moment's care.\n\nFor whole small files, `pathlib` is shorter:\n\n```\nfrom pathlib import Path\ntext = Path('notes.txt').read_text()\nPath('out.txt').write_text('hello')\n```\n\nAnd building paths with `/` beats string concatenation — it handles separators correctly on every platform:\n\n```\nPath('data') / 'raw' / 'file.csv'\n```",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "JSON: data as text",
+        body:
+          "**JSON** is the standard format for exchanging structured data — every API and half the config files you'll meet use it. Python's `json` module converts both ways.\n\n**Object to text** with `dumps` (dump-string):\n\n```\nimport json\ns = json.dumps({'name': 'Ada', 'tags': ['py']})\n# '{\"name\": \"Ada\", \"tags\": [\"py\"]}'\n```\n\n**Text to object** with `loads`:\n\n```\nd = json.loads(s)\nprint(d['name'])       # Ada\n```\n\nThe `s`-less versions — `json.dump(obj, f)` and `json.load(f)` — do the same to and from an open file.\n\nFor human-readable output, `indent` and `sort_keys` help enormously:\n\n```\njson.dumps(data, indent=2, sort_keys=True)\n```\n\nOne thing to know: JSON only understands its own types — objects, arrays, strings, numbers, booleans, null. Python dicts, lists, strs, ints, floats and bools convert cleanly. Sets, tuples-as-keys, dates and custom classes do not, and will raise a TypeError unless you convert them first.",
       },
       {
         kind: "example",
         id: "e1",
-        title: "JSON round-trip in memory",
+        title: "JSON round trip",
         code:
-          "import json\ndata = {'name': 'Ada', 'skills': ['py', 'math'], 'active': True}\ns = json.dumps(data)\nprint(s)\nback = json.loads(s)\nprint(back['skills'])\n",
+          "import json\ndata = {'name': 'Ada', 'skills': ['py', 'math'], 'active': True}\n\n"
+          + "s = json.dumps(data)\nprint(s)\n\n"
+          + "back = json.loads(s)\nprint(back['skills'])\n\n"
+          + "print(json.dumps(data, indent=2, sort_keys=True))\n",
+        note:
+          "Notice Python's True became JSON's `true`, and single quotes became double — JSON has its own spelling rules, which is exactly why you convert rather than just printing the dict.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "File and JSON mistakes",
+        items: [
+          {
+            wrong: "f = open('notes.txt', 'w')\nf.write('hello')\n# forgot f.close()",
+            problem:
+              "The write may sit in a buffer and never reach disk. Worse, if an exception fires between open and close, the file stays open. `with` closes it no matter what.",
+            right: "with open('notes.txt', 'w') as f:\n    f.write('hello')",
+          },
+          {
+            wrong: "import json\ndata = {'tags': {'py', 'math'}}\nprint(json.dumps(data))",
+            problem:
+              "TypeError: Object of type set is not JSON serializable. JSON has no set type. Convert to a list first — and remember that loses the uniqueness guarantee on the way back in.",
+            right: "import json\ndata = {'tags': ['py', 'math']}\nprint(json.dumps(data))",
+          },
+          {
+            wrong: "import json\nd = json.dumps({'a': 1})\nprint(d['a'])",
+            problem:
+              "TypeError: string indices must be integers. `dumps` produced a STRING, not a dict — indexing it by key fails. Use loads to go the other way.",
+            right: "import json\nd = json.loads('{\"a\": 1}')\nprint(d['a'])",
+          },
+        ],
       },
       {
         kind: "predict",
         id: "p1",
         title: "Predict",
-        code:
-          "import json\nprint(json.dumps({'a': 1}, sort_keys=True, indent=2))\n",
+        code: "import json\nprint(json.dumps({'a': 1}, sort_keys=True, indent=2))\n",
         answer: '{\n  "a": 1\n}',
+        hints: [
+          "`indent=2` switches on pretty-printing, so the output spans several lines.",
+          "JSON always uses double quotes around keys, regardless of how you wrote them in Python.",
+        ],
+        why:
+          "With indent set, dumps spreads the object across lines with two-space indentation. The key gains double quotes because that's what the JSON format requires.",
       },
       {
         kind: "write",
         id: "w1",
         title: "Pretty-print with 4-space indent",
         prompt:
-          "Given d = {'a': 1, 'b': [1, 2, 3]}, print it as JSON with 4-space indent and keys sorted.",
+          "Given d = {'a': 1, 'b': [1, 2, 3]}, print it as JSON with 4-space indentation and keys sorted.",
         starter: "import json\nd = {'a': 1, 'b': [1, 2, 3]}\n# print(...)\n",
         expected: '{\n    "a": 1,\n    "b": [\n        1,\n        2,\n        3\n    ]\n}',
+        hints: [
+          "`json.dumps` takes keyword arguments for both of these.",
+          "`indent=4` for the spacing, `sort_keys=True` for the ordering.",
+          "The list gets expanded across lines too — that's what indent does throughout.",
+        ],
+        solution: "import json\nd = {'a': 1, 'b': [1, 2, 3]}\nprint(json.dumps(d, indent=4, sort_keys=True))\n",
+        solutionWhy:
+          "`indent=4` pretty-prints everything nested, including the list. `sort_keys=True` orders keys alphabetically, which makes diffs between two versions of a config file far easier to read — a small habit worth having.",
       },
     ],
   },
@@ -2024,54 +2976,84 @@ export const pythonLessons: Lesson[] = [
     id: "py.20.modern",
     track: "python",
     index: 20,
-    title: "Modern features: walrus, ExceptionGroup, PEP 695",
-    summary: "Recent additions that make idiomatic Python: :=, except*, new generic syntax.",
+    title: "Modern features: walrus, generics, except*",
+    summary: "Recent additions that show up in current Python code.",
     concepts: ["py:walrus", "py:exceptiongroup", "py:generics-new"],
     steps: [
       {
         kind: "read",
         id: "r1",
-        title: "Walrus `:=` (3.8+)",
+        title: "The walrus operator :=",
         body:
-          "Binds and returns a value in one expression. Great for while-loops that need a peek:\n\n```\nwhile (line := f.readline()):\n    ...\n```",
+          "`:=` assigns a value **and** produces it, so you can bind a name inside a condition instead of on a separate line beforehand.\n\nThe classic case is when you need a value both to test and to use:\n\n```\n# without\nn = len(data)\nif n > 2:\n    print(f'{n} items')\n\n# with\nif (n := len(data)) > 2:\n    print(f'{n} items')\n```\n\nIt shines most in while loops that read until something runs out:\n\n```\nwhile (line := f.readline()):\n    process(line)\n```\n\nWithout it you'd need to read once before the loop and again at the bottom — duplicated code that's easy to get out of sync.\n\nThe brackets around `(n := ...)` are usually required, and they're a useful visual signal anyway.\n\nUse it where it genuinely removes duplication. Sprinkled into ordinary code it makes things harder to read, and the shorter version isn't automatically the better one.",
       },
       {
         kind: "example",
         id: "e1",
-        title: "Walrus with comprehension",
+        title: "Walrus in a comprehension",
         code:
-          "nums = [1, 4, 9, 16, 25]\n# keep sqrt only when it's a whole number\nresult = [r for n in nums if (r := int(n**0.5))**2 == n]\nprint(result)\n",
+          "nums = [1, 4, 9, 16, 25]\n"
+          + "# keep only the numbers whose square root is a whole number\n"
+          + "result = [r for n in nums if (r := int(n**0.5))**2 == n]\nprint(result)\n",
+        note:
+          "Without the walrus you'd compute the square root twice — once to test it and once to keep it. This is exactly the duplication it exists to remove.",
       },
       {
         kind: "read",
         id: "r2",
-        title: "PEP 695 generic syntax (3.12+)",
+        title: "Generic syntax (3.12+) and except*",
         body:
-          "```\ndef first[T](xs: list[T]) -> T | None:\n    return xs[0] if xs else None\n```\n\nNo more `TypeVar('T')` boilerplate.",
+          "**Generics without the boilerplate.** A function that works with any type used to need a TypeVar declared separately:\n\n```\n# old\nfrom typing import TypeVar\nT = TypeVar('T')\ndef first(xs: list[T]) -> T | None: ...\n\n# new (3.12+)\ndef first[T](xs: list[T]) -> T | None: ...\n```\n\nThe `[T]` after the name says \"this works with any type, and whatever comes in is what goes out\". That relationship is the useful part — a checker knows `first([1,2,3])` gives an int, and `first(['a'])` gives a str.\n\n**Handling several errors at once.** `asyncio.TaskGroup` can fail in more than one way simultaneously — three concurrent tasks, three different exceptions. Those arrive bundled as an `ExceptionGroup`, and `except*` catches by type *within* the bundle:\n\n```\ntry:\n    async with asyncio.TaskGroup() as tg:\n        ...\nexcept* ValueError as eg:\n    ...    # just the ValueErrors\nexcept* TypeError as eg:\n    ...    # just the TypeErrors\n```\n\nUnlike ordinary `except`, more than one `except*` block can run — because more than one kind of failure may genuinely have occurred.",
       },
       {
-        kind: "read",
-        id: "r3",
-        title: "except* for ExceptionGroup",
-        body:
-          "`asyncio.TaskGroup` can raise several errors at once as an `ExceptionGroup`. `except* ValueError:` catches the ValueError subtree only.",
+        kind: "pitfalls",
+        id: "pf1",
+        title: "Using these well",
+        items: [
+          {
+            wrong: "data = [1, 2, 3]\nif n := len(data) > 2:\n    print(n)",
+            problem:
+              "Prints True, not 3. Without brackets the comparison binds first, so n gets the result of `len(data) > 2`. Bracket the walrus expression itself.",
+            right: "data = [1, 2, 3]\nif (n := len(data)) > 2:\n    print(n)",
+          },
+          {
+            wrong: "total = (x := 5) + (y := 10)\nprint(total)",
+            problem:
+              "Works, but there's no reason to write it this way — it's harder to read than two plain assignments and saves nothing. The walrus is for removing duplicated computation, not for compressing ordinary code.",
+            right: "x = 5\ny = 10\ntotal = x + y\nprint(total)",
+          },
+        ],
       },
       {
         kind: "predict",
         id: "p1",
         title: "Predict",
-        code:
-          "data = [1, 2, 3, 4]\nif (n := len(data)) > 2:\n    print(f'{n} items')\n",
+        code: "data = [1, 2, 3, 4]\nif (n := len(data)) > 2:\n    print(f'{n} items')\n",
         answer: "4 items",
+        hints: [
+          "The walrus assigns and produces in one go — so what does n hold when the body runs?",
+          "n gets len(data), which is 4. The comparison is against that same value.",
+        ],
+        why:
+          "`(n := len(data))` stores 4 in n and yields 4 for the comparison. 4 > 2 holds, so the body runs with n still available.",
       },
       {
         kind: "write",
         id: "w1",
-        title: "Generic wrapper",
+        title: "Generic last()",
         prompt:
-          "Write `def last[T](xs: list[T]) -> T | None` that returns the last element or None. Print last([1,2,3]) and last([]).",
+          "Write `last` using the 3.12 generic syntax: it takes a list of any type and returns the final element, or None when the list is empty. Print last([1,2,3]) and last([]).",
         starter: "def last[T](xs: list[T]) -> T | None:\n    ...\n\nprint(last([1,2,3]))\nprint(last([]))\n",
         expected: "3\nNone",
+        hints: [
+          "The signature is already written for you — only the body is missing.",
+          "An empty list is falsy, so `if xs:` distinguishes the two cases.",
+          "`return xs[-1] if xs else None` does it in one line.",
+        ],
+        solution:
+          "def last[T](xs: list[T]) -> T | None:\n    return xs[-1] if xs else None\n\nprint(last([1,2,3]))\nprint(last([]))\n",
+        solutionWhy:
+          "`xs[-1]` is the last element, and the truthiness check handles the empty case without needing len().\n\nThe `[T]` is what makes this genuinely generic: a type checker knows `last([1,2,3])` yields `int | None` while `last(['a'])` yields `str | None`. The annotation carries the relationship between input and output, not just their shapes.",
       },
     ],
   },
