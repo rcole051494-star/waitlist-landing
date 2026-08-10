@@ -416,16 +416,167 @@ export const pythonLessons: Lesson[] = [
       {
         kind: "read",
         id: "r1",
-        title: "Indentation is the syntax",
+        title: "Making a decision: if",
         body:
-          "Python uses indentation (4 spaces by convention) to delimit blocks. No braces.\n\n`for x in iterable:` iterates. `while cond:` loops while true. Both can have an `else:` clause that runs **only if the loop completed without `break`**.",
+          "So far every line you've written has run, every time. **`if`** lets a chunk of code run only when some condition holds.\n\n```\nage = 20\nif age >= 18:\n    print('adult')\n```\n\nThree parts to notice:\n\n- The **condition** — `age >= 18` — is anything that comes out True or False.\n- The **colon** at the end of the `if` line. Forgetting it is a SyntaxError.\n- The **indentation**. The indented lines underneath are the block that runs when the condition is true.\n\nMost languages wrap blocks in `{ curly braces }`. Python uses indentation instead — the indenting *is* the syntax, not just formatting. Four spaces is the convention.\n\nAdd `else` for the other case, and `elif` (short for 'else if') for extra cases:\n\n```\nif score >= 90:\n    grade = 'A'\nelif score >= 80:\n    grade = 'B'\nelse:\n    grade = 'F'\n```\n\nPython checks these top to bottom and stops at the **first** one that's true. Everything below is skipped — which is why you can write `elif score >= 80` without also checking that it's under 90.",
       },
       {
-        kind: "example",
-        id: "e1",
-        title: "for/else",
-        code:
-          "nums = [2, 4, 7, 8]\nfor n in nums:\n    if n % 2:\n        print(f'odd: {n}')\n        break\nelse:\n    print('all even')\n",
+        kind: "trace",
+        id: "t1",
+        title: "Walk through an if/elif chain",
+        intro:
+          "The 'stops at the first true one' rule is what trips people up. Watch it happen.",
+        code: "score = 85\n\nif score >= 90:\n    print('A')\nelif score >= 80:\n    print('B')\nelif score >= 70:\n    print('C')\nelse:\n    print('F')\n",
+        lines: [
+          { code: "score = 85", what: "Stick the value 85 onto the name score.", state: "score = 85" },
+          {
+            code: "if score >= 90:",
+            what:
+              "Work out the condition: is 85 greater than or equal to 90? No — that's False. So the indented block under this line is skipped entirely, and Python drops to the next elif.",
+            state: "condition was False → skip the print('A')",
+          },
+          {
+            code: "elif score >= 80:",
+            what:
+              "Is 85 >= 80? Yes — True. So this block runs. Note we never had to check 'and is it under 90' — if we'd got past the first test, we already know it isn't 90 or more.",
+            output: "B",
+          },
+          {
+            code: "elif score >= 70:  /  else:",
+            what:
+              "These are never even looked at. Once one branch in the chain runs, Python skips the whole rest of the chain and continues below it. 85 >= 70 is perfectly true, but it doesn't matter — we already matched.",
+            output: "B",
+          },
+        ],
+        takeaway:
+          "An if/elif/else chain runs at most one branch — the first one whose condition is true. Order your conditions from most specific to least.",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "Repeating: the for loop",
+        body:
+          "A **for loop** runs the same block once for each item in a collection.\n\n```\nfor colour in ['red', 'green', 'blue']:\n    print(colour)\n```\n\nRead it as: *for each colour in this list, do the indented block.* On each pass the name `colour` is re-pointed at the next item.\n\nWhen you want to repeat a set number of times rather than walk a list, use **`range`**:\n\n```\nfor i in range(5):\n    print(i)      # 0 1 2 3 4\n```\n\nThe thing to burn into memory: **`range` stops *before* the number you give it.** `range(5)` produces 0, 1, 2, 3, 4 — five numbers, starting at 0, and 5 itself is never included.\n\nWith two arguments it starts somewhere else: `range(1, 6)` gives 1, 2, 3, 4, 5. Still stops before the second number.\n\nThat exclusive endpoint is the single most common off-by-one mistake in programming. It's not arbitrary though — it means `range(len(xs))` gives exactly the valid positions of a list, and `range(a, b)` always produces `b - a` numbers.",
+      },
+      {
+        kind: "trace",
+        id: "t2",
+        title: "Watch a loop go round",
+        intro:
+          "This is the one to slow down on. Follow `total` and `i` as the loop repeats — notice the loop body runs three separate times.",
+        code: "total = 0\n\nfor i in range(1, 4):\n    total = total + i\n\nprint(total)\n",
+        lines: [
+          { code: "total = 0", what: "Set up a running tally, starting at nothing.", state: "total = 0" },
+          {
+            code: "for i in range(1, 4):",
+            what:
+              "range(1, 4) will produce 1, 2, 3 — starting at 1, stopping before 4. Python points i at the first of those, 1, and enters the block.",
+            state: "i = 1, total = 0",
+          },
+          {
+            code: "    total = total + i      # pass 1",
+            what:
+              "Right side first, as always: total (0) plus i (1) is 1. Stick that back onto total. The block is finished, so Python loops back up to the for line.",
+            state: "i = 1, total = 1",
+          },
+          {
+            code: "for i in range(1, 4):      # next value",
+            what: "There are more numbers to come, so i is re-pointed at 2 and the block runs again.",
+            state: "i = 2, total = 1",
+          },
+          {
+            code: "    total = total + i      # pass 2",
+            what: "total (1) plus i (2) is 3. Back up to the top again.",
+            state: "i = 2, total = 3",
+          },
+          {
+            code: "    total = total + i      # pass 3",
+            what: "i is now 3. total (3) plus 3 is 6. After this pass, range has run out of numbers.",
+            state: "i = 3, total = 6",
+          },
+          {
+            code: "print(total)",
+            what:
+              "The loop is done, so Python moves past it to this line. Notice print is NOT indented — it sits outside the loop, so it runs once at the end rather than once per pass.",
+            state: "total = 6",
+            output: "6",
+          },
+        ],
+        takeaway:
+          "The indented block runs once per item. Anything at the outer level runs once, after the loop finishes. Whether a line is inside or outside the loop is decided purely by its indentation.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "The four classic control-flow mistakes",
+        items: [
+          {
+            wrong: "if score = 90:\n    print('top marks')",
+            problem:
+              "SyntaxError. `=` assigns a value; comparing takes `==`. Python deliberately refuses `=` inside an `if` precisely because this typo is so easy and so damaging in languages that do allow it.",
+            right: "if score == 90:\n    print('top marks')",
+          },
+          {
+            wrong: "for i in range(1, 5):\n    print(i)\n# expecting 1 2 3 4 5",
+            problem:
+              "Prints 1 2 3 4 — not 5. range always stops *before* the second number. To include 5 you have to say range(1, 6).",
+            right: "for i in range(1, 6):\n    print(i)",
+          },
+          {
+            wrong: "total = 0\nfor i in range(1, 4):\n    total = total + i\n    print(total)",
+            problem:
+              "Prints 1, 3, 6 — three times — because the print is indented, so it's part of the loop body. If you only want the final answer, the print must sit outside the loop.",
+            right: "total = 0\nfor i in range(1, 4):\n    total = total + i\nprint(total)",
+          },
+          {
+            wrong: "if age >= 18\n    print('adult')",
+            problem:
+              "SyntaxError — the colon is missing off the end of the `if` line. Every line that opens a block (if, elif, else, for, while, def) ends in a colon.",
+            right: "if age >= 18:\n    print('adult')",
+          },
+        ],
+      },
+      {
+        kind: "parsons",
+        id: "pa1",
+        title: "Build a loop that counts down",
+        prompt:
+          "Put these lines in order so the program prints 3, 2, 1, then 'liftoff'. The indented line belongs inside the loop; the unindented ones don't.",
+        solution: [
+          "for n in [3, 2, 1]:",
+          "    print(n)",
+          "print('liftoff')",
+        ],
+        expectedOutput: "3\n2\n1\nliftoff",
+        hints: [
+          "A loop's header line has to come before its body — the indented line can't be first.",
+          "'liftoff' should print once at the very end, not once per number. Which indentation level does that mean it needs to be at, and where does it go?",
+          "Header first, then the indented body, then the unindented line that runs after the loop finishes.",
+        ],
+        explanation:
+          "The indented print runs once per item (three times); the unindented print sits outside the loop so it runs a single time, after the loop is done.",
+      },
+      {
+        kind: "cloze",
+        id: "cl1",
+        title: "Fill in the loop",
+        prompt:
+          "This should print every number from 1 to 5 inclusive, then print 'done' once at the end. Fill the gaps.",
+        template: "for i in {{0}}(1, {{1}}):\n    print(i)\nprint({{2}})\n",
+        blanks: [
+          { answer: "range", width: 6 },
+          { answer: "6", width: 2 },
+          { answer: "'done'", accept: ['"done"'], width: 7 },
+        ],
+        explanation:
+          "`range(1, 6)` gives 1 through 5 — you need 6 as the stop value because range never includes it. The final print is unindented, so it runs once after the loop rather than on every pass.",
+      },
+      {
+        kind: "read",
+        id: "r3",
+        title: "while, break and continue",
+        body:
+          "A **while loop** repeats as long as a condition stays true. Use it when you don't know up front how many passes you need.\n\n```\ncount = 3\nwhile count > 0:\n    print(count)\n    count = count - 1\n```\n\nThe danger with `while` is the **infinite loop** — if nothing inside the block ever makes the condition false, it runs forever. Every while loop needs something in its body that moves it toward stopping. (In this app an endless loop will just hang the Run button, so it's a safe place to make that mistake once.)\n\nTwo keywords work in both kinds of loop:\n\n- **`break`** — leave the loop immediately, skipping any remaining passes.\n- **`continue`** — skip the rest of *this* pass and jump straight to the next one.\n\n```\nfor n in [1, 2, 3, 4, 5]:\n    if n == 3:\n        continue      # skip just the 3\n    if n == 5:\n        break         # stop entirely\n    print(n)          # prints 1, 2, 4\n```",
       },
       {
         kind: "predict",
@@ -434,7 +585,13 @@ export const pythonLessons: Lesson[] = [
         code:
           "total = 0\nfor i in range(1, 6):\n    if i == 3:\n        continue\n    total += i\nprint(total)\n",
         answer: "12",
-        hint: "range(1,6) = 1,2,3,4,5; skip 3.",
+        hints: [
+          "First work out what numbers range(1, 6) actually produces. Remember it stops before 6.",
+          "It gives 1, 2, 3, 4, 5. Now — what does `continue` do when i is 3?",
+          "`continue` skips the rest of that pass, so `total += i` never runs for 3. You're adding 1 + 2 + 4 + 5.",
+        ],
+        why:
+          "range(1, 6) yields 1,2,3,4,5. When i is 3 the continue jumps to the next pass before the addition happens, so 3 is left out: 1 + 2 + 4 + 5 = 12. (`total += i` is just shorthand for `total = total + i`.)",
       },
       {
         kind: "fix",
@@ -443,15 +600,58 @@ export const pythonLessons: Lesson[] = [
         buggy:
           "for i in range(1, 11):\n    if i % 5 = 0:\n        print('buzz')\n    else:\n        print(i)\n",
         expected: "1\n2\n3\n4\nbuzz\n6\n7\n8\n9\nbuzz",
-        hint: "`=` is assignment. Comparison uses `==`.",
+        hints: [
+          "Run it. It's a SyntaxError, and the arrow in the message points near the `=`.",
+          "Inside an `if` you're asking a question, not assigning. Which operator asks 'are these equal?'",
+          "Change `=` to `==`. (`i % 5` gives the remainder when i is divided by 5, so `== 0` means 'divides exactly'.)",
+        ],
+        solution:
+          "for i in range(1, 11):\n    if i % 5 == 0:\n        print('buzz')\n    else:\n        print(i)\n",
+        solutionWhy:
+          "A single `=` means 'assign this value', which makes no sense as a question, so Python rejects it outright. `==` asks whether two things are equal. The modulo operator `%` gives the remainder, so `i % 5 == 0` is the standard way to say 'i divides evenly by 5'.",
       },
       {
         kind: "write",
         id: "w1",
         title: "Sum of even numbers 1..100",
-        prompt: "Print the sum of even numbers from 1 to 100 inclusive. Expected: 2550",
+        prompt: "Print the sum of every even number from 1 to 100 inclusive. Expected: 2550",
         starter: "# print the sum here\n",
         expected: "2550",
+        hints: [
+          "Start with a running total set to 0, loop over the numbers, and print the total once at the end (outside the loop).",
+          "To include 100, your range needs to stop at 101 — remember the endpoint is exclusive.",
+          "To test 'is i even', check whether the remainder when divided by 2 is zero: `if i % 2 == 0:`",
+        ],
+        solution:
+          "total = 0\nfor i in range(1, 101):\n    if i % 2 == 0:\n        total += i\nprint(total)\n",
+        solutionWhy:
+          "range(1, 101) covers 1 through 100 — the stop value is one past where you want to finish. `i % 2 == 0` keeps only the evens. The print is unindented so it runs once at the end, not on every pass.\n\nA neater alternative once you're comfortable: `range(2, 101, 2)` takes a third argument, the step, and counts 2, 4, 6… directly — no `if` needed at all.",
+      },
+      {
+        kind: "mcq",
+        id: "m1",
+        title: "What does range(2, 10, 3) produce?",
+        prompt: "The third argument to range is the step — how much to count by each time.",
+        options: ["2, 5, 8", "2, 5, 8, 11", "2, 3, 10", "3, 6, 9"],
+        correctIndex: 0,
+        optionFeedback: [
+          "Right — start at 2, add 3 each time, and stop before 10. 11 would be past the end.",
+          "This includes 11, but range always stops before the second number, and 11 is beyond 10.",
+          "This reads the arguments as a list of values. They're actually start, stop, and step.",
+          "This starts at 3, but the first argument is the starting value, which is 2.",
+        ],
+        why:
+          "range(start, stop, step) counts from start, adds step each time, and stops as soon as it would reach or pass stop. So 2, 5, 8 — and 11 would be past 10, so it stops.",
+      },
+      {
+        kind: "explain",
+        id: "x1",
+        title: "In your own words",
+        prompt:
+          "Someone writes a loop to total up some numbers, but it prints a number on every pass instead of one total at the end. Nothing is misspelled and there are no error messages. What's wrong, and how would you tell just by looking?",
+        minWords: 25,
+        sampleAnswer:
+          "Their print is indented, so it's part of the loop body and runs once per pass. It needs to be at the outer level, lined up with the `for`, so it runs a single time after the loop ends. You can spot it purely from the indentation — in Python how far a line is indented is what decides whether it's inside the loop or after it.",
       },
     ],
   },
