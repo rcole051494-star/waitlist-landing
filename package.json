@@ -3,15 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "node scripts/copy-pyodide.mjs",
-    "predev": "node scripts/copy-pyodide.mjs",
+    "prebuild": "node scripts/copy-pyodide.mjs && node scripts/copy-monaco.mjs",
+    "predev": "node scripts/copy-pyodide.mjs && node scripts/copy-monaco.mjs",
     "dev": "next dev",
     "build": "next build && node scripts/fix-trailing-slashes.mjs",
     "start": "next start",
     "lint": "next lint",
     "android:sync": "npm run build && cap sync android",
     "android:open": "npm run build && cap sync android && cap open android",
-    "android:apk": "npm run build && cap sync android && cd android && ./gradlew assembleDebug"
+    "android:apk": "npm run build && cap sync android && cd android && ./gradlew assembleDebug",
+    "verify:offline": "node scripts/verify-offline.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
@@ -20,6 +21,7 @@
     "@capacitor/splash-screen": "^8.0.2",
     "@capacitor/status-bar": "^8.0.3",
     "@monaco-editor/react": "4.6.0",
+    "monaco-editor": "0.56.0",
     "next": "14.2.15",
     "pyodide": "^0.26.4",
     "react": "18.3.1",

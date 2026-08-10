@@ -24,3 +24,4 @@ android/app/capacitor.build.gradle
 public/pyodide/
 
 tsconfig.tsbuildinfo
+public/monaco/

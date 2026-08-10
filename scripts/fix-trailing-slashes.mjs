@@ -3,7 +3,7 @@
 // resolve directory index.html for URLs without a trailing slash) can find
 // the right page on full-page loads (e.g. after a service-worker cold start).
 import { readdir, readFile, writeFile, stat } from "node:fs/promises";
-import { join, dirname, extname } from "node:path";
+import { join, dirname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "out");
@@ -32,7 +32,22 @@ function fix(html) {
   });
 }
 
-const files = (await walk(OUT)).filter((f) => f.endsWith(".html"));
+const all = await walk(OUT);
+
+// Next's client prefetches a route's RSC payload from "<route>.txt", but with
+// trailingSlash + export it writes that payload to "<route>/index.txt". Every
+// prefetch therefore 404s. Mirror each payload to the name the client asks for
+// so next-lesson prefetching actually works (a real win on a phone).
+let mirrored = 0;
+for (const f of all.filter((f) => f.endsWith(`${sep}index.txt`))) {
+  const dir = dirname(f);
+  if (dir === OUT) continue; // the root payload is already at the right place
+  await writeFile(`${dir}.txt`, await readFile(f));
+  mirrored++;
+}
+console.log(`[fix-trailing-slashes] mirrored ${mirrored} RSC payloads to <route>.txt`);
+
+const files = all.filter((f) => f.endsWith(".html"));
 let changed = 0;
 for (const f of files) {
   const src = await readFile(f, "utf8");

@@ -56,8 +56,9 @@ Under the hood these run: `next build` → `cap sync android` → optionally `./
 
 ### Notes
 
-- The APK ships the **static web app** inside a Capacitor WebView. Pyodide (~10 MB WASM binary) and Monaco editor load from CDN the first time the app runs and are cached by the service worker for offline use afterward.
-- **First run needs internet** so Pyodide can download. Everything else is local.
+- The APK ships the **static web app** inside a Capacitor WebView, with both heavy runtimes bundled in rather than fetched: Pyodide (~13 MB) via `scripts/copy-pyodide.mjs` and the Monaco editor (~12 MB) via `scripts/copy-monaco.mjs`. Both run on `prebuild`, so a normal `npm run build` produces a fully self-contained app.
+- **No internet needed, ever** — including the very first run. `npm run verify:offline` proves it: it serves `out/` with every external host blocked and checks that Monaco mounts with real syntax highlighting, that Python executes, and that the textarea fallback still works if Monaco is somehow unavailable.
+- Monaco ships ~24 MB in total; `copy-monaco.mjs` copies an allowlist covering the editor core plus the Python and JavaScript grammars. Its filenames are content-hashed, so the allowlist is pattern-matched and the build **fails loudly** if a Monaco upgrade moves something, rather than silently shipping a broken editor. The single largest item is the TypeScript language service (~7 MB) behind JavaScript autocomplete — drop the `ts.worker` / `tsMode` / `lspLanguageFeatures` patterns from `KEEP` to save it, at the cost of JS hover and completion.
 - App ID / package: `app.codeforge.learn` — edit in `capacitor.config.ts` and in `android/app/build.gradle` if you want your own.
 - To make a release build for the Play Store, follow Capacitor's [release docs](https://capacitorjs.com/docs/android/deploying-to-google-play) (sign an AAB with your own keystore).
 
