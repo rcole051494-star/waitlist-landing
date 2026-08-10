@@ -23,3 +23,4 @@ android/app/capacitor.build.gradle
 # Pyodide runtime is copied from node_modules at build time
 public/pyodide/
 
+tsconfig.tsbuildinfo

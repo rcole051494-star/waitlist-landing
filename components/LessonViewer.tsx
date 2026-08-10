@@ -5,10 +5,24 @@ import Link from "next/link";
 import type { Lesson, Step } from "@/lib/curriculum/types";
 import { Prose } from "./Prose";
 import { Runner } from "./Runner";
+import { StuckHelp } from "./StuckHelp";
+import { TraceStep } from "./TraceStep";
+import { PitfallsStep } from "./PitfallsStep";
+import { ParsonsStep } from "./ParsonsStep";
+import { ClozeStep } from "./ClozeStep";
+import { CategorizeStep } from "./CategorizeStep";
 import { getLesson, upsertLesson, markStarted, markCompleted } from "@/lib/progress";
 import { getCard, grade, upsertCard } from "@/lib/srs";
 import { findLesson, lessonsForTrack } from "@/lib/curriculum";
 import { useTutorContext } from "@/lib/tutor/context";
+
+// Lessons written before the hint-ladder existed carry a single `hint`.
+// Treat that as a one-rung ladder so both formats render identically.
+function toHints(hints?: string[], hint?: string): string[] | undefined {
+  if (hints && hints.length) return hints;
+  if (hint) return [hint];
+  return undefined;
+}
 
 function stepTutorFields(step: Step): {
   stepPrompt: string;
@@ -18,6 +32,37 @@ function stepTutorFields(step: Step): {
   switch (step.kind) {
     case "read":
       return { stepPrompt: step.body };
+    case "trace":
+      return {
+        stepPrompt:
+          (step.intro ? step.intro + "\n\n" : "") +
+          "Walking through this program line by line:\n" +
+          step.lines.map((l, i) => `${i + 1}. ${l.code} — ${l.what}`).join("\n"),
+        referenceCode: step.code,
+      };
+    case "pitfalls":
+      return {
+        stepPrompt:
+          "Common mistakes for this concept:\n" +
+          step.items.map((p) => `- ${p.wrong} → ${p.problem}`).join("\n"),
+      };
+    case "parsons":
+      return {
+        stepPrompt: `${step.prompt}\n(The learner is dragging shuffled lines into the correct order — do NOT just give them the ordering.)`,
+        referenceCode: step.solution.join("\n"),
+        expected: step.expectedOutput,
+      };
+    case "cloze":
+      return {
+        stepPrompt: `${step.prompt ?? "Fill in the blanks."}\nBlanks (in order): ${step.blanks
+          .map((b) => b.answer)
+          .join(", ")}\n(Do NOT reveal the answers outright — nudge instead.)`,
+        referenceCode: step.template,
+      };
+    case "categorize":
+      return {
+        stepPrompt: `${step.prompt}\nCategories: ${step.buckets.join(" | ")}\n(Do NOT give the full sorting — help them reason it out.)`,
+      };
     case "example":
       return { stepPrompt: step.note ?? "Read and experiment with this example.", referenceCode: step.code };
     case "predict":
@@ -34,10 +79,20 @@ function stepTutorFields(step: Step): {
 }
 
 export function LessonViewer({ lesson }: { lesson: Lesson }) {
-  const [state, setState] = useState(() => getLesson(lesson.id));
-  const [showHint, setShowHint] = useState<Record<string, boolean>>({});
+  // Start from a blank slate rather than reading localStorage during the first
+  // render — the prerendered HTML has no access to storage, so seeding from it
+  // here would make the server and client markup disagree (hydration error).
+  // Saved progress is pulled in immediately after mount instead.
+  const [state, setState] = useState<ReturnType<typeof getLesson>>(() => ({
+    id: lesson.id,
+    stepIndex: 0,
+    attempts: {},
+    correct: {},
+    freeText: {},
+  }));
 
   useEffect(() => {
+    setState(getLesson(lesson.id));
     markStarted(lesson.id);
   }, [lesson.id]);
 
@@ -187,8 +242,6 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
         <StepBody
           step={step}
           track={track}
-          hintOpen={!!showHint[step.id]}
-          onHint={() => setShowHint((h) => ({ ...h, [step.id]: true }))}
           onAttempt={(ok) => markAttempt(step.id, ok)}
           state={state}
           setState={setState}
@@ -239,6 +292,11 @@ function kindLabel(kind: Step["kind"]) {
   return (
     {
       read: "concept",
+      trace: "walk through it",
+      pitfalls: "common mistakes",
+      parsons: "put it in order",
+      cloze: "fill the blanks",
+      categorize: "sort them",
       example: "example",
       predict: "predict the output",
       fix: "fix the bug",
@@ -252,8 +310,6 @@ function kindLabel(kind: Step["kind"]) {
 function StepBody({
   step,
   track,
-  hintOpen,
-  onHint,
   onAttempt,
   state,
   setState,
@@ -261,14 +317,58 @@ function StepBody({
 }: {
   step: Step;
   track: "python" | "javascript";
-  hintOpen: boolean;
-  onHint: () => void;
   onAttempt: (ok: boolean) => void;
   state: ReturnType<typeof getLesson>;
   setState: React.Dispatch<React.SetStateAction<ReturnType<typeof getLesson>>>;
   upsertLesson: (l: ReturnType<typeof getLesson>) => void;
 }) {
   if (step.kind === "read") return <Prose text={step.body} />;
+
+  if (step.kind === "trace") {
+    return (
+      <TraceStep intro={step.intro} code={step.code} lines={step.lines} takeaway={step.takeaway} />
+    );
+  }
+
+  if (step.kind === "pitfalls") {
+    return <PitfallsStep intro={step.intro} items={step.items} />;
+  }
+
+  if (step.kind === "parsons") {
+    return (
+      <ParsonsStep
+        prompt={step.prompt}
+        solution={step.solution}
+        expectedOutput={step.expectedOutput}
+        hints={step.hints}
+        explanation={step.explanation}
+        onAttempt={onAttempt}
+      />
+    );
+  }
+
+  if (step.kind === "cloze") {
+    return (
+      <ClozeStep
+        prompt={step.prompt}
+        template={step.template}
+        blanks={step.blanks}
+        explanation={step.explanation}
+        onAttempt={onAttempt}
+      />
+    );
+  }
+
+  if (step.kind === "categorize") {
+    return (
+      <CategorizeStep
+        prompt={step.prompt}
+        buckets={step.buckets}
+        items={step.items}
+        onAttempt={onAttempt}
+      />
+    );
+  }
 
   if (step.kind === "example") {
     return (
@@ -313,16 +413,15 @@ function StepBody({
           >
             Check answer
           </button>
-          {step.hint && (
-            <button onClick={onHint} className="text-sm text-ink-400 hover:text-ink-100 transition">
-              {hintOpen ? "hint shown ↓" : "show hint"}
-            </button>
-          )}
           {checked === true && <span className="text-good text-sm">✓ correct</span>}
           {checked === false && <span className="text-bad text-sm">✗ not quite — try running it below</span>}
         </div>
-        {hintOpen && step.hint && (
-          <div className="text-sm text-ink-300 border-l-2 border-warm pl-3">💡 {step.hint}</div>
+        <StuckHelp hints={toHints(step.hints, step.hint)} language={track} />
+        {checked !== null && step.why && (
+          <div className="rounded-lg border border-ink-700 bg-ink-900/60 p-3 text-sm text-ink-200 leading-relaxed">
+            <span className="text-ink-400 text-xs uppercase tracking-wider mr-1.5">Why</span>
+            {step.why}
+          </div>
         )}
         {checked === false && (
           <div className="pt-2">
@@ -344,16 +443,12 @@ function StepBody({
           expected={step.expected}
           onResult={(r) => onAttempt(r.ok)}
         />
-        {step.hint && (
-          <div className="flex items-center gap-3">
-            <button onClick={onHint} className="text-sm text-ink-400 hover:text-ink-100 transition">
-              {hintOpen ? "hint shown ↓" : "show hint"}
-            </button>
-          </div>
-        )}
-        {hintOpen && step.hint && (
-          <div className="text-sm text-ink-300 border-l-2 border-warm pl-3">💡 {step.hint}</div>
-        )}
+        <StuckHelp
+          hints={toHints(step.hints, step.hint)}
+          solution={step.solution}
+          solutionWhy={step.solutionWhy}
+          language={track}
+        />
       </div>
     );
   }
@@ -368,51 +463,25 @@ function StepBody({
           expected={step.expected}
           onResult={(r) => onAttempt(r.ok)}
         />
-        {step.hint && (
-          <div className="flex items-center gap-3">
-            <button onClick={onHint} className="text-sm text-ink-400 hover:text-ink-100 transition">
-              {hintOpen ? "hint shown ↓" : "show hint"}
-            </button>
-          </div>
-        )}
-        {hintOpen && step.hint && (
-          <div className="text-sm text-ink-300 border-l-2 border-warm pl-3">💡 {step.hint}</div>
-        )}
+        <StuckHelp
+          hints={toHints(step.hints, step.hint)}
+          solution={step.solution}
+          solutionWhy={step.solutionWhy}
+          language={track}
+        />
       </div>
     );
   }
 
   if (step.kind === "explain") {
-    const [answer, setAnswer] = usePersistedField(state, setState, upsertLesson, step.id);
-    const min = step.minWords ?? 10;
-    const wordCount = (answer || "").trim().split(/\s+/).filter(Boolean).length;
-    const ok = wordCount >= min;
     return (
-      <div className="space-y-3">
-        <p className="text-ink-200">{step.prompt}</p>
-        <textarea
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          rows={5}
-          className="w-full rounded-lg bg-ink-900 border border-ink-700 focus:border-ink-500 focus:outline-none p-3"
-          placeholder={`Write at least ${min} words explaining it to yourself…`}
-        />
-        <div className="flex items-center gap-3">
-          <span className={`text-sm ${ok ? "text-good" : "text-ink-400"}`}>
-            {wordCount} / {min} words {ok ? "✓" : ""}
-          </span>
-          <button
-            onClick={() => onAttempt(ok)}
-            disabled={!ok}
-            className="px-4 py-2 rounded-lg bg-ink-100 text-ink-950 text-sm font-medium hover:bg-white transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Log this reflection
-          </button>
-        </div>
-        <p className="text-xs text-ink-400">
-          Explaining aloud (or in writing) is one of the highest-yield learning acts you can do.
-        </p>
-      </div>
+      <ExplainStep
+        step={step}
+        onAttempt={onAttempt}
+        state={state}
+        setState={setState}
+        upsertLesson={upsertLesson}
+      />
     );
   }
 
@@ -420,6 +489,68 @@ function StepBody({
     return <Mcq step={step} onAttempt={onAttempt} />;
   }
   return null;
+}
+
+function ExplainStep({
+  step,
+  onAttempt,
+  state,
+  setState,
+  upsertLesson,
+}: {
+  step: Extract<Step, { kind: "explain" }>;
+  onAttempt: (ok: boolean) => void;
+  state: ReturnType<typeof getLesson>;
+  setState: React.Dispatch<React.SetStateAction<ReturnType<typeof getLesson>>>;
+  upsertLesson: (l: ReturnType<typeof getLesson>) => void;
+}) {
+  const [answer, setAnswer] = usePersistedField(state, setState, upsertLesson, step.id);
+  const [logged, setLogged] = useState(false);
+  const min = step.minWords ?? 10;
+  const wordCount = (answer || "").trim().split(/\s+/).filter(Boolean).length;
+  const ok = wordCount >= min;
+  return (
+    <div className="space-y-3">
+      <p className="text-ink-200">{step.prompt}</p>
+      <textarea
+        value={answer}
+        onChange={(e) => setAnswer(e.target.value)}
+        rows={5}
+        className="w-full rounded-lg bg-ink-900 border border-ink-700 focus:border-ink-500 focus:outline-none p-3"
+        placeholder={`Write at least ${min} words explaining it to yourself…`}
+      />
+      <div className="flex items-center gap-3">
+        <span className={`text-sm ${ok ? "text-good" : "text-ink-400"}`}>
+          {wordCount} / {min} words {ok ? "✓" : ""}
+        </span>
+        <button
+          onClick={() => {
+            onAttempt(ok);
+            setLogged(true);
+          }}
+          disabled={!ok}
+          className="px-4 py-2 rounded-lg bg-ink-100 text-ink-950 text-sm font-medium hover:bg-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Log this reflection
+        </button>
+      </div>
+      {logged && step.sampleAnswer && (
+        <div className="rounded-lg border border-ink-700 bg-ink-900/60 p-3">
+          <div className="text-[11px] uppercase tracking-wider text-ink-400 mb-1.5">
+            One way to put it
+          </div>
+          <p className="text-sm text-ink-200 leading-relaxed">{step.sampleAnswer}</p>
+          <p className="mt-2 text-[11px] text-ink-500">
+            Yours doesn't need to match this — if you captured the same idea in your own words,
+            that's the point.
+          </p>
+        </div>
+      )}
+      <p className="text-xs text-ink-400">
+        Explaining aloud (or in writing) is one of the highest-yield learning acts you can do.
+      </p>
+    </div>
+  );
 }
 
 function Mcq({
@@ -455,6 +586,15 @@ function Mcq({
             >
               <span className="mono text-xs text-ink-500 mr-2">{String.fromCharCode(65 + i)}.</span>
               <span className="text-ink-100">{opt}</span>
+              {checked && step.optionFeedback?.[i] && (isCorrect || isWrongPick) && (
+                <span
+                  className={`block mt-1.5 ml-6 text-[13px] leading-relaxed ${
+                    isCorrect ? "text-good/90" : "text-bad/90"
+                  }`}
+                >
+                  {step.optionFeedback[i]}
+                </span>
+              )}
             </button>
           );
         })}

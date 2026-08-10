@@ -24,20 +24,114 @@ export const pythonLessons: Lesson[] = [
         id: "e1",
         title: "Binding and rebinding",
         code:
-          "x = 7          # int\n" +
-          "x = 'seven'    # now str — same name, new object\n" +
+          "x = 7          # an int\n" +
+          "print(x, type(x).__name__)\n" +
+          "x = 'seven'    # now a str — same name, different kind of value\n" +
           "print(x, type(x).__name__)\n",
+        note:
+          "`type(x)` asks Python what kind of value x holds. `.__name__` just trims the answer down to the bare word. Notice the same name held two different types over the program's life — Python allows that.",
       },
       {
-        kind: "example",
-        id: "e2",
-        title: "f-strings (modern format)",
-        code:
-          "name, score = 'Ada', 92.5\n" +
-          "print(f'{name} got {score:.1f}%')      # .1f = 1 decimal\n" +
-          "print(f'{score=}')                      # debug: prints 'score=92.5'\n" +
-          "print(f'{name!r} is uppercase: {name.upper()}')\n",
-        note: "The `=` inside an f-string prints the variable name too — great for debugging.",
+        kind: "categorize",
+        id: "cat1",
+        title: "Which type is each value?",
+        prompt:
+          "Sort each value into the type Python would report for it. Watch out for the ones that look like one thing but aren't.",
+        buckets: ["int (whole number)", "float (decimal)", "str (text)", "bool (True/False)"],
+        items: [
+          { text: "42", bucket: 0, why: "No decimal point and no quotes — a plain whole number." },
+          { text: "42.0", bucket: 1, why: "The decimal point makes it a float, even though the value is a whole amount." },
+          { text: "'42'", bucket: 2, why: "The quotes make it text. It looks like a number but you can't do maths on it." },
+          { text: "True", bucket: 3, why: "A bool. Capital T, no quotes — Python's built-in true value." },
+          { text: "'True'", bucket: 2, why: "Quoted, so it's just the five characters T-r-u-e as text, not the boolean." },
+          { text: "-7", bucket: 0, why: "Negative numbers are still ints as long as there's no decimal point." },
+        ],
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "f-strings: putting values inside text",
+        body:
+          "Constantly you'll want to build a sentence that has a value in the middle of it. The modern way is an **f-string**.\n\nPut an `f` immediately before the opening quote, and then anything inside `{curly braces}` gets *evaluated* and dropped into the text:\n\n```\nname = 'Ada'\nprint(f'hello {name}')     # hello Ada\n```\n\nWithout the `f`, the braces are just literal characters — `print('hello {name}')` prints `hello {name}`. The `f` is what switches the braces on.\n\nYou can put any expression inside the braces, not just a bare name:\n\n```\nprint(f'2 + 2 is {2 + 2}')        # 2 + 2 is 4\nprint(f'shouting: {name.upper()}') # shouting: ADA\n```",
+      },
+      {
+        kind: "trace",
+        id: "t1",
+        title: "Watch an f-string get built",
+        intro: "Python builds the finished string piece by piece. Here's what it's doing.",
+        code: "price = 4\nqty = 3\nprint(f'{qty} items at ${price} = ${qty * price}')\n",
+        lines: [
+          {
+            code: "price = 4",
+            what: "Stick the value 4 onto the name price.",
+            state: "price = 4",
+          },
+          {
+            code: "qty = 3",
+            what: "Stick the value 3 onto the name qty.",
+            state: "price = 4, qty = 3",
+          },
+          {
+            code: "f'{qty} items at ${price} = ${qty * price}'",
+            what:
+              "Python walks the string left to right. Plain characters copy across untouched. At the first {qty} it looks up qty (3) and drops it in. 'items at $' copies across — note that dollar sign is just an ordinary character, nothing special. At {price} it drops in 4.",
+            state: "so far: '3 items at $4 = $'",
+          },
+          {
+            code: "{qty * price}",
+            what:
+              "The last brace holds an expression rather than a plain name. Python works it out first — 3 times 4 is 12 — and drops the result in. The finished string is handed to print.",
+            output: "3 items at $4 = $12",
+          },
+        ],
+        takeaway:
+          "Everything inside braces is evaluated then converted to text; everything outside is copied as-is. That's the whole rule.",
+      },
+      {
+        kind: "read",
+        id: "r3",
+        title: "Format specs: controlling how a value looks",
+        body:
+          "After the value inside the braces you can add a colon and a **format spec** — instructions for how it should be displayed. This changes only the *display*, never the underlying value.\n\nThe one you'll use most is rounding a decimal:\n\n```\npi = 3.14159\nprint(f'{pi:.2f}')     # 3.14   — .2f means 2 decimal places\nprint(f'{pi:.0f}')     # 3      — 0 decimal places\nprint(pi)              # 3.14159 — pi itself never changed\n```\n\nRead `.2f` as \"2 digits after the point, as a **f**loat\".\n\nA few more worth knowing now:\n\n- `{n:,}` → thousands separators: `1000000` becomes `1,000,000`\n- `{name:>10}` → pad to 10 characters wide, aligned right\n- `{name:<10}` → same but aligned left\n\nAnd one purely for debugging — put `=` after the expression and Python prints the expression itself alongside its value:\n\n```\nscore = 92.5\nprint(f'{score=}')     # score=92.5\n```\n\nThat's a genuinely useful trick when you're trying to work out what a variable actually contains.",
+      },
+      {
+        kind: "cloze",
+        id: "cl1",
+        title: "Fill in the f-string",
+        prompt:
+          "This should print exactly: Ada scored 91.5%  — fill in the three gaps.",
+        template: "name = 'Ada'\nscore = 91.4567\nprint({{0}}'{name} scored {score:{{1}}}%')\n",
+        blanks: [
+          { answer: "f", width: 2 },
+          { answer: ".1f", width: 4 },
+        ],
+        explanation:
+          "The `f` before the quote is what turns the braces on. `.1f` rounds the *display* to one decimal place — 91.4567 shows as 91.5, while the variable itself is untouched. The `%` sits outside any braces, so it's printed as an ordinary character.",
+      },
+      {
+        kind: "pitfalls",
+        id: "pf1",
+        title: "The classic f-string and type mistakes",
+        items: [
+          {
+            wrong: "name = 'Ada'\nprint('hello {name}')",
+            problem:
+              "Prints the literal text `hello {name}`. Without the `f` before the opening quote, curly braces have no special meaning at all.",
+            right: "name = 'Ada'\nprint(f'hello {name}')",
+          },
+          {
+            wrong: "age = 30\nprint('I am ' + age)",
+            problem:
+              "TypeError: can only concatenate str (not \"int\") to str. The `+` between text and a number is ambiguous — Python refuses to guess whether you meant to add or to join. An f-string sidesteps the whole problem.",
+            right: "age = 30\nprint(f'I am {age}')",
+          },
+          {
+            wrong: "pi = 3.14159\nprint(f'{pi:2f}')",
+            problem:
+              "Prints 3.141590 — not what you wanted. You dropped the dot: `2f` means something different from `.2f`. The dot is part of the spec, and it's easy to miss.",
+            right: "pi = 3.14159\nprint(f'{pi:.2f}')",
+          },
+        ],
       },
       {
         kind: "predict",
@@ -45,7 +139,12 @@ export const pythonLessons: Lesson[] = [
         title: "Predict the output",
         code: "n = 3\nprint(f'{n * n = }')\n",
         answer: "n * n = 9",
-        hint: "The `=` prints the expression, a space, `=`, a space, the value.",
+        hints: [
+          "The `=` at the end of a brace is the debug form — it prints the expression text as well as the result.",
+          "Python echoes the expression exactly as you wrote it (spaces and all), then ` = `, then the value. So you get the text `n * n`, then ` = `, then 9.",
+        ],
+        why:
+          "The debug `=` reproduces your expression verbatim, then the computed value. Because you wrote spaces around the `*`, they appear in the output too.",
       },
       {
         kind: "fix",
@@ -53,7 +152,14 @@ export const pythonLessons: Lesson[] = [
         title: "Fix: it should print 'Pi ≈ 3.14'",
         buggy: "pi = 3.14159\nprint('Pi ≈ ' + pi)\n",
         expected: "Pi ≈ 3.14",
-        hint: "You can't concatenate str + float. Use an f-string with `:.2f`.",
+        hints: [
+          "Run it and read the error. It's a TypeError about combining a str and a float with `+`.",
+          "You can't glue text and a number together with `+`. Use an f-string instead so the number gets converted for you.",
+          "You also need to round 3.14159 down to two decimals for display — that's a format spec after a colon.",
+        ],
+        solution: "pi = 3.14159\nprint(f'Pi ≈ {pi:.2f}')\n",
+        solutionWhy:
+          "Two fixes in one: the f-string converts the number to text automatically (so no TypeError), and `:.2f` rounds the displayed value to two decimal places. The variable `pi` still holds the full 3.14159 — only the display changed.",
       },
       {
         kind: "write",
@@ -62,6 +168,14 @@ export const pythonLessons: Lesson[] = [
         prompt: "Assign name='Ren' and age=30, then print exactly: Ren is 30 years old.",
         starter: "name = ''\nage = 0\n# print here\n",
         expected: "Ren is 30 years old.",
+        hints: [
+          "Start by putting the right values on those first two lines, replacing the empty placeholders.",
+          "Use an f-string with two braces in it — one for the name, one for the age.",
+          "Don't forget the full stop at the end. It goes inside the quotes, outside any braces.",
+        ],
+        solution: "name = 'Ren'\nage = 30\nprint(f'{name} is {age} years old.')\n",
+        solutionWhy:
+          "The two braces get replaced by the values; everything else — the spaces, the words 'is' and 'years old', and the final full stop — is ordinary text copied through as written.",
       },
       {
         kind: "mcq",
@@ -75,15 +189,23 @@ export const pythonLessons: Lesson[] = [
           "print(x)",
         ],
         correctIndex: 1,
-        why: "f-strings with format specs are the current idiomatic choice.",
+        optionFeedback: [
+          "Works, but it's doing by hand what the language does for you — converting to str and rounding separately, then gluing with +. Harder to read at a glance.",
+          "The idiomatic modern choice. The value and how to display it sit right where they appear in the sentence.",
+          "This is %-formatting, the style Python used decades ago. You'll see it in old code, but it's no longer the recommended way to write new code.",
+          "This just prints the raw number with no sentence and no rounding.",
+        ],
+        why: "f-strings with format specs are the current idiomatic choice — the value and its formatting live inline, where you can see them in context.",
       },
       {
         kind: "explain",
         id: "x1",
         title: "In your own words",
         prompt:
-          "Why is `x = 5; x = 'hello'` valid in Python but would be a type error in a language like Java?",
-        minWords: 15,
+          "Why is `x = 5` then later `x = 'hello'` allowed in Python, when in a language like Java that would be an error? Use the sticky-note idea in your answer.",
+        minWords: 20,
+        sampleAnswer:
+          "In Python the type belongs to the value, not to the name. A name is just a sticky note you can move onto anything — so moving it from the number 5 onto the text 'hello' is fine. In Java the name itself is declared to hold one specific type, so it's not allowed to point at a different kind of value later.",
       },
     ],
   },
