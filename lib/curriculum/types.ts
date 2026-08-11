@@ -8,7 +8,11 @@ export type TraceLine = {
   code: string; // the line (or small group of lines) being explained
   what: string; // plain-language description of what happens
   state?: string; // optional: variable values after this line, e.g. "age = 25"
-  output?: string; // optional: what gets printed at this point
+  output?: string; // optional: what this line prints (not the output so far)
+  // Set false when `code` is an annotation rather than a real program line —
+  // an intermediate result like "3 * 16", or a resumption point. Those can
+  // never highlight anything, and saying so keeps the checker honest.
+  highlight?: false;
 };
 
 // A common mistake, shown *before* the learner makes it.

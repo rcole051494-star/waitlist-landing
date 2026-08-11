@@ -24,7 +24,12 @@ export function TraceStep({
 
   // Highlight the code line(s) matching the current trace entry.
   const activeCode = lines[current]?.code ?? "";
-  const activeSet = new Set(activeCode.split("\n").map((l) => l.trim()).filter(Boolean));
+  // Some trace entries quote an intermediate result rather than a program
+  // line; those declare highlight: false and light nothing up.
+  const activeSet =
+    lines[current]?.highlight === false
+      ? new Set<string>()
+      : new Set(activeCode.split("\n").map((l) => l.trim()).filter(Boolean));
 
   return (
     <div className="space-y-4">
