@@ -106,16 +106,73 @@ for (const [track, lesson, step, code, expected, waitMs] of [
   );
 }
 
-// With Monaco itself unreachable, the textarea fallback has to carry the lesson.
-console.log("fallback: Monaco unavailable");
-blockMonaco = true;
-await page.goto(`${BASE}/learn/javascript/js.11.closures/`, { waitUntil: "networkidle" });
-await openStep("Memoize");
-await page.waitForSelector("main textarea", { timeout: 20000 });
-await page.locator("main textarea").first().fill("console.log('fallback ok');\n");
-await page.getByRole("button", { name: /Run/ }).first().click();
-await page.waitForTimeout(3000);
-ok(/fallback ok/.test(await body()), "fallback editor accepts typing and runs it");
+// With Monaco itself unreachable, the textarea fallback has to carry the
+// lesson.
+//
+// This has to be blocked at the SERVER, not with page.route: once a service
+// worker is registered it fetches assets itself, and page-level interception
+// doesn't apply to requests a worker makes. So serve the same directory from
+// a second port that refuses /monaco/ and /sw.js outright.
+{
+  console.log("fallback: Monaco unavailable");
+  const denied = createServer(async (req, res) => {
+    const path = decodeURIComponent(req.url.split("?")[0]);
+    if (path.startsWith("/monaco/") || path === "/sw.js") {
+      res.writeHead(404).end("blocked for this test");
+      return;
+    }
+    for (const candidate of [join(OUT, path), join(OUT, path, "index.html")]) {
+      try {
+        if (!(await stat(candidate)).isFile()) continue;
+        res.writeHead(200, { "content-type": TYPES[extname(candidate)] ?? "application/octet-stream" });
+        res.end(await readFile(candidate));
+        return;
+      } catch {}
+    }
+    res.writeHead(404).end("not found");
+  });
+  await new Promise((r) => denied.listen(0, "127.0.0.1", r));
+  const DENIED = `http://127.0.0.1:${denied.address().port}`;
+
+  const ctx = await browser.newContext();
+  const bare = await ctx.newPage();
+  await bare.goto(`${DENIED}/learn/javascript/js.11.closures/`, { waitUntil: "networkidle" });
+  await bare.getByRole("button", { name: /Memoize/ }).last().click();
+  // The app's own fallback box, not Monaco's hidden IME textarea.
+  const box = bare.locator("main textarea:not([aria-hidden])").first();
+  await box.waitFor({ timeout: 20000 });
+  ok(/Offline editor —/.test(await bare.locator("main").innerText()), "the fallback editor takes over");
+  await box.fill("console.log('fallback ok');\n");
+  await bare.getByRole("button", { name: /Run/ }).first().click();
+  await bare.waitForTimeout(3000);
+  ok(/fallback ok/.test(await bare.locator("main").innerText()), "fallback editor accepts typing and runs it");
+  await ctx.close();
+  denied.close();
+}
+
+// The service worker is what makes the app installable and keeps it working
+// offline in the browser. It once failed to register at all — the code waited
+// for the load event, which had usually already fired by the time React
+// hydrated — so assert it actually takes hold.
+{
+  console.log("service worker registers in a production build");
+  const ctx = await browser.newContext();
+  const swPage = await ctx.newPage();
+  await swPage.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await swPage.waitForTimeout(3000);
+  const regs = await swPage.evaluate(() =>
+    navigator.serviceWorker.getRegistrations().then((r) => r.length)
+  );
+  ok(regs === 1, `exactly one service worker is registered (got ${regs})`);
+
+  const manifest = await swPage.evaluate(
+    async (base) => (await fetch(base + "/manifest.webmanifest")).json(),
+    BASE
+  );
+  ok(manifest.display === "standalone", `manifest opens in its own window (display: ${manifest.display})`);
+  ok((manifest.icons?.length ?? 0) >= 2, "manifest ships install icons");
+  await ctx.close();
+}
 
 if (notFound.length) {
   console.log("  FAIL missing assets:", notFound.slice(0, 10));
