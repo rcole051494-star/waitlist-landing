@@ -159,6 +159,22 @@ const bloomOpacity = (scope) =>
   await ctx.close();
 }
 
+// ------------------------------------------------- javascript-driven motion ----
+// The CSS reduced-motion block can't reach animations driven from JavaScript,
+// so the app wraps everything in MotionConfig reducedMotion="user". Verified
+// by hand that this suppresses interpolation (y snaps 8 → 0 instead of easing);
+// this guard just makes sure the wrapper doesn't quietly disappear.
+{
+  console.log("framer-motion inherits the reduced-motion policy");
+  const layout = await readFile(join(dirname(fileURLToPath(import.meta.url)), "..", "app", "layout.tsx"), "utf8");
+  ok(/MotionProvider/.test(layout), "the root layout wraps the tree in MotionProvider");
+  const provider = await readFile(
+    join(dirname(fileURLToPath(import.meta.url)), "..", "components", "MotionProvider.tsx"),
+    "utf8"
+  );
+  ok(/reducedMotion=["']user["']/.test(provider), 'MotionConfig is set to reducedMotion="user"');
+}
+
 // ------------------------------------------ contrast against the real wash ----
 // The page carries a radial wash over its base colour, so the ground under a
 // glass panel is brighter in some places than others. Rather than guess where

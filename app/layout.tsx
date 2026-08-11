@@ -4,6 +4,7 @@ import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { TutorProvider } from "@/lib/tutor/context";
 import { TutorPanel } from "@/components/TutorPanel";
 import { TutorShell } from "@/components/TutorShell";
+import { MotionProvider } from "@/components/MotionProvider";
 
 export const metadata: Metadata = {
   title: "Code Forge — Learn Python & JavaScript by doing",
@@ -38,10 +39,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen bg-ink-950 text-ink-100 antialiased">
-        <TutorProvider>
-          <TutorShell>{children}</TutorShell>
-          <TutorPanel />
-        </TutorProvider>
+        <MotionProvider>
+          <TutorProvider>
+            <TutorShell>{children}</TutorShell>
+            <TutorPanel />
+          </TutorProvider>
+        </MotionProvider>
         <ServiceWorkerRegister />
       </body>
     </html>
