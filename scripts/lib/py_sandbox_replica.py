@@ -12,7 +12,9 @@ import asyncio
 import contextlib
 import io
 import json
+import os
 import sys
+import tempfile
 
 CO_COROUTINE = 0x80
 
@@ -34,6 +36,9 @@ def run(code: str) -> tuple[str, str | None]:
 
 def main() -> int:
     cases = json.load(open(sys.argv[1]))
+    # Lessons about files really do write files. Run from a scratch directory
+    # so they cannot litter (or overwrite) anything in the repository.
+    os.chdir(tempfile.mkdtemp(prefix="curriculum-fs-"))
     passed = failed = 0
     for case in cases:
         got, error = run(case["code"])

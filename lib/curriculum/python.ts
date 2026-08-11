@@ -53,6 +53,24 @@ export const pythonLessons: Lesson[] = [
           "Constantly you'll want to build a sentence that has a value in the middle of it. The modern way is an **f-string**.\n\nPut an `f` immediately before the opening quote, and then anything inside `{curly braces}` gets *evaluated* and dropped into the text:\n\n```\nname = 'Ada'\nprint(f'hello {name}')     # hello Ada\n```\n\nWithout the `f`, the braces are just literal characters — `print('hello {name}')` prints `hello {name}`. The `f` is what switches the braces on.\n\nYou can put any expression inside the braces, not just a bare name:\n\n```\nprint(f'2 + 2 is {2 + 2}')        # 2 + 2 is 4\nprint(f'shouting: {name.upper()}') # shouting: ADA\n```",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Text, or the value inside it",
+        prompt: "Same variable, two ways of putting it in a sentence.",
+        a: { label: "comma", code: 
+          "name = 'Ada'\n"
+          + "print('hello', name)\n", output: "hello Ada" },
+        b: { label: "plus", code: 
+          "name = 'Ada'\n"
+          + "print('hello' + name)\n", output: "helloAda" },
+        hints: [
+          "Look closely at the space between the two words in each answer.",
+          "`print` puts a space between its arguments. `+` joins strings with nothing between them.",
+        ],
+        explanation: 
+          "A comma passes two separate values to `print`, which joins them with a space. `+` glues the strings together exactly as written — no space unless you put one there.\n\nAn f-string sidesteps the whole question: `print(f'hello {name}')` puts exactly the characters you typed, spaces included.",
+      },
+      {
         kind: "categorize",
         id: "cat1",
         title: "Which type is each value?",
@@ -333,6 +351,24 @@ export const pythonLessons: Lesson[] = [
         title: "Why floats trade exactness for range",
         body: 
           "Floats aren't like that. They trade exactness for range, which causes a surprise you'll meet later in this lesson.\n\nOne bit of syntax worth knowing now: you can put underscores in long numbers to make them readable. `1_000_000` is exactly the same value as `1000000` — Python ignores the underscores, they're purely for your eyes.",
+      },
+      {
+        kind: "diff",
+        id: "d1",
+        title: "One slash, or two",
+        prompt: "Same numbers, one extra character.",
+        a: { label: "single slash", code: 
+          "print(7 / 2)\n"
+          + "print(8 / 2)\n", output: "3.5\n4.0" },
+        b: { label: "double slash", code: 
+          "print(7 // 2)\n"
+          + "print(8 // 2)\n", output: "3\n4" },
+        hints: [
+          "Look at the second line of each answer, where the division is exact.",
+          "`/` always produces a float, even when it divides evenly.",
+        ],
+        explanation: 
+          "`/` always gives a float — note `4.0`, not `4`, even though 8 divides by 2 exactly.\n\n`//` divides and throws the remainder away, giving a whole number.\n\nUse `//` when you want a count of whole things — how many full boxes, how many complete pages. Use `/` when a fraction is meaningful.",
       },
       {
         kind: "categorize",
@@ -690,6 +726,31 @@ export const pythonLessons: Lesson[] = [
           "Negative positions count backwards from the end, which saves a lot of arithmetic:\n\n```\ns[-1]   # 'e'  — last character, no need to know the length\ns[-2]   # 'd'  — second from last\n```\n\nThe other thing to know up front: **strings never change.** Every method that looks like it modifies a string actually builds a brand-new one and hands it back. `s.upper()` doesn't shout at `s`; it returns a new shouty string and leaves `s` exactly as it was. If you want to keep the result, you have to assign it somewhere.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Caught, or discarded",
+        prompt: "One line apart.",
+        a: {
+          label: "not stored",
+          code: 
+            "name = '  Ada  '\n"
+            + "name.strip()\n"
+            + "print(f'[{name}]')\n",
+          output: "[  Ada  ]",
+        },
+        b: {
+          label: "stored",
+          code: 
+            "name = '  Ada  '\n"
+            + "name = name.strip()\n"
+            + "print(f'[{name}]')\n",
+          output: "[Ada]",
+        },
+        hints: ["`strip()` builds a new string. Which version keeps hold of it?"],
+        explanation: 
+          "Strings can't be changed in place, so `strip()` has no choice but to return a new one. In A that new string is created and immediately thrown away.\n\nEvery string method works this way — `.lower()`, `.replace()`, `.title()`. If you don't assign the result, nothing happens.",
+      },
+      {
         kind: "example",
         id: "e1",
         title: "Methods in action",
@@ -934,6 +995,38 @@ export const pythonLessons: Lesson[] = [
         title: "Truthiness: things that aren't bools but act like them",
         body: 
           "Here's where Python differs from what you might expect. An `if` doesn't demand an actual True or False — it accepts **any** value and decides whether it counts as true.\n\nThe rule is short: **empty things are false, everything else is true.**\n\nThese are all **falsy**:\n\n- `False`\n- `None` (Python's 'no value')\n- `0` and `0.0`\n- `''` — the empty string\n- `[]`, `()`, `{}`, `set()` — empty collections",
+      },
+      {
+        kind: "diff",
+        id: "d1",
+        title: "Is it empty, or is it False",
+        prompt: "Two ways of asking about an empty list.",
+        a: {
+          label: "truthiness",
+          code: 
+            "items = []\n"
+            + "if items:\n"
+            + "    print('has items')\n"
+            + "else:\n"
+            + "    print('empty')\n",
+          output: "empty",
+        },
+        b: {
+          label: "comparison",
+          code: 
+            "items = []\n"
+            + "if items == False:\n"
+            + "    print('empty')\n"
+            + "else:\n"
+            + "    print('has items')\n",
+          output: "has items",
+        },
+        hints: [
+          "`if items:` asks whether there's anything in it. `items == False` asks a different question.",
+          "An empty list is falsy, but it is not equal to the boolean False.",
+        ],
+        explanation: 
+          "`if items:` asks \"is there anything here?\" — the question you almost always mean.\n\n`items == False` asks \"is this thing the boolean False?\", and an empty list isn't; it's an empty list. So B takes the wrong branch and claims a list with nothing in it has items.\n\nNever compare to `True` or `False`. Write `if items:` and `if not items:`.",
       },
       {
         kind: "example",
@@ -1185,6 +1278,33 @@ export const pythonLessons: Lesson[] = [
         title: "Indentation is the syntax",
         body: 
           "Most languages wrap blocks in `{ curly braces }`. Python uses indentation instead — the indenting *is* the syntax, not just formatting. Four spaces is the convention.\n\nAdd `else` for the other case, and `elif` (short for 'else if') for extra cases:\n\n```\nif score >= 90:\n    grade = 'A'\nelif score >= 80:\n    grade = 'B'\nelse:\n    grade = 'F'\n```\n\nPython checks these top to bottom and stops at the **first** one that's true. Everything below is skipped — which is why you can write `elif score >= 80` without also checking that it's under 90.",
+      },
+      {
+        kind: "diff",
+        id: "d1",
+        title: "Leave, or skip",
+        prompt: "Same loop, one keyword different.",
+        a: {
+          label: "break",
+          code: 
+            "for n in [1, 2, 3, 4]:\n"
+            + "    if n == 2:\n"
+            + "        break\n"
+            + "    print(n)\n",
+          output: "1",
+        },
+        b: {
+          label: "continue",
+          code: 
+            "for n in [1, 2, 3, 4]:\n"
+            + "    if n == 2:\n"
+            + "        continue\n"
+            + "    print(n)\n",
+          output: "1\n3\n4",
+        },
+        hints: ["One ends the loop entirely; the other only ends the current pass."],
+        explanation: 
+          "`break` leaves the loop — nothing after 1 ever prints.\n\n`continue` skips the rest of *this* pass and moves on, so 2 is missed and 3 and 4 carry on.\n\nUse `break` when you've found what you were after, and `continue` to skip cases you don't care about without wrapping the whole body in an `if`.",
       },
       {
         kind: "trace",
@@ -1541,6 +1661,26 @@ export const pythonLessons: Lesson[] = [
           "Strings are **immutable** — every method hands back a new string and leaves the original alone. Lists are the opposite: they're **mutable**, and many list methods change the list *in place* and return nothing.\n\nThat difference is the source of nearly every list bug beginners hit, so it's worth stating plainly:\n\n**Methods that change the list itself** (and return `None`):\n`.append()`, `.insert()`, `.remove()`, `.sort()`, `.reverse()`, `.extend()`",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Sorted in place, or a sorted copy",
+        prompt: "Both sort. Watch what happens to the original.",
+        a: { label: "xs.sort()", code: 
+          "xs = [3, 1, 2]\n"
+          + "xs.sort()\n"
+          + "print(xs)\n", output: "[1, 2, 3]" },
+        b: { label: "sorted(xs)", code: 
+          "xs = [3, 1, 2]\n"
+          + "sorted(xs)\n"
+          + "print(xs)\n", output: "[3, 1, 2]" },
+        hints: [
+          "Neither version stores a result, so both prints show `xs` itself.",
+          "One of these rearranges `xs`; the other builds a new list and, here, drops it.",
+        ],
+        explanation: 
+          "`xs.sort()` is a **method on the list** — it rearranges `xs` and returns `None`.\n\n`sorted(xs)` is a **function** — it leaves `xs` alone and returns a new sorted list, which B never caught.\n\nThe naming is a reliable signal across Python: methods like `.sort()`, `.append()`, `.reverse()` change the list; functions like `sorted()` and `reversed()` hand you something new.",
+      },
+      {
         kind: "trace",
         id: "t1",
         title: "Watch two names share one list",
@@ -1825,6 +1965,32 @@ export const pythonLessons: Lesson[] = [
           "**It signals intent.** A list says \"a collection of similar things, probably growing\". A tuple says \"a fixed record where each position means something\". `(x, y)` is a point — swapping or appending would be nonsense.\n\n**It can be a dict key.** Only immutable things can be dict keys, so `(3, 4)` can be, and `[3, 4]` can't. That single fact makes tuples the natural choice for coordinates, database-style composite keys, and anything you want to put in a set.\n\nOne quirk: the brackets are often optional. `a = 1, 2` makes a tuple. And a one-item tuple needs a trailing comma — `(5,)` — because `(5)` is just the number 5 in brackets.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "A tuple, or just brackets",
+        prompt: "One comma apart.",
+        a: {
+          label: "no comma",
+          code: 
+            "x = ('a')\n"
+            + "print(type(x).__name__, len(x))\n",
+          output: "str 1",
+        },
+        b: {
+          label: "with comma",
+          code: 
+            "x = ('a',)\n"
+            + "print(type(x).__name__, len(x))\n",
+          output: "tuple 1",
+        },
+        hints: [
+          "Brackets are used for grouping in maths too — `(2 + 3) * 4`.",
+          "It's the comma, not the brackets, that makes a tuple.",
+        ],
+        explanation: 
+          "`('a')` is just `'a'` with pointless brackets round it. What actually makes a tuple is the **comma** — `'a',` is a one-item tuple with or without brackets.\n\nThis matters when a function returns \"one thing or several\": a stray missing comma turns your one-item tuple into a bare value, and the error shows up somewhere else entirely.",
+      },
+      {
         kind: "example",
         id: "e1",
         title: "Swap without a temp",
@@ -2027,6 +2193,36 @@ export const pythonLessons: Lesson[] = [
         title: "Insertion order, and what can be a key",
         body: 
           "Dicts remember insertion order (guaranteed since Python 3.7), so looping gives you entries in the order you added them.\n\nWhy dicts matter: looking up a key is fast no matter how big the dict is. Finding something in a list of a million items means potentially checking a million items; in a dict it's effectively instant. When you're matching things up by name or id, a dict is almost always the right structure.",
+      },
+      {
+        kind: "diff",
+        id: "d1",
+        title: "Crash, or a fallback",
+        prompt: "Two ways of reading a key that isn't there.",
+        a: {
+          label: "square brackets",
+          code: 
+            "counts = {'a': 1}\n"
+            + "try:\n"
+            + "    print(counts['b'])\n"
+            + "except KeyError as e:\n"
+            + "    print('KeyError', e)\n",
+          output: "KeyError 'b'",
+        },
+        b: {
+          label: ".get()",
+          code: 
+            "counts = {'a': 1}\n"
+            + "print(counts.get('b'))\n"
+            + "print(counts.get('b', 0))\n",
+          output: "None\n0",
+        },
+        hints: [
+          "Square brackets insist the key exists. `.get()` doesn't.",
+          "`.get()` returns None by default, or whatever fallback you pass as a second argument.",
+        ],
+        explanation: 
+          "`counts['b']` raises `KeyError` when the key is missing — which is correct when its absence is a genuine bug.\n\n`.get('b')` returns `None` instead, and `.get('b', 0)` returns a fallback you choose. That second form is what makes counting work in one line: `counts[ch] = counts.get(ch, 0) + 1`.\n\nPick deliberately: brackets when a missing key means something is wrong, `.get()` when it's expected.",
       },
       {
         kind: "example",
@@ -2287,6 +2483,29 @@ export const pythonLessons: Lesson[] = [
           "The speed point is the real reason sets exist. Checking `x in some_list` may have to scan the entire list; `x in some_set` is effectively instant however large the set is. If you're repeatedly asking \"have I seen this before?\", a set is the tool.\n\nOne trap worth knowing now: `{}` is an **empty dict**, not an empty set. Python gave the braces to dicts first. For an empty set you must write `set()`.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Fast lookup, or a scan",
+        prompt: "Both answer the same question. Only the container differs.",
+        a: {
+          label: "list",
+          code: 
+            "xs = [1, 2, 3, 2, 1]\n"
+            + "print(3 in xs, len(xs))\n",
+          output: "True 5",
+        },
+        b: {
+          label: "set",
+          code: 
+            "xs = {1, 2, 3, 2, 1}\n"
+            + "print(3 in xs, len(xs))\n",
+          output: "True 3",
+        },
+        hints: ["The duplicates went somewhere in one of them."],
+        explanation: 
+          "Both say `True` — but the set quietly dropped the duplicates, so its length is 3.\n\nThere's a hidden difference too: `in` on a list checks each item in turn, while `in` on a set jumps straight to the answer however big it gets. With thousands of items inside a loop, that's the gap between instant and sluggish.",
+      },
+      {
         kind: "example",
         id: "e1",
         title: "Dedupe while preserving order",
@@ -2469,6 +2688,61 @@ export const pythonLessons: Lesson[] = [
         title: "Adding a filter, and reading it in order",
         body: 
           "Read it left to right as: *\"n times n, for each n in range 5\"*.\n\nAdd a condition on the end to skip items:\n\n```\n[n * n for n in range(5) if n % 2 == 0]     # only even n\n```\n\nWhich corresponds to putting an `if` inside the loop before the append.\n\nThe reason to use them isn't brevity for its own sake — it's that the whole operation reads as a single thought (\"the squares of the even numbers\") rather than four lines you have to mentally execute.",
+      },
+      {
+        kind: "buildup",
+        id: "b1",
+        title: "Build a comprehension",
+        prompt: "Turn a four-line loop into one line, a piece at a time.",
+        stages: [
+          {
+            line: "words = ['hi', 'there', 'ok', 'friend']",
+            distractors: [
+              "words = ('hi', 'there', 'ok', 'friend'",
+              "words = ['hi' 'there' 'ok' 'friend']",
+            ],
+            what: 
+              "The data to work from. (The second option is a real trap — Python joins adjacent string literals, so it would give one long word.)",
+          },
+          {
+            line: "long_words = [",
+            distractors: ["long_words = (", "long_words = {"],
+            what: 
+              "Square brackets mean the result is a list. Round would give a generator, curly a set.",
+          },
+          {
+            line: "    w.upper()",
+            distractors: ["    for w in words", "    w.upper() for"],
+            what: 
+              "The expression comes FIRST — what you want each item to become. This is the part that reads out of order at first.",
+          },
+          {
+            line: "    for w in words",
+            distractors: ["    for w in words:", "    in words"],
+            what: 
+              "Then the loop. No colon: a comprehension isn't a block, it's one expression.",
+          },
+          {
+            line: "    if len(w) > 2",
+            distractors: ["    if len(w) > 2:", "    where len(w) > 2"],
+            what: 
+              "The filter comes last and is optional. Items failing it never reach the expression at the top.",
+          },
+          {
+            line: "]",
+            distractors: [")", "}"],
+            what: "Close it — matching the bracket we opened.",
+          },
+          {
+            line: "print(long_words)",
+            distractors: ["print(words)", "console.log(long_words)"],
+            what: 
+              "Both 'hi' and 'ok' are exactly two characters, so `len(w) > 2` drops them; the survivors get uppercased.",
+            output: "['THERE', 'FRIEND']",
+          },
+        ],
+        explanation: 
+          "The trick to reading these is that they don't run left to right. Run order is **for → if → expression**: take each word, keep the long ones, uppercase what's left.\n\nOnce that clicks, a comprehension is easier to read than the loop it replaces, because the whole operation is visible at once.",
       },
       {
         kind: "example",
@@ -2700,6 +2974,38 @@ export const pythonLessons: Lesson[] = [
         title: "Defining is not calling",
         body: 
           "Defining a function doesn't run it. `def` just stores the recipe under a name; nothing happens until you **call** it by writing `greet('Ada')`.\n\nThe value you pass in when calling — `'Ada'` — is an **argument**. Parameter is the name in the definition, argument is the actual value at the call. People mix the words up constantly and it rarely matters, but it's useful to know they're different things.\n\nWhy bother? Two reasons that matter immediately: you write the logic once instead of copying it around, and you get to give a chunk of code a **name**, which makes the code that uses it readable. `total = calculate_tax(income)` says what's happening; ten lines of inline arithmetic doesn't.",
+      },
+      {
+        kind: "diff",
+        id: "d1",
+        title: "Print, or return",
+        prompt: "Two functions that look like they do the same thing.",
+        a: {
+          label: "print",
+          code: 
+            "def add(a, b):\n"
+            + "    print(a + b)\n"
+            + "\n"
+            + "result = add(2, 3)\n"
+            + "print(result)\n",
+          output: "5\nNone",
+        },
+        b: {
+          label: "return",
+          code: 
+            "def add(a, b):\n"
+            + "    return a + b\n"
+            + "\n"
+            + "result = add(2, 3)\n"
+            + "print(result)\n",
+          output: "5",
+        },
+        hints: [
+          "Count the lines of output. Why does one produce two?",
+          "In A, where does the first 5 come from — and what did the function actually hand back?",
+        ],
+        explanation: 
+          "In A the function prints 5 itself, then hands back `None`, which the second `print` dutifully shows.\n\nIn B the function hands back 5 and prints nothing; the single line of output comes from the caller.\n\nThe rule: `return` is how a function gives a value to the code that called it. `print` just puts characters on a screen. A function that only prints can't be used in a calculation.",
       },
       {
         kind: "pitfalls",
@@ -2990,6 +3296,39 @@ export const pythonLessons: Lesson[] = [
           "So what's the point? Three things, all real:\n\n- **Editors** use them for autocomplete and to flag mistakes as you type.\n- **Type checkers** like mypy or pyright read them and catch whole classes of bug before you run anything.\n- **Readers** — including you in six months — can see what a function expects without reading its body.\n\nThey're optional. Plenty of good Python has none. But on anything that lives longer than a script, they pay for themselves quickly.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Stored, but never checked",
+        prompt: 
+          "One of these has hints that are flatly wrong. Look at what Python does with them.",
+        a: {
+          label: "honest hints",
+          code: 
+            "def double(n: int) -> int:\n"
+            + "    return n * 2\n"
+            + "\n"
+            + "print(double(5))\n"
+            + "print(double.__annotations__)\n",
+          output: "10\n{'n': <class 'int'>, 'return': <class 'int'>}",
+        },
+        b: {
+          label: "lying hints",
+          code: 
+            "def double(n: str) -> bool:\n"
+            + "    return n * 2\n"
+            + "\n"
+            + "print(double(5))\n"
+            + "print(double.__annotations__)\n",
+          output: "10\n{'n': <class 'str'>, 'return': <class 'bool'>}",
+        },
+        hints: [
+          "Look at the first line of each answer before the second.",
+          "Python stores the annotations — you can read them back — and otherwise ignores them completely.",
+        ],
+        explanation: 
+          "Both return 10. The hints are recorded faithfully in `__annotations__` and **never acted on**: a string hint on an int argument changes nothing at runtime.\n\nWhat B loses is everything around the running — your editor's autocomplete and warnings, and a checker like mypy, which would reject it instantly.\n\nSo hints are a message to tools and to the next human. Worth writing accurately, and never a substitute for a test.",
+      },
+      {
         kind: "pitfalls",
         id: "pf1",
         title: "What hints do and don't do",
@@ -3188,6 +3527,44 @@ export const pythonLessons: Lesson[] = [
         title: "__init__, self, and methods",
         body: 
           "**`__init__`** runs automatically when you create an instance. Its job is to set up the starting data. The double underscores mark it as special to Python — you never call it directly, `Dog('Rex')` does.\n\nAnd **`self`** is the instance itself, handed to every method automatically. Inside a method, `self.name` means \"this particular dog's name\". It's the thing that lets one method see what another one stored.",
+      },
+      {
+        kind: "diff",
+        id: "d1",
+        title: "A class, or a dataclass",
+        prompt: "The same two fields, declared two ways. Look at both lines of output.",
+        a: {
+          label: "plain class",
+          code: 
+            "class Point:\n"
+            + "    def __init__(self, x, y):\n"
+            + "        self.x = x\n"
+            + "        self.y = y\n"
+            + "\n"
+            + "print(Point(1, 2) == Point(1, 2))\n"
+            + "print(type(Point(1, 2)).__name__)\n",
+          output: "False\nPoint",
+        },
+        b: {
+          label: "dataclass",
+          code: 
+            "from dataclasses import dataclass\n"
+            + "\n"
+            + "@dataclass\n"
+            + "class Point:\n"
+            + "    x: int\n"
+            + "    y: int\n"
+            + "\n"
+            + "print(Point(1, 2) == Point(1, 2))\n"
+            + "print(Point(1, 2))\n",
+          output: "True\nPoint(x=1, y=2)",
+        },
+        hints: [
+          "By default, `==` on your own class compares identity — is this the same object?",
+          "`@dataclass` writes `__init__`, `__eq__` and `__repr__` for you.",
+        ],
+        explanation: 
+          "The plain class compares by identity, so two points with the same coordinates are \"different\", and printing one gives an unhelpful `<__main__.Point object at 0x...>`.\n\n`@dataclass` generates the constructor, a sensible `__eq__` that compares the fields, and a readable `__repr__` — three things you'd otherwise write by hand and probably get subtly wrong.\n\nFor a class that is mostly just data, reach for it by default.",
       },
       {
         kind: "example",
@@ -3496,6 +3873,45 @@ export const pythonLessons: Lesson[] = [
           "You can capture the error object itself to see what it said:\n\n```\nexcept ValueError as e:\n    print(f'bad input: {e}')\n```\n\nTwo extras complete the picture:\n\n- **`else:`** runs only if the try block did NOT raise. Useful for the code that should only happen on success.\n- **`finally:`** runs no matter what — success, failure, even an early `return`. It's for cleanup that must happen either way.\n\nAnd you can raise errors yourself when something is wrong:\n\n```\nif amount < 0:\n    raise ValueError('amount cannot be negative')\n```",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Catch everything, or catch what you meant",
+        prompt: "There's a typo in both. Only one of them tells you.",
+        a: {
+          label: "bare except",
+          code: 
+            "def parse(s):\n"
+            + "    try:\n"
+            + "        return int(s.strp())\n"
+            + "    except:\n"
+            + "        return 0\n"
+            + "\n"
+            + "print(parse(' 42 '))\n",
+          output: "0",
+        },
+        b: {
+          label: "except ValueError",
+          code: 
+            "def parse(s):\n"
+            + "    try:\n"
+            + "        return int(s.strp())\n"
+            + "    except ValueError:\n"
+            + "        return 0\n"
+            + "\n"
+            + "try:\n"
+            + "    print(parse(' 42 '))\n"
+            + "except AttributeError as e:\n"
+            + "    print('AttributeError:', e)\n",
+          output: "AttributeError: 'str' object has no attribute 'strp'",
+        },
+        hints: [
+          "`strp` is a typo for `strip`. What kind of error does a misspelled method raise?",
+          "A bare `except:` catches that too, and quietly returns 0.",
+        ],
+        explanation: 
+          "A bare `except:` catches **everything**, including the typo. The function returns 0, looks like it worked, and the bug lives on — this is how a five-minute fix becomes an afternoon.\n\nNaming the error you can actually handle lets everything else surface, which is exactly what you want: `AttributeError` is a bug in your code, not a bad input.\n\nCatch narrowly. It's the most valuable habit in this lesson.",
+      },
+      {
         kind: "example",
         id: "e1",
         title: "Custom exception",
@@ -3744,6 +4160,35 @@ export const pythonLessons: Lesson[] = [
           "Calling a generator function doesn't run any of the body. It hands back a generator object, ready and waiting. The body only advances when something asks for a value — a `for` loop, `next()`, `list()`, `sum()`.\n\nWhy bother:\n\n- **Memory.** Processing a huge file line by line never holds the whole thing.\n- **Infinite sequences** become possible — the generator only ever produces what you take.\n- **Speed to first result.** You get value one immediately rather than after all the work.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Built, or promised",
+        prompt: "Square brackets in one, round in the other.",
+        a: {
+          label: "list comprehension",
+          code: 
+            "xs = [n * n for n in range(5)]\n"
+            + "print(len(xs), xs[0])\n",
+          output: "5 0",
+        },
+        b: {
+          label: "generator expression",
+          code: 
+            "xs = (n * n for n in range(5))\n"
+            + "try:\n"
+            + "    print(len(xs))\n"
+            + "except TypeError as e:\n"
+            + "    print('TypeError:', e)\n",
+          output: "TypeError: object of type 'generator' has no len()",
+        },
+        hints: [
+          "One of these built all five values immediately. The other built none of them.",
+          "You can't ask a generator how long it is — it doesn't know yet.",
+        ],
+        explanation: 
+          "The list built all five squares up front. The generator built nothing: it's a promise to produce them when asked, so it has no length and no indexing.\n\nThat's the trade. For five numbers the list is obviously better. For five million — or a file you're reading line by line — the generator uses a constant, tiny amount of memory while the list would not fit at all.",
+      },
+      {
         kind: "example",
         id: "e1",
         title: "An infinite sequence",
@@ -3915,6 +4360,42 @@ export const pythonLessons: Lesson[] = [
         title: "Capturing values while you match",
         body: 
           "That second case matches any two-item sequence whose first item is 0, **and** binds the second to `y` in one step. Writing that with if/elif takes length checks, index access and separate assignments.\n\nThe pattern kinds:\n\n- literals — `case 0:`, `case 'hi':`\n- captures — `case n:` matches anything and binds it to n\n- sequences — `case [a, b, *rest]:`\n- mappings — `case {'type': 'circle', 'r': r}:`\n- classes — `case Point(x=0, y=y):`\n- alternatives — `case 1 | 2 | 3:`\n- guards — `case n if n > 100:`",
+      },
+      {
+        kind: "diff",
+        id: "d1",
+        title: "A literal, or a capture",
+        prompt: "Both cases look like they compare against a name. Only one does.",
+        a: {
+          label: "bare name",
+          code: 
+            "LIMIT = 10\n"
+            + "value = 3\n"
+            + "match value:\n"
+            + "    case LIMIT:\n"
+            + "        print(f'captured {LIMIT}')\n",
+          output: "captured 3",
+        },
+        b: {
+          label: "dotted name",
+          code: 
+            "class C:\n"
+            + "    LIMIT = 10\n"
+            + "\n"
+            + "value = 3\n"
+            + "match value:\n"
+            + "    case C.LIMIT:\n"
+            + "        print('equals the limit')\n"
+            + "    case _:\n"
+            + "        print('does not match')\n",
+          output: "does not match",
+        },
+        hints: [
+          "In A, look at what LIMIT is after the match — it says 3, not 10.",
+          "A bare name in a `case` is a place to PUT a value, not a value to compare against.",
+        ],
+        explanation: 
+          "This is the sharpest edge in pattern matching. A bare name like `LIMIT` in a `case` is a **capture**: it matches anything and rebinds the name — so `LIMIT` is now 3, and your constant is gone.\n\nTo compare against a constant it must be **dotted**: `C.LIMIT`, `Colour.RED`, `math.pi`.\n\nPython does catch the most obvious version of this — a bare capture followed by more cases is a SyntaxError, because nothing after it could ever run. But as the last case, as in A, it's perfectly legal and silently wrong.",
       },
       {
         kind: "pitfalls",
@@ -4102,6 +4583,42 @@ export const pythonLessons: Lesson[] = [
           "Avoid `from x import *` — it dumps every name into your file, and you lose track of what came from where and what might have been silently overwritten.\n\nPython ships with a large standard library, which is why people say it comes 'batteries included'. Before installing anything, check whether the standard library already does it — very often it does.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "What each import actually brings in",
+        prompt: "Two import styles, and in each one the OTHER style's name is then tried.",
+        a: {
+          label: "import math",
+          code: 
+            "import math\n"
+            + "\n"
+            + "print(math.sqrt(16))\n"
+            + "try:\n"
+            + "    print(sqrt(16))\n"
+            + "except NameError as e:\n"
+            + "    print('NameError:', e)\n",
+          output: "4.0\nNameError: name 'sqrt' is not defined",
+        },
+        b: {
+          label: "from math import sqrt",
+          code: 
+            "from math import sqrt\n"
+            + "\n"
+            + "print(sqrt(16))\n"
+            + "try:\n"
+            + "    print(math.sqrt(16))\n"
+            + "except NameError as e:\n"
+            + "    print('NameError:', e)\n",
+          output: "4.0\nNameError: name 'math' is not defined",
+        },
+        hints: [
+          "Each style puts exactly one name into your file. Which one?",
+          "`import math` gives you `math`. `from math import sqrt` gives you `sqrt` — and not `math`.",
+        ],
+        explanation: 
+          "`import math` binds the name **math**, and nothing else — `sqrt` alone is undefined.\n\n`from math import sqrt` binds **sqrt**, and `math` itself is never introduced.\n\nBoth compute the same answer, so this is a readability choice: `math.sqrt` says where it came from at every call site, while a bare `sqrt` in a 500-line file tells the reader nothing. Prefer `import module`, and use `from` when the name is unmistakable (`from pathlib import Path`). Never `from x import *`.",
+      },
+      {
         kind: "pitfalls",
         id: "pf1",
         title: "Import mistakes",
@@ -4278,6 +4795,45 @@ export const pythonLessons: Lesson[] = [
         title: "Coroutines don't run until awaited",
         body: 
           "Calling a coroutine doesn't run it. It hands back a coroutine object, which does nothing until awaited or scheduled — a common early surprise.\n\nRun several concurrently with `asyncio.gather`:\n\n```\nresults = await asyncio.gather(fetch('a'), fetch('b'), fetch('c'))\n```\n\nThat takes about one second, not three. All three waits overlap.\n\n**Important limit:** async only helps when you're **waiting** — network, disk, timers. It does nothing for CPU-heavy work like crunching numbers, because there's no idle time to reclaim. For that you need threads or processes.",
+      },
+      {
+        kind: "diff",
+        id: "d1",
+        title: "One after another, or both at once",
+        prompt: "Two sleeps of 0.1 seconds each. Predict what each reports.",
+        a: {
+          label: "sequential",
+          code: 
+            "import asyncio, time\n"
+            + "\n"
+            + "async def work():\n"
+            + "    await asyncio.sleep(0.1)\n"
+            + "\n"
+            + "t = time.time()\n"
+            + "await work()\n"
+            + "await work()\n"
+            + "print(time.time() - t < 0.15)\n",
+          output: "False",
+        },
+        b: {
+          label: "gathered",
+          code: 
+            "import asyncio, time\n"
+            + "\n"
+            + "async def work():\n"
+            + "    await asyncio.sleep(0.1)\n"
+            + "\n"
+            + "t = time.time()\n"
+            + "await asyncio.gather(work(), work())\n"
+            + "print(time.time() - t < 0.15)\n",
+          output: "True",
+        },
+        hints: [
+          "In A, when does the second `work()` start?",
+          "`await` on its own line means nothing else begins until it finishes.",
+        ],
+        explanation: 
+          "In A the second call doesn't start until the first has finished: about 0.2 seconds.\n\nIn B `gather` starts both and waits for the slower one: about 0.1.\n\nThe shape to remember: **create all the coroutines, then await them together.** With ten network calls that's the difference between two seconds and two hundred milliseconds — and it's the entire reason async exists.",
       },
       {
         kind: "example",
@@ -4514,6 +5070,39 @@ export const pythonLessons: Lesson[] = [
           "The modes:\n\n- `'r'` — read (the default)\n- `'w'` — write, **replacing** the file entirely\n- `'a'` — append to the end\n\nThat `'w'` truncates immediately, so opening the wrong path in write mode destroys it. Worth a moment's care.\n\nFor whole small files, `pathlib` is shorter:\n\n```\nfrom pathlib import Path\ntext = Path('notes.txt').read_text()\nPath('out.txt').write_text('hello')\n```\n\nAnd building paths with `/` beats string concatenation — it handles separators correctly on every platform:\n\n```\nPath('data') / 'raw' / 'file.csv'\n```",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Append, or obliterate",
+        prompt: "One character apart. Both write successfully.",
+        a: {
+          label: "mode 'w'",
+          code: 
+            "path = 'demo.txt'\n"
+            + "with open(path, 'w') as f:\n"
+            + "    f.write('first\\n')\n"
+            + "with open(path, 'w') as f:\n"
+            + "    f.write('second\\n')\n"
+            + "print(open(path).read().strip())\n",
+          output: "second",
+        },
+        b: {
+          label: "mode 'a'",
+          code: 
+            "path = 'demo2.txt'\n"
+            + "with open(path, 'w') as f:\n"
+            + "    f.write('first\\n')\n"
+            + "with open(path, 'a') as f:\n"
+            + "    f.write('second\\n')\n"
+            + "print(open(path).read().strip())\n",
+          output: "first\nsecond",
+        },
+        hints: [
+          "One of these modes empties the file the moment it's opened — before you write anything.",
+        ],
+        explanation: 
+          "`'w'` **truncates on open**. The moment that second `open(path, 'w')` runs, the file is empty — even if you then crash before writing a byte.\n\n`'a'` appends to whatever is already there.\n\nThis is the one file mode worth being genuinely careful about: opening the wrong file with `'w'` destroys it instantly, with no warning and nothing to undo.",
+      },
+      {
         kind: "pitfalls",
         id: "pf1",
         title: "File and JSON mistakes",
@@ -4655,6 +5244,43 @@ export const pythonLessons: Lesson[] = [
         title: "The walrus in a while loop",
         body: 
           "It shines most in while loops that read until something runs out:\n\n```\nwhile (line := f.readline()):\n    process(line)\n```\n\nWithout it you'd need to read once before the loop and again at the bottom — duplicated code that's easy to get out of sync.\n\nThe brackets around `(n := ...)` are usually required, and they're a useful visual signal anyway.\n\nUse it where it genuinely removes duplication. Sprinkled into ordinary code it makes things harder to read, and the shorter version isn't automatically the better one.",
+      },
+      {
+        kind: "diff",
+        id: "d1",
+        title: "Called once, or twice",
+        prompt: 
+          "The same test, with and without the walrus. `expensive` announces itself, so you can count the calls.",
+        a: {
+          label: "without :=",
+          code: 
+            "def expensive(xs):\n"
+            + "    print('computing')\n"
+            + "    return len(xs)\n"
+            + "\n"
+            + "items = [1, 2, 3, 4, 5]\n"
+            + "if expensive(items) > 3:\n"
+            + "    print(f'{expensive(items)} items')\n",
+          output: "computing\ncomputing\n5 items",
+        },
+        b: {
+          label: "with :=",
+          code: 
+            "def expensive(xs):\n"
+            + "    print('computing')\n"
+            + "    return len(xs)\n"
+            + "\n"
+            + "items = [1, 2, 3, 4, 5]\n"
+            + "if (n := expensive(items)) > 3:\n"
+            + "    print(f'{n} items')\n",
+          output: "computing\n5 items",
+        },
+        hints: [
+          "Count the 'computing' lines. How many times is the function called in each?",
+          "In A the value is computed for the test, thrown away, then computed again for the message.",
+        ],
+        explanation: 
+          "`:=` assigns **and** hands the value onward, so the result of the test is still there to use inside the block. One call instead of two.\n\nWith a cheap `len()` that's cosmetic. With a database query, a network call, or anything with a side effect, doing it twice is a real bug — and the walrus is the tidiest fix.\n\nIt shines most in `while (line := f.readline()):`, where you need the value you just tested.",
       },
       {
         kind: "pitfalls",

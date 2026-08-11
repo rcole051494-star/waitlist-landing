@@ -50,6 +50,33 @@ export const pythonBasicsLesson: Lesson = {
           "That last part is the whole game. The computer isn't being difficult when your code doesn't work; it's being *literal*. Most of learning to code is learning to be precise enough for something that takes you completely at your word.\n\n**Python** is one such language. You type text following its rules, and a program called the **Python interpreter** reads your text and carries out each instruction.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Order matters",
+        prompt: "The same three lines, in a different order. Predict both.",
+        a: {
+          label: "change, then print",
+          code: 
+            "score = 10\n"
+            + "score = score + 5\n"
+            + "print(score)\n",
+          output: "15",
+        },
+        b: {
+          label: "print, then change",
+          code: 
+            "score = 10\n"
+            + "print(score)\n"
+            + "score = score + 5\n",
+          output: "10",
+        },
+        hints: [
+          "Read each one top to bottom, doing exactly what each line says, in order.",
+        ],
+        explanation: 
+          "A program is a list of instructions run in order, and `print` shows the value **at the moment it runs** — not the final value.\n\nB does change the score to 15. It just does it after the only line that was going to tell you about it.\n\nThat's the most useful debugging habit there is: put a `print` in and ask *when* it runs, not just what it says.",
+      },
+      {
         kind: "trace",
         id: "t1",
         title: "Walk through a 3-line program",

@@ -49,6 +49,33 @@ export const javascriptBasicsLesson: Lesson = {
           "Every code box in this app has a **▶ Run** button. Clicking it hands your code to a JavaScript engine, which carries out your instructions top to bottom.\n\nWhatever your code tells JavaScript to **show** — using `console.log(...)` — appears below the code box.\n\nThat's the loop you'll repeat forever as a programmer:\n\n- **Write** some code\n- **Run** it\n- **Read** what actually happened\n- **Adjust**\n\nNobody writes correct code first try — not beginners, not people who've done this twenty years. The skill isn't writing it perfectly; it's getting fast at that loop.\n\n(`console.log` is JavaScript's way of showing something. The name is historical — it means 'write this to the console', the text output area. Other languages call it `print`.)",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Order matters",
+        prompt: "The same three lines, in a different order. Predict both.",
+        a: {
+          label: "change, then print",
+          code: 
+            "let score = 10;\n"
+            + "score = score + 5;\n"
+            + "console.log(score);\n",
+          output: "15",
+        },
+        b: {
+          label: "print, then change",
+          code: 
+            "let score = 10;\n"
+            + "console.log(score);\n"
+            + "score = score + 5;\n",
+          output: "10",
+        },
+        hints: [
+          "Read each one top to bottom, doing exactly what each line says, in order.",
+        ],
+        explanation: 
+          "A program is a list of instructions run in order, and `console.log` shows the value **at the moment it runs** — not the final value.\n\nB does change the score to 15. It just does it after the only line that was going to tell you about it.\n\nThat's the single most useful debugging habit: put a `console.log` in and ask *when* it runs, not just what it says.",
+      },
+      {
         kind: "trace",
         id: "t1",
         title: "Walk through a 3-line program",

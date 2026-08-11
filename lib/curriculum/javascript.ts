@@ -74,6 +74,38 @@ export const javascriptLessons: Lesson[] = [
           "**Reach for `const` by default**, and only switch to `let` when you actually need the value to change (a counter climbing in a loop, a running total). That sounds backwards if you're new — surely being able to change things is better? — but a `const` is a promise to whoever reads the code next, including future you: *this never changes, you don't have to track it.* Most variables genuinely never change, and marking them that way removes a whole category of bug.\n\nYou'll also see `var` in older code and tutorials. It's the original keyword, with scoping rules loose enough to cause real bugs. It still works, but there is no reason to write it in new code — this app never does, and neither should you.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "One word, two different variables",
+        prompt: "Both have an `n` inside the braces. Only one of them is the same `n`.",
+        a: {
+          label: "with let",
+          code: 
+            "let n = 1;\n"
+            + "{\n"
+            + "  let n = 2;\n"
+            + "}\n"
+            + "console.log(n);\n",
+          output: "1",
+        },
+        b: {
+          label: "without let",
+          code: 
+            "let n = 1;\n"
+            + "{\n"
+            + "  n = 2;\n"
+            + "}\n"
+            + "console.log(n);\n",
+          output: "2",
+        },
+        hints: [
+          "`let` announces a NEW variable. Without it, you're assigning to one that already exists.",
+          "In A there are two separate variables that happen to share a name; the inner one dies with its block.",
+        ],
+        explanation: 
+          "`let n = 2` inside braces creates a **second, separate** variable that only exists inside them. The outer `n` is untouched.\n\nWithout `let`, there's only ever one `n`, and the braces change it for good.\n\nThis is what \"block scoped\" means, and it's why accidentally re-declaring a name inside an `if` or a loop leads to \"but I set it!\" confusion.",
+      },
+      {
         kind: "trace",
         id: "t1",
         title: "Watch a template literal get built",
@@ -331,6 +363,22 @@ export const javascriptLessons: Lesson[] = [
           "One notable difference from Python: **`/` never floors.** `7 / 2` is `3.5`, and there's no `//`. When you want the whole part, you say so explicitly:\n\n```\nMath.floor(7 / 2)     // 3\nMath.trunc(-7 / 2)    // -3  (chops toward zero)\nMath.round(3.6)       // 4\n```\n\n`Math` also carries `Math.abs`, `Math.max`, `Math.min`, `Math.sqrt`, `Math.random` and friends — it's a plain object of helpers, not something you import.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Plus is not like minus",
+        prompt: "Identical operands, two different operators. This one catches everybody.",
+        a: { label: "plus", code: 
+          "console.log('5' + 3);\n", output: "53" },
+        b: { label: "minus", code: 
+          "console.log('5' - 3);\n", output: "2" },
+        hints: [
+          "One of these operators has a meaning for text as well as numbers.",
+          "`+` joins strings. `-` has no string meaning at all, so JavaScript converts first.",
+        ],
+        explanation: 
+          "`+` is overloaded: with a string on either side it means **join**, so `'5' + 3` becomes `'53'`.\n\n`-` has no meaning for text, so JavaScript converts the string to a number and subtracts: 2.\n\nThe practical rule: anything from an input box, a URL or JSON arrives as a **string**. Convert it with `Number(x)` the moment it enters your code, and you'll never meet this.",
+      },
+      {
         kind: "pitfalls",
         id: "pf1",
         title: "Number mistakes",
@@ -498,6 +546,30 @@ export const javascriptLessons: Lesson[] = [
         title: "Positions, .at() and slicing",
         body: 
           "Access by position with brackets, counting from 0 — or with **`.at()`**, which also accepts negatives:\n\n```\ns[0]        // 'h'\ns.at(-1)    // 'o'  — last character, no length arithmetic\ns.length    // 5    — a property, not a method: no brackets\n```\n\nSlicing uses `.slice(start, end)`, with the end excluded — the same convention as Python:\n\n```\n'code forge'.slice(0, 4)    // 'code'\n'code forge'.slice(5)       // 'forge'\n'code forge'.slice(-5)      // 'forge' — negatives count from the end\n```",
+      },
+      {
+        kind: "diff",
+        id: "d1",
+        title: "One replaced, or all of them",
+        prompt: "Two method names that differ by three letters.",
+        a: {
+          label: "replace",
+          code: 
+            "console.log('a-b-c'.replace('-', '+'));\n",
+          output: "a+b-c",
+        },
+        b: {
+          label: "replaceAll",
+          code: 
+            "console.log('a-b-c'.replaceAll('-', '+'));\n",
+          output: "a+b+c",
+        },
+        hints: [
+          "Count the dashes in each answer.",
+          "`replace` with a plain string stops after the first match.",
+        ],
+        explanation: 
+          "`replace` with a plain string changes only the **first** match — a genuinely surprising default that has bitten people for decades.\n\n`replaceAll` does what you probably meant. Reach for it unless you specifically want just the first.",
       },
       {
         kind: "pitfalls",
@@ -680,6 +752,32 @@ export const javascriptLessons: Lesson[] = [
         title: "=== never converts, and that's the point",
         body: 
           "**`===` compares without converting.** If the types differ, it's false. Full stop.\n\n```\n0 === ''         // false\n0 === '0'        // false\n```\n\n**Use `===` (and `!==`) always.** The one conventional exception is `x == null`, which conveniently catches both null and undefined — and even that has clearer alternatives.\n\nThis is not a stylistic preference; it's the single most widely agreed rule in JavaScript, and every linter enforces it by default.",
+      },
+      {
+        kind: "diff",
+        id: "d1",
+        title: "Two equals, or three",
+        prompt: "One character apart, opposite answers.",
+        a: {
+          label: "==",
+          code: 
+            "console.log(0 == '');\n"
+            + "console.log('1' == 1);\n",
+          output: "true\ntrue",
+        },
+        b: {
+          label: "===",
+          code: 
+            "console.log(0 === '');\n"
+            + "console.log('1' === 1);\n",
+          output: "false\nfalse",
+        },
+        hints: [
+          "One of these converts the two sides to a common type before comparing.",
+          "`==` converts. `===` says \"different types, therefore not equal\" and stops.",
+        ],
+        explanation: 
+          "`==` converts before comparing, and the conversion rules are genuinely strange — `0 == ''` is true, and so is `'1' == 1`.\n\n`===` compares type first: different types, not equal, done.\n\n**Always use `===`.** The one common exception is `x == null`, which neatly catches both null and undefined.",
       },
       {
         kind: "example",
@@ -896,6 +994,35 @@ export const javascriptLessons: Lesson[] = [
         title: "Three loops, and which one to use",
         body: 
           "**`for...of`** — walks the values of an array or string. This is your default:\n\n```\nfor (const item of items) {\n  console.log(item);\n}\n```\n\n**Classic `for`** — when you need the index, or a step other than 1:\n\n```\nfor (let i = 0; i < items.length; i++) { ... }\n```\n\nThree parts separated by semicolons: start, keep-going condition, and what to do after each pass.",
+      },
+      {
+        kind: "diff",
+        id: "d1",
+        title: "Leave, or skip",
+        prompt: "Same loop, one keyword different.",
+        a: {
+          label: "break",
+          code: 
+            "for (const n of [1, 2, 3, 4]) {\n"
+            + "  if (n === 2) break;\n"
+            + "  console.log(n);\n"
+            + "}\n",
+          output: "1",
+        },
+        b: {
+          label: "continue",
+          code: 
+            "for (const n of [1, 2, 3, 4]) {\n"
+            + "  if (n === 2) continue;\n"
+            + "  console.log(n);\n"
+            + "}\n",
+          output: "1\n3\n4",
+        },
+        hints: [
+          "One of them ends the loop entirely; the other only ends the current pass.",
+        ],
+        explanation: 
+          "`break` leaves the loop — nothing after 1 ever prints.\n\n`continue` skips the rest of *this* pass and moves to the next value, so 2 is missed and 3 and 4 carry on.\n\nUse `break` when you've found what you were looking for, and `continue` to skip cases you don't care about without nesting everything in an `if`.",
       },
       {
         kind: "example",
@@ -1143,6 +1270,34 @@ export const javascriptLessons: Lesson[] = [
           "Some methods change the array in place; others return a new one. Mixing them up is a common source of bugs.\n\n**Mutate:** `push`, `pop`, `shift`, `unshift`, `splice`, `sort`, `reverse`\n\n**Return new:** `slice`, `concat`, `map`, `filter`, `flat`, and the ES2023 trio `toSorted`, `toReversed`, `toSpliced`\n\nThose last three exist precisely because `sort` and `reverse` mutating in place surprises people. `xs.toSorted()` gives you a sorted copy and leaves xs alone.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Sorted, and still sorted",
+        prompt: "Both sort correctly. Look at what gets printed afterwards.",
+        a: {
+          label: "sort",
+          code: 
+            "const xs = [3, 1, 2];\n"
+            + "xs.sort((a, b) => a - b);\n"
+            + "console.log(xs);\n",
+          output: "[ 1, 2, 3 ]",
+        },
+        b: {
+          label: "toSorted",
+          code: 
+            "const xs = [3, 1, 2];\n"
+            + "xs.toSorted((a, b) => a - b);\n"
+            + "console.log(xs);\n",
+          output: "[ 3, 1, 2 ]",
+        },
+        hints: [
+          "Neither line stores the result. So what's being printed is the original array.",
+          "One of these two methods reorders the array it was called on.",
+        ],
+        explanation: 
+          "`sort` rearranges the array **in place** and returns that same array. `toSorted` leaves the original alone and hands back a new one — which, in B, nothing caught.\n\nSo the rule is: `sort` changes your data whether you wanted it to or not. Prefer `toSorted`, and when you do use `sort`, know that any other code holding that array just had it reordered underneath them.",
+      },
+      {
         kind: "example",
         id: "e1",
         title: "Copying and sorting",
@@ -1360,6 +1515,65 @@ export const javascriptLessons: Lesson[] = [
           "**`.reduce(fn, start)`** — fold everything into a **single value**.\n\n```\n[1, 2, 3].reduce((acc, n) => acc + n, 0)   // 6\n```\n\nreduce's function takes two arguments: the accumulator so far, and the current item. It returns the new accumulator. That second argument to reduce is the starting value — always supply it, or an empty array will throw.\n\nAll three leave the original array untouched, and all three chain:\n\n```\nitems.filter(i => i.inStock).map(i => i.price)\n```\n\nRule of thumb: reach for the most specific tool that fits. If it's a transformation, use map. If it's a selection, use filter. Save reduce for when you're genuinely collapsing to one value — a clever reduce that does the job of a map is harder to read, not cleverer.",
       },
       {
+        kind: "buildup",
+        id: "b1",
+        title: "Build a pipeline",
+        prompt: 
+          "Total the value of everything actually in stock. Build the chain one line at a time.",
+        stages: [
+          {
+            line: "const items = [",
+            distractors: ["let items = (", "const items = {"],
+            what: "An array literal, because we have a list of things in order.",
+          },
+          {
+            line: "  { name: 'a', price: 10, stock: 2 },",
+            distractors: ["  ['a', 10, 2],", "  name: 'a', price: 10, stock: 2,"],
+            what: 
+              "Each item is an object, so the fields have names rather than positions you'd have to remember.",
+          },
+          {
+            line: "  { name: 'b', price: 5, stock: 0 },",
+            distractors: ["  { name: 'b', price: 5 },", "  { 'b', 5, 0 },"],
+            what: "This one is out of stock — it's the one the filter has to remove.",
+          },
+          {
+            line: "];",
+            distractors: ["}", ")"],
+            what: "Close the array.",
+          },
+          {
+            line: "const total = items",
+            distractors: ["const total = items.map", "let total = 0;"],
+            what: 
+              "Start the chain. Each method returns something the next one can be called on.",
+          },
+          {
+            line: "  .filter(i => i.stock > 0)",
+            distractors: ["  .filter(i => i.stock)", "  .map(i => i.stock > 0)"],
+            what: 
+              "Filter FIRST. Doing it after the multiply would mean computing values you're about to throw away — and `.map` would leave you with numbers that no longer know their stock.",
+          },
+          {
+            line: "  .reduce((sum, i) => sum + i.price * i.stock, 0);",
+            distractors: [
+              "  .reduce((sum, i) => sum + i.price * i.stock);",
+              "  .map((sum, i) => sum + i.price * i.stock, 0);",
+            ],
+            what: 
+              "`reduce` folds the list into one number. The `0` is the starting value — leave it out and an empty list throws.",
+          },
+          {
+            line: "console.log(total);",
+            distractors: ["console.log(items);", "print(total);"],
+            what: "Only item 'a' survived the filter: 10 × 2 = 20.",
+            output: "20",
+          },
+        ],
+        explanation: 
+          "Read a chain top to bottom as a sentence: take the items, keep the ones in stock, add up price × stock.\n\nThe order matters for both correctness and speed — filtering first means `reduce` sees fewer items, and it keeps each object intact so its other fields are still available.",
+      },
+      {
         kind: "example",
         id: "e1",
         title: "The trio",
@@ -1547,6 +1761,34 @@ export const javascriptLessons: Lesson[] = [
           "Keys are strings (or symbols). Writing `{ 1: 'a' }` stores the key as `'1'`.\n\nThe modern conveniences:\n\n```\nconst name = 'Ada';\nconst obj = { name };              // shorthand for { name: name }\nconst key = 'colour';\nconst dyn = { [key]: 'red' };      // computed key -> { colour: 'red' }\nconst merged = { ...a, ...b };     // spread; later keys win\n```\n\nAnd to loop over one:\n\n```\nfor (const [k, v] of Object.entries(user)) { ... }\n```\n\n`Object.keys()` and `Object.values()` give you just one side each.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "The key, or what's in the variable",
+        prompt: "Square brackets in one, not the other.",
+        a: {
+          label: "no brackets",
+          code: 
+            "const key = 'colour';\n"
+            + "const o = { key: 'red' };\n"
+            + "console.log(o.key, o.colour);\n",
+          output: "red undefined",
+        },
+        b: {
+          label: "with brackets",
+          code: 
+            "const key = 'colour';\n"
+            + "const o = { [key]: 'red' };\n"
+            + "console.log(o.key, o.colour);\n",
+          output: "undefined red",
+        },
+        hints: [
+          "In one of them the object literally has a property called \"key\".",
+          "Square brackets around a key mean \"work this out first, then use the result as the name\".",
+        ],
+        explanation: 
+          "Without brackets, the key is taken **literally** — the object has a property named `key`, and the variable was never consulted.\n\nWith `[key]`, JavaScript evaluates the variable first and uses its value, `'colour'`, as the property name.\n\nThe same distinction applies when reading: `o.key` is literal, `o[key]` looks up whatever the variable holds.",
+      },
+      {
         kind: "pitfalls",
         id: "pf1",
         title: "Object mistakes",
@@ -1717,6 +1959,33 @@ export const javascriptLessons: Lesson[] = [
           "It pairs naturally with `??` to supply a fallback:\n\n```\nconst city = user?.address?.city ?? 'unknown';\n```\n\n**Use it deliberately, not everywhere.** `a?.b?.c?.d?.e` usually means you don't actually know the shape of your data — and silencing five possible failures makes the eventual bug much harder to find. Reach for `?.` where a value is genuinely optional (an API field that may be absent), not as blanket insurance.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Falsy, or actually missing",
+        prompt: 
+          "An empty name, and two ways of supplying a fallback. (JSON.stringify makes the empty string visible.)",
+        a: {
+          label: "||",
+          code: 
+            "const user = { name: '' };\n"
+            + "console.log(JSON.stringify(user.name || 'anonymous'));\n",
+          output: "\"anonymous\"",
+        },
+        b: {
+          label: "??",
+          code: 
+            "const user = { name: '' };\n"
+            + "console.log(JSON.stringify(user.name ?? 'anonymous'));\n",
+          output: "\"\"",
+        },
+        hints: [
+          "An empty string is falsy — but it isn't null or undefined.",
+          "`||` reacts to falsy. `??` reacts only to null and undefined.",
+        ],
+        explanation: 
+          "The user deliberately left the name blank, and `||` overwrote it.\n\nWhether that's right depends entirely on intent: if blank means \"not filled in\", `||` is what you want. If blank is a real, chosen value, `??` is.\n\nThe bug happens when you don't decide — and `||` is the one that silently destroys 0 and empty strings.",
+      },
+      {
         kind: "pitfalls",
         id: "pf1",
         title: "Using ?. well",
@@ -1864,6 +2133,36 @@ export const javascriptLessons: Lesson[] = [
         title: "How short an arrow can get",
         body: 
           "**Arrows can be very short.** With no braces, the body is the return value:\n\n```\nn => n * 2                  // returns n * 2\nn => { return n * 2; }      // same thing, spelled out\nn => { n * 2; }             // returns UNDEFINED — no return statement\n```\n\nThat third line is one of the most common JavaScript slips.\n\nIn practice: use arrows for short callbacks, and `function` declarations for named top-level functions where hoisting and a readable name in stack traces both help.",
+      },
+      {
+        kind: "diff",
+        id: "d1",
+        title: "Missing, or deliberately nothing",
+        prompt: "Same function, two ways of passing 'no value'.",
+        a: {
+          label: "undefined",
+          code: 
+            "function f(n = 1) {\n"
+            + "  return n;\n"
+            + "}\n"
+            + "console.log(f(undefined));\n",
+          output: "1",
+        },
+        b: {
+          label: "null",
+          code: 
+            "function f(n = 1) {\n"
+            + "  return n;\n"
+            + "}\n"
+            + "console.log(f(null));\n",
+          output: "null",
+        },
+        hints: [
+          "A default fires when the argument is missing. Is `null` missing?",
+          "Only `undefined` counts as absent. `null` is a value you chose to pass.",
+        ],
+        explanation: 
+          "Defaults trigger on `undefined` only. `null` is a real value — an explicit \"nothing\" — so it's passed straight through and the default never runs.\n\nThat bites when data arrives from JSON or a database, where a missing field is usually `null` rather than `undefined`. If you want both to trigger the default, handle it in the body: `n = n ?? 1`.",
       },
       {
         kind: "example",
@@ -2442,6 +2741,40 @@ export const javascriptLessons: Lesson[] = [
           "**1. Is there a dot?** `user.greet()` — `this` is whatever is immediately left of the dot: `user`.\n\n**2. Is it `new`?** `new Timer()` — `this` is the brand-new object being built.\n\n**3. Was it called with `.call` / `.apply` / `.bind`?** Then `this` is whatever you passed.\n\n**4. None of the above?** `greet()` on its own — `this` is `undefined` in modern code (modules and class bodies). Reading a property off it throws.\n\nAnd then the escape hatch: **arrow functions ignore all four rules.** An arrow has no `this` of its own; it uses whatever `this` meant in the surrounding code where it was written. That's lexical, decided at write-time, and it's why arrows are the fix for most `this` bugs.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Arrow or method",
+        prompt: "The same object twice, with `inc` written two different ways.",
+        a: {
+          label: "shorthand method",
+          code: 
+            "const counter = {\n"
+            + "  n: 0,\n"
+            + "  inc() { this.n++; },\n"
+            + "};\n"
+            + "counter.inc();\n"
+            + "console.log(counter.n);\n",
+          output: "1",
+        },
+        b: {
+          label: "arrow",
+          code: 
+            "const counter = {\n"
+            + "  n: 0,\n"
+            + "  inc: () => { this.n++; },\n"
+            + "};\n"
+            + "counter.inc();\n"
+            + "console.log(counter.n);\n",
+          output: "0",
+        },
+        hints: [
+          "One of these two forms ignores the dot in `counter.inc()` entirely.",
+          "Arrows take `this` from where they were WRITTEN, not from how they're called.",
+        ],
+        explanation: 
+          "The shorthand method gets `this` from the call — `counter.inc()` has `counter` left of the dot, so `this.n++` works.\n\nThe arrow ignores the dot and uses whatever `this` meant in the surrounding code, which out here isn't the object at all. It quietly incremented something else.\n\nSo: **shorthand methods for methods, arrows for callbacks.** That single rule avoids most `this` bugs.",
+      },
+      {
         kind: "categorize",
         id: "cat1",
         title: "What is `this` here?",
@@ -2695,6 +3028,62 @@ export const javascriptLessons: Lesson[] = [
         title: "The pieces of a class declaration",
         body: 
           "The pieces:\n\n- **`constructor`** runs automatically on `new`. Its job is to set up `this`. It's optional — omit it if there's nothing to set up.\n- **Methods** go in the class body with no `function` keyword and no commas between them.\n- **`new`** is required. Calling `Dog('Rex')` without it throws.\n\nComing from Python: same idea as `class Dog:` with `__init__`, except JavaScript has no explicit `self` parameter — `this` is supplied by the call, as you saw in the last lesson.",
+      },
+      {
+        kind: "buildup",
+        id: "b1",
+        title: "Build a class with a private field",
+        prompt: "A counter nobody can tamper with. Pick each line in turn.",
+        stages: [
+          {
+            line: "class Counter {",
+            distractors: ["const Counter = {", "function Counter() {"],
+            what: "A class, because we want many of these with the same behaviour.",
+          },
+          {
+            line: "  #n = 0;",
+            distractors: ["  let n = 0;", "  this.#n = 0;"],
+            what: 
+              "A class field — no `let`, no `this.`, and `#` makes it genuinely private. It's created fresh for every instance.",
+          },
+          {
+            line: "  inc() { this.#n++; }",
+            distractors: ["  inc() { #n++; }", "  inc: () => this.#n++,"],
+            what: 
+              "Inside a method, instance data always needs `this.`. A bare `#n` isn't a variable in scope.",
+          },
+          {
+            line: "  get value() { return this.#n; }",
+            distractors: ["  value() { return this.#n; }", "  get value { return this.#n; }"],
+            what: 
+              "A getter, so callers read `c.value` like a property — with no way to write to it.",
+          },
+          {
+            line: "}",
+            distractors: ["};", ")"],
+            what: "Close the class. No semicolon needed after a class declaration.",
+          },
+          {
+            line: "const c = new Counter();",
+            distractors: ["const c = Counter();", "const c = new Counter;"],
+            what: "`new` is required — calling a class without it throws.",
+          },
+          {
+            line: "c.inc(); c.inc();",
+            distractors: ["c.#n = 2;", "c.value = 2;"],
+            what: 
+              "`c.#n = 2` wouldn't even parse, and `c.value = 2` does nothing without a setter. The only way in is `inc`.",
+          },
+          {
+            line: "console.log(c.value, Object.keys(c));",
+            distractors: ["console.log(c.#n);", "console.log(c.value(), c.keys());"],
+            what: 
+              "The getter reads 2, and the private field doesn't show up in the object's keys at all.",
+            output: "2 []",
+          },
+        ],
+        explanation: 
+          "Eight lines, and the tally is genuinely unreachable — not by naming convention like Python's `_underscore`, but enforced by the language.\n\nThe getter is what makes it feel like data while staying read-only: `c.value` reads, and there's nothing to assign to.",
       },
       {
         kind: "example",
@@ -3006,6 +3395,34 @@ export const javascriptLessons: Lesson[] = [
           "- **pending** — still working\n- **fulfilled** — finished, with a value\n- **rejected** — failed, with an error\n\nOnce it settles into fulfilled or rejected, it's frozen there forever. It can't change its mind or fire twice.\n\nYou read the result with `.then()`, and handle failure with `.catch()`:\n\n```\ngetUser(1)\n  .then(user => console.log(user.name))\n  .catch(err => console.log('failed:', err.message));\n```\n\nOne thing to be clear about up front: **`.then` does not pause your program.** The lines after it run immediately, while the promise is still pending. That's the whole point — but it surprises everyone at first.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Returned, or not",
+        prompt: "One pair of braces apart. This is the most common promise bug there is.",
+        a: {
+          label: "with braces",
+          code: 
+            "await Promise.resolve(1)\n"
+            + "  .then(x => { Promise.resolve(x + 1); })\n"
+            + "  .then(v => console.log('got', v));\n",
+          output: "got undefined",
+        },
+        b: {
+          label: "without braces",
+          code: 
+            "await Promise.resolve(1)\n"
+            + "  .then(x => Promise.resolve(x + 1))\n"
+            + "  .then(v => console.log('got', v));\n",
+          output: "got 2",
+        },
+        hints: [
+          "What does the first handler hand to the second one?",
+          "An arrow with `{ }` returns undefined unless you write `return`.",
+        ],
+        explanation: 
+          "With braces the inner promise is created, ignored, and `undefined` is passed down the chain. Without them the arrow returns it — and a returned promise is waited for and unwrapped.\n\n`.then(x => { return Promise.resolve(x + 1); })` works too. The fix is the `return`, not the braces.",
+      },
+      {
         kind: "example",
         id: "e1",
         title: "all vs allSettled on the same inputs",
@@ -3313,6 +3730,37 @@ export const javascriptLessons: Lesson[] = [
           "The second version has no callbacks, no nesting, and intermediate values in plain named variables. That's the entire pitch.\n\nTwo things that trip people up:\n\n**`await` only pauses the function it's in.** The rest of your program keeps running. Nothing is blocked.\n\n**An `async` function always returns a promise.** `return orders.length` doesn't hand back a number — it hands back a promise that fulfils with that number. So the caller still has to `await` it.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "One after another, or both at once",
+        prompt: "Two sleeps of 60ms each. Predict what each reports.",
+        a: {
+          label: "sequential",
+          code: 
+            "const sleep = (ms) => new Promise(r => setTimeout(r, ms));\n"
+            + "const t = Date.now();\n"
+            + "await sleep(60);\n"
+            + "await sleep(60);\n"
+            + "console.log(Date.now() - t < 100);\n",
+          output: "false",
+        },
+        b: {
+          label: "parallel",
+          code: 
+            "const sleep = (ms) => new Promise(r => setTimeout(r, ms));\n"
+            + "const t = Date.now();\n"
+            + "await Promise.all([sleep(60), sleep(60)]);\n"
+            + "console.log(Date.now() - t < 100);\n",
+          output: "true",
+        },
+        hints: [
+          "In A, when does the second sleep start?",
+          "`await` on its own line means nothing after it starts until it finishes.",
+        ],
+        explanation: 
+          "In A the second timer doesn't start until the first has finished: about 120ms.\n\nIn B both `sleep(60)` calls run as the array is built, so both timers start together and `Promise.all` waits for the slower one: about 60ms.\n\nThe shape to remember: **call everything, collect the promises, await once.** With ten independent network requests this is the difference between two seconds and two hundred milliseconds.",
+      },
+      {
         kind: "example",
         id: "e1",
         title: "Sequential vs parallel, timed",
@@ -3603,6 +4051,35 @@ export const javascriptLessons: Lesson[] = [
           "A generator is a function written `function*` that can **stop in the middle and resume later**. Instead of `return` (once, then done) it uses `yield` (as many times as it likes):\n\n```\nfunction* nums() {\n  yield 1;\n  yield 2;\n  yield 3;\n}\n\nfor (const n of nums()) console.log(n);   // 1, 2, 3\n```\n\nCalling `nums()` does **not** run the body. It hands back a generator object, and the body only advances when something asks for the next value. Each `yield` pauses it exactly where it stands, local variables intact, until the next request.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "A list, or a recipe for one",
+        prompt: "Both describe the numbers 0 to 4. Only one of them can be counted twice.",
+        a: {
+          label: "an array",
+          code: 
+            "const xs = [0, 1, 2, 3, 4];\n"
+            + "console.log(xs.length, [...xs].length);\n",
+          output: "5 5",
+        },
+        b: {
+          label: "a generator",
+          code: 
+            "function* g() {\n"
+            + "  for (let i = 0; i < 5; i++) yield i;\n"
+            + "}\n"
+            + "const xs = g();\n"
+            + "console.log([...xs].length, [...xs].length);\n",
+          output: "5 0",
+        },
+        hints: [
+          "An array holds its values. What does a generator hold?",
+          "The first spread in B consumed everything there was.",
+        ],
+        explanation: 
+          "An array **is** its values — you can count it, index it, walk it as often as you like.\n\nA generator is a recipe that produces values once, on demand. It has no `.length`, no index, and no rewind.\n\nThat's the trade: you give up random access and repeat use, and get the ability to describe a sequence too big — or endless — to hold in memory.",
+      },
+      {
         kind: "example",
         id: "e1",
         title: "An infinite sequence, taken finitely",
@@ -3854,6 +4331,38 @@ export const javascriptLessons: Lesson[] = [
         title: "Keep the try block small",
         body: 
           "A rule that matters more than it sounds: **keep the try block small.** Wrapping fifty lines means an error anywhere in them lands in the same handler and you can't tell what actually failed. Wrap the one call that can fail.\n\nAnd `catch` is optional if you only want cleanup — `try { } finally { }` is valid.",
+      },
+      {
+        kind: "diff",
+        id: "d1",
+        title: "An Error, or a string",
+        prompt: "Two things being thrown, and the same handler catching both.",
+        a: {
+          label: "throw new Error",
+          code: 
+            "try {\n"
+            + "  throw new Error('nope');\n"
+            + "} catch (e) {\n"
+            + "  console.log(e instanceof Error, e.message);\n"
+            + "}\n",
+          output: "true nope",
+        },
+        b: {
+          label: "throw a string",
+          code: 
+            "try {\n"
+            + "  throw 'nope';\n"
+            + "} catch (e) {\n"
+            + "  console.log(e instanceof Error, e.message);\n"
+            + "}\n",
+          output: "false undefined",
+        },
+        hints: [
+          "The handler assumes what it caught has a `.message`. Does a plain string?",
+          "You can throw any value — but everything downstream expects an Error.",
+        ],
+        explanation: 
+          "A thrown string has no `.message`, no `.stack`, no `.name`, and fails `instanceof Error`. Every handler written the normal way mishandles it, and you lose the stack trace that would have told you where it came from.\n\nAlways `throw new Error(...)` — or a subclass. It costs nothing and keeps every tool working.",
       },
       {
         kind: "example",
@@ -4154,6 +4663,38 @@ export const javascriptLessons: Lesson[] = [
           "A plain object is already a key-value store, so why `Map`? Four concrete reasons:\n\n**1. Any key type.** Object keys are silently converted to strings — `obj[1]` and `obj['1']` are the same slot, and any object key becomes the useless string `'[object Object]'`. A Map key can be a number, an object, a function, anything, and stays itself.\n\n**2. A real size.** `map.size`. For an object you have to write `Object.keys(obj).length`.\n\n**3. No inherited surprises.** Objects come with keys like `constructor` and `toString` from their prototype, so a key you didn't set can appear to exist. A Map starts genuinely empty.",
       },
       {
+        kind: "diff",
+        id: "d1",
+        title: "Object keys, or Map keys",
+        prompt: "The same two keys stored two ways.",
+        a: {
+          label: "plain object",
+          code: 
+            "const a = {}, b = {};\n"
+            + "const store = {};\n"
+            + "store[a] = 'first';\n"
+            + "store[b] = 'second';\n"
+            + "console.log(Object.keys(store).length, store[a]);\n",
+          output: "1 second",
+        },
+        b: {
+          label: "Map",
+          code: 
+            "const a = {}, b = {};\n"
+            + "const store = new Map();\n"
+            + "store.set(a, 'first');\n"
+            + "store.set(b, 'second');\n"
+            + "console.log(store.size, store.get(a));\n",
+          output: "2 first",
+        },
+        hints: [
+          "An object's keys can only ever be strings. What does an object turn into as a string?",
+          "Both `a` and `b` stringify to '[object Object]' — the same key.",
+        ],
+        explanation: 
+          "A plain object converts every key to a string, and any object becomes the useless `'[object Object]'`. So the second write silently overwrote the first, and `store[a]` returns something that was never stored under `a`.\n\nA Map keeps keys as they are. Two different objects are two different keys.\n\nThat's the clearest reason to reach for a Map: **when your keys aren't strings.**",
+      },
+      {
         kind: "example",
         id: "e1",
         title: "Where Map beats an object",
@@ -4373,6 +4914,42 @@ export const javascriptLessons: Lesson[] = [
         title: "Named exports, and renaming on the way in",
         body: 
           "Those are **named exports**: exported under their own names, imported inside braces, and the names must match.\n\nYou can rename on the way in when they'd clash, or take the whole file as one object:\n\n```\nimport { add as addNumbers } from './math.js';\nimport * as math from './math.js';    // math.add, math.PI\n```",
+      },
+      {
+        kind: "categorize",
+        id: "cat2",
+        title: "Which import line goes with which export?",
+        prompt: "Match each import to the kind of export it needs on the other side.",
+        buckets: ["Needs a named export", "Needs a default export"],
+        items: [
+          {
+            text: "import { add } from './math.js'",
+            bucket: 0,
+            why: "Braces mean named — the exporting file must have `export function add`.",
+          },
+          {
+            text: "import add from './math.js'",
+            bucket: 1,
+            why: 
+              "No braces means it's taking the file's default export, whatever it's called there.",
+          },
+          {
+            text: "import { add as sum } from './math.js'",
+            bucket: 0,
+            why: "Still named — `as` only renames it locally.",
+          },
+          {
+            text: "import Button from './Button.js'",
+            bucket: 1,
+            why: "No braces. The name `Button` is chosen here, not by the exporting file.",
+          },
+          {
+            text: "import * as math from './math.js'",
+            bucket: 0,
+            why: 
+              "Gathers all the NAMED exports into one object. A default export is not included in it.",
+          },
+        ],
       },
       {
         kind: "pitfalls",
@@ -4602,6 +5179,45 @@ export const javascriptLessons: Lesson[] = [
         title: "Why sort needs a comparator",
         body: 
           "Use these by default. The mutating originals are still there when you genuinely want in-place behaviour, but that should be the deliberate choice, not the accident.\n\nWhile you're here: **`sort` compares as strings unless you give it a comparator.** `[10, 9, 1].sort()` gives `[1, 10, 9]`, because '10' sorts before '9' alphabetically. Always pass `(a, b) => a - b` for numbers.\n\nAnd `.at(-1)` reads the last element, which `arr[-1]` cannot do — bracket access on a negative index looks for a property literally named '-1' and finds undefined.",
+      },
+      {
+        kind: "mutate",
+        id: "mu1",
+        title: "Modernise it",
+        prompt: 
+          "This works, but it mutates the caller's array and hand-rolls a grouping. Rewrite it using `toSorted` and `Object.groupBy` so `scores` comes out untouched. Target output: [ 1, 9, 10 ] then { even: [ 10 ], odd: [ 9, 1 ] } then [ 10, 9, 1 ]",
+        starter: 
+          "const scores = [10, 9, 1];\n"
+          + "\n"
+          + "const sorted = scores.sort((a, b) => a - b);\n"
+          + "\n"
+          + "const grouped = {};\n"
+          + "for (const n of scores) {\n"
+          + "  const key = n % 2 ? 'odd' : 'even';\n"
+          + "  (grouped[key] ||= []).push(n);\n"
+          + "}\n"
+          + "\n"
+          + "console.log(sorted);\n"
+          + "console.log(grouped);\n"
+          + "console.log(scores);\n",
+        expected: "[ 1, 9, 10 ]\n{ even: [ 10 ], odd: [ 9, 1 ] }\n[ 10, 9, 1 ]",
+        hints: [
+          "Look at the last line first — `scores` should still be in its original order at the end, so nothing may mutate it.",
+          "`toSorted(fn)` returns a new sorted array and leaves the original alone.",
+          "`Object.groupBy(scores, n => n % 2 ? 'odd' : 'even')` replaces the whole loop. Note it must run on the ORIGINAL order — 10 is seen first, so 'even' is the first key.",
+        ],
+        solution: 
+          "const scores = [10, 9, 1];\n"
+          + "\n"
+          + "const sorted = scores.toSorted((a, b) => a - b);\n"
+          + "\n"
+          + "const grouped = Object.groupBy(scores, (n) => (n % 2 ? 'odd' : 'even'));\n"
+          + "\n"
+          + "console.log(sorted);\n"
+          + "console.log(grouped);\n"
+          + "console.log(scores);\n",
+        solutionWhy: 
+          "Nine lines became two, and the caller's array survives.\n\nThe detail worth noticing: the grouping runs on `scores`, which is still in its original order — so 'odd' is [ 9, 1 ], not [ 1, 9 ]. In the original version `sort` had already reordered `scores` in place, so the loop was walking a different array than the author wrote. That's the exact class of bug non-mutating methods remove.",
       },
       {
         kind: "pitfalls",
