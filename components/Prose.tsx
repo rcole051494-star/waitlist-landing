@@ -13,9 +13,11 @@ function inline(text: string): ReactNode[] {
     if (match.index > last) parts.push(text.slice(last, match.index));
     const m = match[0];
     if (m.startsWith("**")) {
+      // Bold can contain `code`, so recurse rather than dumping the raw text
+      // and leaving backticks on screen.
       parts.push(
         <strong key={key++} className="text-ink-100 font-semibold">
-          {m.slice(2, -2)}
+          {inline(m.slice(2, -2))}
         </strong>
       );
     } else if (m.startsWith("`")) {
@@ -51,7 +53,7 @@ export function Prose({ text }: { text: string }) {
       blocks.push(
         <pre
           key={k++}
-          className="rounded-lg border border-ink-800 bg-ink-950 p-3 mono text-[13px] text-ink-100 overflow-x-auto scrollbar-thin"
+          className="rounded-lg surface-code p-3 mono text-[13px] text-ink-100 overflow-x-auto scrollbar-thin"
         >
           {buf.join("\n")}
         </pre>
@@ -95,5 +97,15 @@ export function Prose({ text }: { text: string }) {
 // scattered through the activity components, where a full Prose block — with
 // its own paragraph spacing — would be too heavy.
 export function InlineProse({ text }: { text: string }) {
-  return <>{inline(text)}</>;
+  const paras = text.split(/\n{2,}/).filter((p) => p.trim() !== "");
+  if (paras.length <= 1) return <>{inline(text)}</>;
+  return (
+    <>
+      {paras.map((p, i) => (
+        <p key={i} className={i > 0 ? "mt-2.5" : undefined}>
+          {inline(p)}
+        </p>
+      ))}
+    </>
+  );
 }

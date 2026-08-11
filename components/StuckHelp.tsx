@@ -1,5 +1,6 @@
 "use client";
 import { InlineProse } from "./Prose";
+import { Bloom } from "./Bloom";
 import { useState } from "react";
 
 // Progressive help for an exercise. Hints reveal one at a time so the learner
@@ -49,17 +50,16 @@ export function StuckHelp({
       </div>
 
       {list.slice(0, revealed).map((h, i) => (
-        <div
-          key={i}
-          className="text-sm text-ink-200 border-l-2 border-warm pl-3 py-1 bg-warm/5 rounded-r"
-        >
-          <span className="text-warm text-xs font-medium mr-1.5">Hint {i + 1}:</span>
-          <InlineProse text={h} />
-        </div>
+        <Bloom key={i} tone="warm" active={i === revealed - 1} pulse>
+          <div className="text-sm text-ink-200 border-l-2 border-warm pl-3 py-1 bg-warm/5 rounded-r">
+            <span className="text-warm text-xs font-medium mr-1.5">Hint {i + 1}:</span>
+            <InlineProse text={h} />
+          </div>
+        </Bloom>
       ))}
 
       {showSolution && solution && (
-        <div className="rounded-lg border border-ink-700 bg-ink-950 overflow-hidden">
+        <div className="rounded-lg surface-code overflow-hidden">
           <div className="px-3 py-1.5 bg-ink-800 text-[11px] uppercase tracking-wider text-ink-300">
             Solution
           </div>

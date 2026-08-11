@@ -35,7 +35,7 @@ export function TraceStep({
     <div className="space-y-4">
       {intro && <Prose text={intro} />}
 
-      <div className="rounded-xl border border-ink-800 bg-ink-950 overflow-hidden">
+      <div className="rounded-xl surface-code overflow-hidden">
         <div className="px-3 py-1.5 bg-ink-800/60 text-[11px] uppercase tracking-wider text-ink-400">
           The program
         </div>
@@ -59,7 +59,7 @@ export function TraceStep({
         </pre>
       </div>
 
-      <div className="rounded-xl border border-ink-700 bg-ink-900/60 p-4">
+      <div className="rounded-xl glass p-4">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-[11px] uppercase tracking-wider text-ink-400">
             Step {current + 1} of {lines.length}

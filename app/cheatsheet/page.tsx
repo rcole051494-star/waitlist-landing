@@ -152,7 +152,7 @@ export default function CheatsheetPage() {
 
         <div className="grid md:grid-cols-2 gap-4">
           {data.map((sec) => (
-            <div key={sec.title} className="rounded-2xl border border-ink-800 bg-ink-900/40 p-5">
+            <div key={sec.title} className="rounded-2xl glass p-5">
               <h3 className="text-ink-100 font-semibold mb-3">{sec.title}</h3>
               <dl className="space-y-2">
                 {sec.rows.map(([label, code]) => (

@@ -13,7 +13,9 @@
     "android:open": "npm run build && cap sync android && cap open android",
     "android:apk": "npm run build && cap sync android && cd android && ./gradlew assembleDebug",
     "verify:offline": "node scripts/verify-offline.mjs",
-    "verify:curriculum": "node scripts/verify-curriculum.mjs"
+    "verify:curriculum": "node scripts/verify-curriculum.mjs",
+    "verify:ui": "node scripts/verify-ui.mjs",
+    "verify:contrast": "node scripts/verify-contrast.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",

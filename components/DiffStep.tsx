@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { InlineProse } from "./Prose";
+import { Bloom } from "./Bloom";
 import { StuckHelp } from "./StuckHelp";
 
 // Two snippets that look almost the same and behave differently. Predicting
@@ -77,7 +78,7 @@ export function DiffStep({
                   autoCapitalize="off"
                   autoCorrect="off"
                   spellCheck={false}
-                  className="w-full rounded-lg border border-ink-700 bg-ink-950 px-2.5 py-1.5 mono text-[13px] text-ink-100 outline-none focus:border-ink-500 resize-y"
+                  className="w-full rounded-lg surface-code px-2.5 py-1.5 mono text-[13px] text-ink-100 outline-none focus:border-ink-500 resize-y"
                 />
                 {state === false && (
                   <div className="text-xs">
@@ -106,12 +107,14 @@ export function DiffStep({
       {!checked?.every(Boolean) && <StuckHelp hints={hints} />}
 
       {checked && (
-        <div className="rounded-lg border border-ink-700 bg-ink-900/60 p-4 text-sm text-ink-100 leading-relaxed">
+        <Bloom tone={checked.every(Boolean) ? "good" : "warm"} active pulse>
+        <div className="rounded-lg glass p-4 text-sm text-ink-100 leading-relaxed">
           <span className="text-[11px] uppercase tracking-wider text-ink-500 block mb-1.5">
             The difference
           </span>
           <InlineProse text={explanation} />
         </div>
+        </Bloom>
       )}
     </div>
   );

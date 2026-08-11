@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { InlineProse, Prose } from "./Prose";
+import { Prose } from "./Prose";
+import { Bloom } from "./Bloom";
 
 // The lesson opener. A tiny snippet, a guess, then the payoff — before any
 // explanation exists to lean on. Guessing wrong first primes you to actually
@@ -38,7 +39,7 @@ export function HookStep({
         {prompt ?? "No explanation yet — just have a guess. What does this print?"}
       </p>
 
-      <pre className="rounded-xl border border-ink-700 bg-ink-950 p-4 mono text-[13.5px] text-ink-100 overflow-x-auto scrollbar-thin whitespace-pre">
+      <pre className="rounded-xl surface-code p-4 mono text-[13.5px] text-ink-100 overflow-x-auto scrollbar-thin whitespace-pre">
         {code.replace(/\n$/, "")}
       </pre>
 
@@ -52,7 +53,7 @@ export function HookStep({
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
-            className="w-full rounded-lg border border-ink-700 bg-ink-950 px-3 py-2 mono text-[13.5px] text-ink-100 outline-none focus:border-ink-500"
+            className="w-full rounded-lg surface-code px-3 py-2 mono text-[13.5px] text-ink-100 outline-none focus:border-ink-500"
           />
           <div className="flex items-center gap-3">
             <button
@@ -73,7 +74,7 @@ export function HookStep({
       ) : (
         <div className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div className="rounded-lg border border-ink-700 bg-ink-900/60 p-3">
+            <div className="rounded-lg glass p-3">
               <div className="text-[11px] uppercase tracking-wider text-ink-500 mb-1">
                 You said
               </div>
@@ -95,9 +96,11 @@ export function HookStep({
               : "That's the interesting bit. Here's what's going on:"}
           </p>
 
-          <div className="rounded-lg border border-ink-700 bg-ink-900/60 p-4">
-            <Prose text={reveal} />
-          </div>
+          <Bloom tone={right ? "good" : "warm"} active pulse>
+            <div className="rounded-lg glass p-4">
+              <Prose text={reveal} />
+            </div>
+          </Bloom>
         </div>
       )}
     </div>

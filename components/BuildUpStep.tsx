@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { InlineProse } from "./Prose";
+import { Bloom } from "./Bloom";
 
 type Stage = {
   line: string;
@@ -63,7 +64,7 @@ export function BuildUpStep({
         {prompt ?? "Build the program one line at a time. Pick what comes next."}
       </p>
 
-      <div className="rounded-xl border border-ink-800 bg-ink-950 overflow-hidden">
+      <div className="rounded-xl surface-code overflow-hidden">
         <div className="px-3 py-1.5 bg-ink-800/60 text-[11px] uppercase tracking-wider text-ink-400 flex items-center justify-between">
           <span>The program so far</span>
           <span>
@@ -130,9 +131,11 @@ export function BuildUpStep({
             <InlineProse text={stages[stages.length - 1].what} />
           </p>
           {explanation && (
-            <div className="rounded-lg border border-good/40 bg-good/10 p-3 text-sm text-ink-100 leading-relaxed">
-              <InlineProse text={explanation} />
-            </div>
+            <Bloom tone="good" active pulse>
+              <div className="rounded-lg border border-good/40 bg-good/10 p-3 text-sm text-ink-100 leading-relaxed">
+                <InlineProse text={explanation} />
+              </div>
+            </Bloom>
           )}
         </div>
       )}

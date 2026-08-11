@@ -111,7 +111,7 @@ function ModuleSection({
             <Link
               key={l.id}
               href={`/learn/${track}/${l.id}/`}
-              className="group flex items-center gap-4 rounded-xl border border-ink-800 bg-ink-900/40 hover:bg-ink-900 hover:border-ink-600 active:bg-ink-800 transition p-4"
+              className="group flex items-center gap-4 rounded-xl glass hover:bg-ink-900 hover:border-ink-600 active:bg-ink-800 transition p-4"
             >
               <span
                 className={`w-10 h-10 shrink-0 rounded-lg grid place-items-center text-sm font-semibold ${

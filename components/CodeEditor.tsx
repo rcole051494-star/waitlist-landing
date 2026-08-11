@@ -76,7 +76,7 @@ export function CodeEditor({
   if (fallback) {
     const indent = language === "python" ? "    " : "  ";
     return (
-      <div className="rounded-xl overflow-hidden border border-ink-700 bg-ink-900">
+      <div className="rounded-xl overflow-hidden glass-strong">
         <textarea
           value={value}
           readOnly={readOnly}
@@ -107,7 +107,7 @@ export function CodeEditor({
   }
 
   return (
-    <div className="rounded-xl overflow-hidden border border-ink-700 bg-ink-900">
+    <div className="rounded-xl overflow-hidden glass-strong">
       <Editor
         height={height}
         defaultLanguage={language}

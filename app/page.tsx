@@ -81,7 +81,7 @@ export default function Home() {
             <Link
               key={t.id}
               href={`/learn/${t.id}/`}
-              className="group rounded-2xl border border-ink-800 bg-ink-900/50 p-6 hover:border-ink-600 transition"
+              className="group rounded-2xl glass p-6 hover:border-ink-600 transition"
             >
               <div className="flex items-center gap-3">
                 <span
@@ -143,7 +143,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-ink-800 bg-ink-900/40 p-6">
+        <section className="rounded-2xl glass p-6">
           <h3 className="font-semibold text-ink-100 mb-3">Why this app works — the research</h3>
           <div className="grid md:grid-cols-2 gap-x-8 gap-y-3 text-sm text-ink-300">
             <Bullet>
@@ -189,7 +189,7 @@ function Stat({
   sub?: string;
 }) {
   return (
-    <div className="rounded-xl border border-ink-800 bg-ink-900/40 p-4">
+    <div className="rounded-xl glass p-4">
       <div className="text-xs text-ink-400 uppercase tracking-wider">{label}</div>
       <div className={`mt-1 text-2xl font-semibold ${accent ?? "text-ink-100"}`}>{value}</div>
       {sub && <div className="text-xs text-ink-500 mt-0.5">{sub}</div>}

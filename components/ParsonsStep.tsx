@@ -1,5 +1,6 @@
 "use client";
 import { InlineProse } from "./Prose";
+import { Bloom } from "./Bloom";
 import { useEffect, useRef, useState } from "react";
 import { StuckHelp } from "./StuckHelp";
 
@@ -182,7 +183,7 @@ export function ParsonsStep({
           <summary className="cursor-pointer hover:text-ink-200">
             What should this program print?
           </summary>
-          <pre className="mt-2 rounded-lg border border-ink-800 bg-ink-950 p-3 mono text-ink-200 whitespace-pre-wrap">
+          <pre className="mt-2 rounded-lg surface-code p-3 mono text-ink-200 whitespace-pre-wrap">
             {expectedOutput}
           </pre>
         </details>
@@ -191,9 +192,11 @@ export function ParsonsStep({
       {checked !== true && <StuckHelp hints={hints} />}
 
       {checked === true && explanation && (
-        <div className="rounded-lg border border-good/40 bg-good/10 p-3 text-sm text-ink-100 leading-relaxed">
-          <InlineProse text={explanation} />
-        </div>
+        <Bloom tone="good" active pulse>
+          <div className="rounded-lg border border-good/40 bg-good/10 p-3 text-sm text-ink-100 leading-relaxed">
+            <InlineProse text={explanation} />
+          </div>
+        </Bloom>
       )}
     </div>
   );

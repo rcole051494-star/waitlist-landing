@@ -62,6 +62,33 @@ Under the hood these run: `next build` → `cap sync android` → optionally `./
 - App ID / package: `app.codeforge.learn` — edit in `capacitor.config.ts` and in `android/app/build.gradle` if you want your own.
 - To make a release build for the Play Store, follow Capacitor's [release docs](https://capacitorjs.com/docs/android/deploying-to-google-play) (sign an AAB with your own keystore).
 
+## Interface
+
+Deep indigo base with a still radial wash of blue, teal and indigo fixed to
+the viewport; frosted-glass panels over it so the app reads as one space
+rather than stacked blocks. Code keeps an opaque ground — syntax colours are
+tuned against it, and blurring live text is both unreadable and expensive.
+
+**Attention blooms.** A soft radial glow appears behind whatever matters right
+now: the step you're on, a result the moment it lands (green, amber or red by
+verdict), a hint you just unlocked, the reveal after a hook, the review count
+when work is waiting. It's driven by application **state, not hover** — the
+Android build has no cursor, and state actually knows what you're working on.
+
+Nothing animates on a loop. Motion happens on transitions only, and
+`prefers-reduced-motion` removes it entirely while leaving the glow visible,
+because the glow is information rather than decoration.
+
+Two checks keep this honest:
+
+- `npm run verify:contrast` — every colour pair the interface uses, against
+  WCAG AA, read straight from the Tailwind config so it can't drift.
+- `npm run verify:ui` — drives a real browser without ever moving the mouse:
+  blooms follow state, the verdict picks the right tone, glass is actually
+  frosted, code panels stay opaque, nothing animates infinitely, reduced
+  motion is honoured, and the ambient wash is screenshotted and measured so
+  text contrast is checked against the brightest pixel it really produces.
+
 ## Project layout
 
 ```

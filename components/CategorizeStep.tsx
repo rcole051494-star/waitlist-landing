@@ -109,7 +109,7 @@ export function CategorizeStep({
       {/* Buckets */}
       <div className="grid sm:grid-cols-2 gap-3">
         {buckets.map((b, bi) => (
-          <div key={bi} className="rounded-xl border border-ink-700 bg-ink-900/40 overflow-hidden">
+          <div key={bi} className="rounded-xl glass overflow-hidden">
             <button
               onClick={() => place(bi)}
               disabled={selected === null}

@@ -1,5 +1,6 @@
 "use client";
 import { InlineProse } from "./Prose";
+import { Bloom } from "./Bloom";
 import { useState } from "react";
 import { StuckHelp } from "./StuckHelp";
 
@@ -49,7 +50,7 @@ export function ClozeStep({
     <div className="space-y-4">
       {prompt && <p className="text-ink-200">{prompt}</p>}
 
-      <div className="rounded-xl border border-ink-800 bg-ink-950 p-3 mono text-[13px] leading-[2] overflow-x-auto scrollbar-thin">
+      <div className="rounded-xl surface-code p-3 mono text-[13px] leading-[2] overflow-x-auto scrollbar-thin">
         <pre className="whitespace-pre-wrap">
           {parts.map((part, i) => {
             const m = part.match(/^\{\{(\d+)\}\}$/);
@@ -103,9 +104,11 @@ export function ClozeStep({
       {!allRight && <StuckHelp hints={hints} />}
 
       {allRight && explanation && (
-        <div className="rounded-lg border border-good/40 bg-good/10 p-3 text-sm text-ink-100 leading-relaxed">
-          <InlineProse text={explanation} />
-        </div>
+        <Bloom tone="good" active pulse>
+          <div className="rounded-lg border border-good/40 bg-good/10 p-3 text-sm text-ink-100 leading-relaxed">
+            <InlineProse text={explanation} />
+          </div>
+        </Bloom>
       )}
     </div>
   );

@@ -11,6 +11,7 @@ import { PitfallsStep } from "./PitfallsStep";
 import { ParsonsStep } from "./ParsonsStep";
 import { ClozeStep } from "./ClozeStep";
 import { CategorizeStep } from "./CategorizeStep";
+import { Bloom } from "./Bloom";
 import { HookStep } from "./HookStep";
 import { DiffStep } from "./DiffStep";
 import { BuildUpStep } from "./BuildUpStep";
@@ -190,7 +191,7 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)] gap-6">
       {/* Sidebar */}
-      <aside className="lg:sticky lg:top-20 self-start rounded-2xl border border-ink-800 bg-ink-900/60 p-4">
+      <aside className="lg:sticky lg:top-20 self-start rounded-2xl glass p-4">
         <Link
           href={`/learn/${track}/`}
           className="text-xs uppercase tracking-wider text-ink-400 hover:text-ink-100 transition"
@@ -233,6 +234,7 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
         <ul className="hidden lg:block mt-5 space-y-2">
           {lesson.steps.map((s, i) => (
             <li key={s.id}>
+              <Bloom tone={track === "python" ? "focus" : "warm"} active={i === state.stepIndex}>
               <button
                 onClick={() => goToStep(i)}
                 className={`w-full text-left flex items-start gap-2 rounded-md px-2 py-1.5 hover:bg-ink-800 transition ${
@@ -245,6 +247,7 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
                   <span className="text-ink-100 block leading-tight">{s.title}</span>
                 </span>
               </button>
+              </Bloom>
             </li>
           ))}
         </ul>
@@ -419,7 +422,7 @@ function StepBody({
     };
     return (
       <div className="space-y-4">
-        <div className="rounded-xl border border-ink-800 bg-ink-950 p-3 mono text-[13px] whitespace-pre-wrap">
+        <div className="rounded-xl surface-code p-3 mono text-[13px] whitespace-pre-wrap">
           {step.code}
         </div>
         <label className="block text-sm text-ink-300">
@@ -444,7 +447,7 @@ function StepBody({
         </div>
         <StuckHelp hints={toHints(step.hints, step.hint)} language={track} />
         {checked !== null && step.why && (
-          <div className="rounded-lg border border-ink-700 bg-ink-900/60 p-3 text-sm text-ink-200 leading-relaxed">
+          <div className="rounded-lg glass p-3 text-sm text-ink-200 leading-relaxed">
             <span className="text-ink-400 text-xs uppercase tracking-wider mr-1.5">Why</span>
             <InlineProse text={step.why} />
           </div>
@@ -623,7 +626,7 @@ function ExplainStep({
         </button>
       </div>
       {logged && step.sampleAnswer && (
-        <div className="rounded-lg border border-ink-700 bg-ink-900/60 p-3">
+        <div className="rounded-lg glass p-3">
           <div className="text-[11px] uppercase tracking-wider text-ink-400 mb-1.5">
             One way to put it
           </div>

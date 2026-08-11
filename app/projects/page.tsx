@@ -34,7 +34,7 @@ export default function ProjectsPage() {
               <button
                 key={p.id}
                 onClick={() => setCurrent(p)}
-                className="text-left rounded-2xl border border-ink-800 bg-ink-900/40 hover:bg-ink-900 hover:border-ink-600 transition p-5"
+                className="text-left rounded-2xl glass hover:bg-ink-900 hover:border-ink-600 transition p-5"
               >
                 <div className="flex items-center gap-2">
                   <span
@@ -62,7 +62,7 @@ function ProjectView({ project }: { project: Project }) {
   const [showHints, setShowHints] = useState(false);
   return (
     <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] gap-6">
-      <aside className="rounded-2xl border border-ink-800 bg-ink-900/60 p-4 self-start">
+      <aside className="rounded-2xl glass p-4 self-start">
         <div
           className={`text-xs px-2 py-0.5 rounded inline-block ${
             project.track === "python" ? "bg-py/20 text-py" : "bg-js/20 text-js"
@@ -72,7 +72,7 @@ function ProjectView({ project }: { project: Project }) {
         </div>
         <h2 className="mt-3 text-lg font-semibold text-ink-100">{project.title}</h2>
         <p className="mt-1 text-sm text-ink-400">{project.summary}</p>
-        <div className="mt-4 rounded-lg border border-ink-700 bg-ink-950/50 p-3 text-sm text-ink-200">
+        <div className="mt-4 rounded-lg surface-code p-3 text-sm text-ink-200">
           <b className="text-ink-100">Goal:</b> {project.goal}
         </div>
         <button

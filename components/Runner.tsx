@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { CodeEditor } from "./CodeEditor";
+import { Bloom } from "./Bloom";
 import { runJs } from "@/lib/js-runner";
 import { runPython } from "@/lib/pyodide-runner";
 import { useTutor } from "@/lib/tutor/context";
@@ -119,15 +120,21 @@ export function Runner({
         <div className="text-sm">{statusPill}</div>
       </div>
       {(stdout || stderr) && (
-        <div className="rounded-lg bg-ink-950 border border-ink-800 p-3 mono text-[13px] scrollbar-thin overflow-auto max-h-64">
-          {stdout && <pre className="text-ink-100 whitespace-pre-wrap">{stdout}</pre>}
-          {stderr && <pre className="text-bad whitespace-pre-wrap">{stderr}</pre>}
-        </div>
+        <Bloom
+          tone={status === "match" || status === "ok" ? "good" : status === "err" ? "bad" : "warm"}
+          active={status !== "idle" && status !== "running"}
+          pulse
+        >
+          <div className="rounded-lg surface-code p-3 mono text-[13px] scrollbar-thin overflow-auto max-h-64">
+            {stdout && <pre className="text-ink-100 whitespace-pre-wrap">{stdout}</pre>}
+            {stderr && <pre className="text-bad whitespace-pre-wrap">{stderr}</pre>}
+          </div>
+        </Bloom>
       )}
       {expected !== undefined && (
         <details className="text-xs text-ink-400">
           <summary className="cursor-pointer hover:text-ink-200">Show expected output</summary>
-          <pre className="mt-2 rounded-lg border border-ink-800 bg-ink-950 p-3 mono text-ink-200 whitespace-pre-wrap">{expected}</pre>
+          <pre className="mt-2 rounded-lg surface-code p-3 mono text-ink-200 whitespace-pre-wrap">{expected}</pre>
         </details>
       )}
     </div>

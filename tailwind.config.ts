@@ -5,31 +5,35 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Deep indigo-black rather than neutral grey: the same luminance
+        // ladder as before, rotated toward the cool end. Every pairing that
+        // ships is checked by scripts/verify-contrast.mjs.
         ink: {
-          950: "#07080b",
-          900: "#0b0d12",
-          850: "#0f121a",
-          800: "#141824",
-          700: "#1b2130",
-          600: "#242c3f",
-          500: "#39445f",
-          400: "#6b7594",
-          300: "#a2adc6",
-          200: "#cfd6e6",
-          100: "#e8ecf6",
+          950: "#05070f",
+          900: "#080c17",
+          850: "#0c1121",
+          800: "#111829",
+          700: "#18223a",
+          600: "#213052",
+          500: "#374d75",
+          400: "#7286ab",
+          300: "#a8b6d2",
+          200: "#d2dbec",
+          100: "#eaeff9",
         },
         py: { DEFAULT: "#3b82f6", accent: "#60a5fa" },
         js: { DEFAULT: "#f5b301", accent: "#fbbf24" },
         good: "#22c55e",
         bad: "#ef4444",
         warm: "#f59e0b",
+        teal: "#2dd4bf",
       },
       fontFamily: {
         sans: ["ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Inter", "sans-serif"],
         mono: ["ui-monospace", "SFMono-Regular", "JetBrains Mono", "Menlo", "monospace"],
       },
       boxShadow: {
-        soft: "0 2px 20px -8px rgba(0,0,0,0.35)",
+        soft: "0 2px 20px -8px rgba(0,0,0,0.45)",
         glow: "0 0 0 1px rgba(96,165,250,0.4), 0 6px 32px -12px rgba(96,165,250,0.4)",
       },
     },

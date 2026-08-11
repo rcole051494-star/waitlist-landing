@@ -55,7 +55,7 @@ export function TutorSettingsModal({ open, onClose }: { open: boolean; onClose: 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-2xl border border-ink-700 bg-ink-900 p-5 shadow-soft"
+        className="w-full max-w-md rounded-2xl glass-strong p-5 shadow-soft"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold text-ink-100">Tutor settings</h2>

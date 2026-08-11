@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Nav } from "@/components/Nav";
 import { allCards, dueCards, grade, mastery, upsertCard } from "@/lib/srs";
+import { Bloom } from "@/components/Bloom";
 import { allLessons } from "@/lib/curriculum";
 import type { Lesson, Step } from "@/lib/curriculum/types";
 import { Runner } from "@/components/Runner";
@@ -79,11 +80,13 @@ export default function ReviewPage() {
               Concepts you've seen return here on schedule. Mixed topics, mixed languages.
             </p>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-semibold text-ink-100">{dueTotal}</div>
-            <div className="text-xs text-ink-400 uppercase tracking-wider">due now</div>
-            <div className="text-xs text-ink-500 mt-1">avg mastery {avgMastery}%</div>
-          </div>
+          <Bloom tone="warm" active={dueTotal > 0} className="shrink-0">
+            <div className="text-right">
+              <div className="text-2xl font-semibold text-ink-100">{dueTotal}</div>
+              <div className="text-xs text-ink-400 uppercase tracking-wider">due now</div>
+              <div className="text-xs text-ink-500 mt-1">avg mastery {avgMastery}%</div>
+            </div>
+          </Bloom>
         </header>
 
         {!hydrated ? (
@@ -91,7 +94,7 @@ export default function ReviewPage() {
         ) : items.length === 0 ? (
           <EmptyReview />
         ) : idx >= items.length ? (
-          <div className="rounded-2xl border border-ink-800 bg-ink-900/50 p-8 text-center">
+          <div className="rounded-2xl glass p-8 text-center">
             <div className="text-4xl">🎯</div>
             <h2 className="mt-4 text-2xl font-semibold text-ink-100">Session complete</h2>
             <p className="text-ink-300 mt-2">
@@ -106,7 +109,7 @@ export default function ReviewPage() {
             </Link>
           </div>
         ) : item ? (
-          <div className="rounded-2xl border border-ink-800 bg-ink-900/40 p-6">
+          <div className="rounded-2xl glass p-6">
             <div className="flex items-center gap-2 text-xs mb-3">
               <span
                 className={`px-2 py-0.5 rounded ${
@@ -155,7 +158,7 @@ export default function ReviewPage() {
               .map((c) => (
                 <div
                   key={c.id}
-                  className="flex items-center gap-3 rounded-lg border border-ink-800 bg-ink-900/40 px-4 py-2 text-sm"
+                  className="flex items-center gap-3 rounded-lg glass px-4 py-2 text-sm"
                 >
                   <span className="mono text-xs text-ink-400 w-40 truncate">{c.id}</span>
                   <div className="flex-1 h-1.5 rounded-full bg-ink-800 overflow-hidden">
@@ -183,7 +186,7 @@ export default function ReviewPage() {
 
 function EmptyReview() {
   return (
-    <div className="rounded-2xl border border-ink-800 bg-ink-900/50 p-8 text-center">
+    <div className="rounded-2xl glass p-8 text-center">
       <div className="text-4xl">🌱</div>
       <h2 className="mt-4 text-2xl font-semibold text-ink-100">Nothing due yet</h2>
       <p className="text-ink-300 mt-2">
@@ -229,7 +232,7 @@ function ReviewStep({
     return (
       <div className="space-y-3">
         <p className="text-ink-300 text-sm">What does this print?</p>
-        <div className="rounded-xl border border-ink-800 bg-ink-950 p-3 mono text-[13px] whitespace-pre-wrap">
+        <div className="rounded-xl surface-code p-3 mono text-[13px] whitespace-pre-wrap">
           {step.code}
         </div>
         <PredictBox answer={step.answer} onResult={onResult} />
