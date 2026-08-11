@@ -1345,25 +1345,29 @@ export const javascriptLessons: Lesson[] = [
     concepts: ["js:closure", "js:scope"],
     steps: [
       {
+        kind: "hook",
+        id: "h1",
+        title: "Two counters walk into a function",
+        code:
+          "function makeCounter() {\n  let n = 0;\n  return () => ++n;\n}\nconst a = makeCounter();\nconst b = makeCounter();\na(); a();\nconsole.log(a(), b());\n",
+        answer: "3 1",
+        accept: ["3, 1", "3 and 1"],
+        reveal:
+          "`a` has been called three times and `b` once — and they don't interfere.\n\nThat's strange if you think about it. `makeCounter` finished running long ago, so `n` should be gone. Instead there are **two separate `n`s**, each still alive, each remembered by the function that was created next to it.\n\nThat's a closure. The rest of this lesson is about why it works and what it's good for.",
+      },
+      {
         kind: "read",
         id: "r1",
         title: "A function remembers where it was written",
         body:
-          "Here's the whole idea in one sentence: **when you create a function inside another function, the inner one keeps access to the outer one's variables — even after the outer function has finished and returned.**\n\nThat sounds like it shouldn't work. Normally when a function returns, its local variables are gone. But if something still points at them, JavaScript keeps them alive:\n\n```\nfunction makeGreeter(name) {\n  return function () {\n    console.log('Hi, ' + name);\n  };\n}\n\nconst greetSam = makeGreeter('Sam');\nmakeGreeter has now finished. `name` should be gone.\ngreetSam();   // 'Hi, Sam'  — but it isn't\n```\n\nThe returned function is carrying `name` around with it. That combination — **a function plus the variables it captured** — is what people mean by a *closure*.\n\nYou have already been writing closures without the name. Every callback you passed to `map` that used a variable from outside was one.",
-      },
-      {
-        kind: "read",
-        id: "r2",
-        title: "What it's actually for",
-        body:
-          "Three jobs come up over and over.\n\n**1. Private state.** Variables inside the factory can't be reached from outside — the only way in is through the functions you hand back. There's no `obj.count = -999` to accidentally clobber.\n\n**2. Factories.** Write one function that manufactures customised functions:\n\n```\nfunction multiplyBy(n) {\n  return (x) => x * n;\n}\nconst double = multiplyBy(2);\nconst triple = multiplyBy(3);\n```\n\n`double` and `triple` are separate functions with separate captured `n`s.\n\n**3. Callbacks that need baggage.** When you hand a function to `setTimeout` or an event listener, you can't pass extra arguments to it — but a closure can carry them.\n\nOne rule to internalise now, because it causes real bugs later: **a closure captures the variable, not a snapshot of its value.** If the variable changes afterwards, the closure sees the new value.",
+          "The whole idea in one sentence: **a function created inside another function keeps access to the outer one's variables, even after the outer function has returned.**\n\nNormally a function's locals vanish when it returns. But if something still points at them — a function you handed back — JavaScript keeps them alive.\n\nThat pairing, **a function plus the variables it captured**, is what people mean by a *closure*.\n\nYou've been writing them already. Every callback you passed to `map` that used a variable from outside was one.",
       },
       {
         kind: "trace",
         id: "t1",
         title: "Watch a counter keep its own state",
         intro:
-          "`makeCounter` returns two small functions. Both of them close over the same `n`. Step through and watch where `n` lives.",
+          "The same `makeCounter` from the opener, slowed down. Watch where `n` lives.",
         code:
           "function makeCounter() {\n  let n = 0;\n  return {\n    inc: () => { n = n + 1; },\n    get: () => n,\n  };\n}\nconst a = makeCounter();\nconst b = makeCounter();\na.inc();\na.inc();\nconsole.log(a.get(), b.get());\n",
         lines: [
@@ -1374,7 +1378,7 @@ export const javascriptLessons: Lesson[] = [
           },
           {
             code: "const b = makeCounter();",
-            what: "Calls it AGAIN. This is a separate call, so it makes a completely separate `n`. b's functions close over b's `n`, not a's.",
+            what: "Calls it AGAIN. A separate call, so a completely separate `n`. b's functions close over b's `n`, not a's.",
             state: "a's n = 0, b's n = 0 — two independent boxes",
           },
           {
@@ -1395,31 +1399,100 @@ export const javascriptLessons: Lesson[] = [
           },
         ],
         takeaway:
-          "Every CALL of the outer function creates a fresh set of captured variables. That's why two counters don't interfere — and it's exactly how you get private, per-instance state without a class.",
+          "Every CALL of the outer function creates a fresh set of captured variables. That's why two counters don't interfere — and how you get private, per-instance state without a class.",
       },
       {
-        kind: "example",
-        id: "e1",
-        title: "A factory and a private store",
-        code:
-          "function multiplyBy(n) {\n"
-          + "  return (x) => x * n;\n"
-          + "}\n"
-          + "const double = multiplyBy(2);\n"
-          + "const triple = multiplyBy(3);\n"
-          + "console.log(double(5), triple(5));\n"
-          + "\n"
-          + "function makeWallet(start) {\n"
-          + "  let balance = start;\n"
-          + "  return {\n"
-          + "    deposit: (x) => { balance += x; },\n"
-          + "    balance: () => balance,\n"
-          + "  };\n"
-          + "}\n"
-          + "const w = makeWallet(10);\n"
-          + "w.deposit(5);\n"
-          + "console.log(w.balance());\n"
-          + "console.log(w.hiddenBalance);\n",
+        kind: "diff",
+        id: "d1",
+        title: "One word moved",
+        prompt:
+          "The only difference is which side of `function makeCounter()` the `let` sits on. Predict both.",
+        a: {
+          label: "let inside",
+          code: "function makeCounter() {\n  let n = 0;\n  return () => ++n;\n}\nconst a = makeCounter();\nconst b = makeCounter();\na(); a();\nconsole.log(b());\n",
+          output: "1",
+        },
+        b: {
+          label: "let outside",
+          code: "let n = 0;\nfunction makeCounter() {\n  return () => ++n;\n}\nconst a = makeCounter();\nconst b = makeCounter();\na(); a();\nconsole.log(b());\n",
+          output: "3",
+        },
+        hints: [
+          "Ask how many separate `n` variables exist in each version.",
+          "`let` inside runs once per CALL. `let` outside runs once, full stop.",
+        ],
+        explanation:
+          "In A, `let n = 0` runs on every call to makeCounter, so `a` and `b` each get their own. `b` has only been called once: 1.\n\nIn B there is a single `n` for the whole program, and all three calls land on it: 3.\n\nThis is the entire trick to private state — **declare it inside the factory**. It's also the bug you'll write when you don't: two things that should be independent quietly sharing one variable.",
+      },
+      {
+        kind: "read",
+        id: "r2",
+        title: "What it's actually for",
+        body:
+          "**Private state.** Variables inside the factory can't be reached from outside — the only way in is the functions you hand back. No `obj.count = -999` to clobber.\n\n**Factories.** One function that manufactures customised functions: `multiplyBy(2)` and `multiplyBy(3)` are separate functions with separate captured `n`s.\n\n**Callbacks that carry baggage.** You can't pass extra arguments to a `setTimeout` callback — but a closure can carry them.\n\nOne rule that causes real bugs: a closure captures the **variable**, not a snapshot of its value. Change it later and the closure sees the new value.",
+      },
+      {
+        kind: "buildup",
+        id: "b1",
+        title: "Build a wallet with a private balance",
+        prompt:
+          "Assemble a factory that hands out functions but keeps the money out of reach. Pick each line in turn.",
+        stages: [
+          {
+            line: "function makeWallet(start) {",
+            distractors: ["const makeWallet = { start };", "let makeWallet(start) {"],
+            what: "A factory is just a function. Everything private will live inside its body.",
+          },
+          {
+            line: "  let balance = start;",
+            distractors: ["  const balance = start;", "  this.balance = start;"],
+            what: "`let`, because it has to change. Declared INSIDE, so every call to makeWallet gets its own balance — and nothing outside can see it.",
+          },
+          {
+            line: "  return {",
+            distractors: ["  return balance;", "  export {"],
+            what: "Return an object of functions, not the balance itself. Handing back the number would give a dead copy; handing back functions keeps the live variable behind them.",
+          },
+          {
+            line: "    deposit: (x) => { balance += x; },",
+            distractors: ["    deposit: (x) => { start += x; },", "    balance: balance,"],
+            what: "This arrow closes over `balance`. It can change it — which is the whole point of exposing it.",
+          },
+          {
+            line: "    check: () => balance,",
+            distractors: ["    check: balance,", "    check: () => this.balance,"],
+            what: "`check: balance` would freeze today's number into the object. A function reads the variable fresh on every call.",
+          },
+          {
+            line: "  };",
+            distractors: ["  }", "  );"],
+            what: "Close the returned object.",
+          },
+          {
+            line: "}",
+            distractors: ["};", ")"],
+            what: "And close the factory.",
+            output: "(nothing yet — nobody has called it)",
+          },
+          {
+            line: "const w = makeWallet(10);",
+            distractors: ["const w = makeWallet;", "const w = new makeWallet(10);"],
+            what: "Call it to actually create a wallet. Without the parentheses you'd just have the factory itself.",
+          },
+          {
+            line: "w.deposit(5);",
+            distractors: ["w.balance += 5;", "w.deposit = 5;"],
+            what: "`w.balance += 5` can't work — there is no `balance` property. The only door in is `deposit`.",
+          },
+          {
+            line: "console.log(w.check(), w.balance);",
+            distractors: ["console.log(balance);", "console.log(w.check, w.balance);"],
+            what: "`w.check()` reads the live captured variable: 15. `w.balance` is undefined, because the balance was never a property of anything.",
+            output: "15 undefined",
+          },
+        ],
+        explanation:
+          "Ten lines, and the balance is genuinely unreachable — not by convention, but because it only ever existed as a local variable inside a function that has already returned.",
       },
       {
         kind: "pitfalls",
@@ -1429,46 +1502,16 @@ export const javascriptLessons: Lesson[] = [
           {
             wrong: "const fns = [];\nfor (var i = 0; i < 3; i++) {\n  fns.push(() => i);\n}\nconsole.log(fns.map(f => f()));",
             problem:
-              "Logs [ 3, 3, 3 ]. `var` creates ONE `i` shared by the whole loop, so all three functions captured the same variable — and by the time you call them, the loop has finished and left it at 3. `let` creates a fresh binding each iteration, which is what you almost always want.",
+              "Logs [ 3, 3, 3 ]. `var` creates ONE `i` shared by the whole loop, so all three functions captured the same variable — and by the time you call them the loop has finished and left it at 3. `let` creates a fresh binding each iteration.",
             right: "const fns = [];\nfor (let i = 0; i < 3; i++) {\n  fns.push(() => i);\n}\nconsole.log(fns.map(f => f()));",
           },
           {
             wrong: "let msg = 'first';\nconst show = () => console.log(msg);\nmsg = 'second';\nshow();",
             problem:
-              "Logs 'second'. A closure captures the VARIABLE, not a copy of its value at the moment it was created. If you want a snapshot, copy it into a new const before making the function.",
+              "Logs 'second'. A closure captures the VARIABLE, not a copy of its value at the moment it was created. For a snapshot, copy it into a new const before making the function.",
             right: "let msg = 'first';\nconst snapshot = msg;\nconst show = () => console.log(snapshot);\nmsg = 'second';\nshow();",
           },
-          {
-            wrong: "let count = 0;\nfunction makeCounter() {\n  return () => ++count;\n}\nconst a = makeCounter();\nconst b = makeCounter();\na(); a();\nconsole.log(b());",
-            problem:
-              "Logs 3, not 1. `count` lives OUTSIDE the factory, so every counter shares it. The state must be declared inside the function for each call to get its own.",
-            right: "function makeCounter() {\n  let count = 0;\n  return () => ++count;\n}",
-          },
         ],
-      },
-      {
-        kind: "parsons",
-        id: "pa1",
-        title: "Assemble a counter factory",
-        prompt:
-          "Put these lines in order to build a factory that returns an independent counting function. Watch where the state has to be declared.",
-        solution: [
-          "function makeCounter() {",
-          "  let n = 0;",
-          "  return () => ++n;",
-          "}",
-          "const next = makeCounter();",
-          "next();",
-          "console.log(next());",
-        ],
-        expectedOutput: "2",
-        hints: [
-          "The state has to be created fresh on every call, so it belongs inside the function body.",
-          "The factory's job is to hand back a function — that's the `return`.",
-          "Two calls to `next()` happen; only the second one is logged.",
-        ],
-        explanation:
-          "`let n = 0` runs once per call to makeCounter, giving each returned counter its own private tally. The first `next()` moves it to 1 and its result is thrown away; the second returns 2.",
       },
       {
         kind: "predict",
@@ -1477,35 +1520,37 @@ export const javascriptLessons: Lesson[] = [
         code: "const fns = [];\nfor (let i = 0; i < 3; i++) fns.push(() => i);\nconsole.log(fns.map(f => f()));\n",
         answer: "[ 0, 1, 2 ]",
         hints: [
-          "There are three functions in the array, and each was created during a different pass of the loop.",
-          "`let` gives each iteration of the loop its very own `i`, so each function captured a different one.",
+          "Three functions in the array, each created during a different pass of the loop.",
+          "`let` gives each iteration its very own `i`, so each function captured a different one.",
         ],
         why:
-          "`let` in a for-loop header is special-cased: the language creates a new binding per iteration. Each arrow captured its own `i`, frozen at 0, 1 and 2. Swap in `var` and you'd get [ 3, 3, 3 ].",
+          "`let` in a for-loop header is special-cased: a new binding per iteration. Each arrow captured its own `i`, frozen at 0, 1 and 2. Swap in `var` and you'd get [ 3, 3, 3 ].",
       },
       {
-        kind: "fix",
-        id: "f1",
-        title: "Fix: the shared counter",
-        buggy:
-          "let n = 0;\nfunction makeCounter() {\n  return () => ++n;\n}\nconst a = makeCounter();\nconst b = makeCounter();\na(); a();\nconsole.log(b());\n",
-        expected: "1",
+        kind: "mutate",
+        id: "mu1",
+        title: "Turn a multiplier into an adder",
+        prompt:
+          "This factory makes multiplying functions. Change it so it makes ADDING functions instead — `addTo(2)` should give a function that adds 2. Target output: 7 8",
+        starter:
+          "function makeOp(n) {\n  return (x) => x * n;\n}\nconst addTo5 = makeOp(5);\nconst addTo6 = makeOp(6);\nconsole.log(addTo5(2), addTo6(2));\n",
+        expected: "7 8",
         hints: [
-          "Run it. `b` has only been called once, so why isn't it 1?",
-          "Both counters are reaching for the same variable. Where is that variable declared?",
-          "Move `let n = 0` inside makeCounter so each call creates its own.",
+          "Only the returned arrow needs to change — the factory shape is already right.",
+          "It captures `n` either way; the question is what it does with it.",
+          "`(x) => x + n`",
         ],
         solution:
-          "function makeCounter() {\n  let n = 0;\n  return () => ++n;\n}\nconst a = makeCounter();\nconst b = makeCounter();\na(); a();\nconsole.log(b());\n",
+          "function makeOp(n) {\n  return (x) => x + n;\n}\nconst addTo5 = makeOp(5);\nconst addTo6 = makeOp(6);\nconsole.log(addTo5(2), addTo6(2));\n",
         solutionWhy:
-          "Nothing about the returned arrow changed — the fix is entirely about WHERE the captured variable is declared. Inside the factory, each call gets a fresh one. Outside, they all share.",
+          "One character. The closure machinery — capture `n`, remember it, use it later — is identical; only the operation changed.\n\nThat's the useful mental model for a factory: the captured value is configuration, and the returned function is the behaviour you configured.",
       },
       {
         kind: "write",
         id: "w1",
         title: "Memoize",
         prompt:
-          "Write `memoize(fn)`: it returns a new function that remembers results by its first argument, so repeat calls skip the work. Test it with `x => x * x`, calling memo(4) twice and logging the sum. Expected: 32",
+          "Write `memoize(fn)`: it returns a new function that remembers results by its first argument, so repeat calls skip the work. Test with `x => x * x`, calling memo(4) twice and logging the sum. Expected: 32",
         starter:
           "function memoize(fn) {\n  // keep a cache here, return a function that uses it\n}\nconst memo = memoize(x => x * x);\nconsole.log(memo(4) + memo(4));\n",
         expected: "32",
@@ -1517,7 +1562,7 @@ export const javascriptLessons: Lesson[] = [
         solution:
           "function memoize(fn) {\n  const cache = new Map();\n  return (x) => {\n    if (cache.has(x)) return cache.get(x);\n    const result = fn(x);\n    cache.set(x, result);\n    return result;\n  };\n}\nconst memo = memoize(x => x * x);\nconsole.log(memo(4) + memo(4));\n",
         solutionWhy:
-          "The `cache` is the closure's private state: unreachable from outside, but alive for as long as the returned function is.\n\nUse `has`/`get` rather than `if (cache.get(x))` — a legitimately cached `0`, `''` or `false` is falsy and would be recomputed forever.",
+          "The `cache` is the closure's private state: unreachable from outside, alive as long as the returned function is.\n\nUse `has`/`get` rather than `if (cache.get(x))` — a legitimately cached `0`, `''` or `false` is falsy and would be recomputed forever.",
       },
     ],
   },

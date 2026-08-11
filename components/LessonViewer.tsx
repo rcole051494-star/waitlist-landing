@@ -11,6 +11,9 @@ import { PitfallsStep } from "./PitfallsStep";
 import { ParsonsStep } from "./ParsonsStep";
 import { ClozeStep } from "./ClozeStep";
 import { CategorizeStep } from "./CategorizeStep";
+import { HookStep } from "./HookStep";
+import { DiffStep } from "./DiffStep";
+import { BuildUpStep } from "./BuildUpStep";
 import { getLesson, upsertLesson, markStarted, markCompleted } from "@/lib/progress";
 import { getCard, grade, upsertCard } from "@/lib/srs";
 import { findLesson, lessonsForTrack } from "@/lib/curriculum";
@@ -32,6 +35,25 @@ function stepTutorFields(step: Step): {
   switch (step.kind) {
     case "read":
       return { stepPrompt: step.body };
+    case "hook":
+      return {
+        stepPrompt: `${step.prompt ?? "Guess the output before any explanation."}\n(This is the lesson's opener — they are MEANT to be unsure. Do not hand over the answer; ask what they think happens and why.)`,
+        referenceCode: step.code,
+        expected: step.answer,
+      };
+    case "mutate":
+      return { stepPrompt: step.prompt, referenceCode: step.starter, expected: step.expected };
+    case "diff":
+      return {
+        stepPrompt: `${step.prompt ?? "Predict the output of both snippets."}\n(Two near-identical snippets. Do NOT state the outputs — point at what differs between them.)`,
+        referenceCode: `A:\n${step.a.code}\nB:\n${step.b.code}`,
+        expected: `A prints: ${step.a.output}\nB prints: ${step.b.output}`,
+      };
+    case "buildup":
+      return {
+        stepPrompt: `${step.prompt ?? "Build the program one line at a time."}\n(They pick each next line from candidates — nudge toward the reasoning, do not give the sequence.)`,
+        referenceCode: step.stages.map((st) => st.line).join("\n"),
+      };
     case "trace":
       return {
         stepPrompt:
@@ -291,6 +313,7 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
 function kindLabel(kind: Step["kind"]) {
   return (
     {
+      hook: "have a guess",
       read: "concept",
       trace: "walk through it",
       pitfalls: "common mistakes",
@@ -300,6 +323,9 @@ function kindLabel(kind: Step["kind"]) {
       example: "example",
       predict: "predict the output",
       fix: "fix the bug",
+      mutate: "make it print this",
+      diff: "spot the difference",
+      buildup: "build it up",
       write: "write from scratch",
       explain: "explain in your own words",
       mcq: "quick check",
@@ -429,6 +455,66 @@ function StepBody({
             <Runner key={step.id} initial={step.code} track={track} expected={step.answer} runLabel="Run" />
           </div>
         )}
+      </div>
+    );
+  }
+
+  if (step.kind === "hook") {
+    return (
+      <HookStep
+        prompt={step.prompt}
+        code={step.code}
+        answer={step.answer}
+        accept={step.accept}
+        reveal={step.reveal}
+        onAttempt={onAttempt}
+      />
+    );
+  }
+
+  if (step.kind === "diff") {
+    return (
+      <DiffStep
+        prompt={step.prompt}
+        a={step.a}
+        b={step.b}
+        hints={step.hints}
+        explanation={step.explanation}
+        onAttempt={onAttempt}
+      />
+    );
+  }
+
+  if (step.kind === "buildup") {
+    return (
+      <BuildUpStep
+        prompt={step.prompt}
+        stages={step.stages}
+        explanation={step.explanation}
+        onAttempt={onAttempt}
+      />
+    );
+  }
+
+  // Same machinery as "fix" — working code and a target output — but framed as
+  // play rather than repair, so it reads as a puzzle instead of a chore.
+  if (step.kind === "mutate") {
+    return (
+      <div className="space-y-3">
+        <p className="text-ink-200">{step.prompt}</p>
+        <Runner
+          key={step.id}
+          initial={step.starter}
+          track={track}
+          expected={step.expected}
+          onResult={(r) => onAttempt(r.ok)}
+        />
+        <StuckHelp
+          hints={step.hints}
+          solution={step.solution}
+          solutionWhy={step.solutionWhy}
+          language={track}
+        />
       </div>
     );
   }

@@ -120,6 +120,60 @@ export type Step =
       buckets: string[];
       items: { text: string; bucket: number; why?: string }[];
     }
+  // A lesson opener: run a tiny snippet and guess the output BEFORE any
+  // explanation. Being wrong first is what makes the explanation land — the
+  // point is the surprise, not the score, so nothing here counts against you.
+  | {
+      kind: "hook";
+      id: string;
+      title: string;
+      prompt?: string; // defaults to a "have a guess" framing
+      code: string;
+      answer: string;
+      accept?: string[]; // other acceptable phrasings
+      reveal: string; // the short payoff, shown once they commit to a guess
+    }
+  // Working code plus a DIFFERENT target output: change it until it matches.
+  // Same machinery as "fix", but the framing is play rather than repair.
+  | {
+      kind: "mutate";
+      id: string;
+      title: string;
+      prompt: string; // "Change one thing so it prints 30 instead of 3"
+      starter: string; // code that already works
+      expected: string; // the new stdout to hit
+      hints?: string[];
+      solution?: string;
+      solutionWhy?: string;
+    }
+  // Two near-identical snippets that behave differently. Predict both, then
+  // find out why. Almost no reading, and it isolates one idea precisely.
+  | {
+      kind: "diff";
+      id: string;
+      title: string;
+      prompt?: string;
+      a: { label?: string; code: string; output: string };
+      b: { label?: string; code: string; output: string };
+      hints?: string[];
+      explanation: string;
+    }
+  // Assemble a program one line at a time, choosing the next line from a few
+  // candidates and seeing the output grow after each. Parsons in slow motion,
+  // with feedback at every stage.
+  | {
+      kind: "buildup";
+      id: string;
+      title: string;
+      prompt?: string;
+      stages: {
+        line: string; // the correct next line
+        distractors: string[]; // plausible wrong candidates
+        what: string; // why that line, shown after they pick correctly
+        output?: string; // what the program prints once this line is in
+      }[];
+      explanation?: string;
+    }
   | {
       kind: "explain";
       id: string;
